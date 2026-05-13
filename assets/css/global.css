@@ -38,6 +38,10 @@ textarea {
     font-variation-settings: 'FILL' 1;
 }
 
+body.theme-transition * {
+    transition: color .2s, background-color .2s, border-color .2s;
+}
+
 .text-loading-effect {
     --s2u-speed: 1.8s;
     --s2u-angle: 115deg;

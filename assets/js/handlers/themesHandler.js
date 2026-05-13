@@ -2,14 +2,16 @@ import { Setting } from "../settings.js"
 
 export function optionsThemeButtonHandler(themeSelect) {
     themeSelect.on("click", (item) => {
-        let id = item.id
+        const id = item.id;
 
-        const tempStyle = document.createElement("style")
-        tempStyle.innerHTML = `* { transition: .2s!important; }`
-        document.head.appendChild(tempStyle)
+        document.body.classList.add("theme-transition");
 
-        setTimeout(() => { tempStyle.remove() }, 400)
+        requestAnimationFrame(() => {
+            Setting.themeSelect(id);
+        });
 
-        Setting.themeSelect(id)
-    })
+        setTimeout(() => {
+            document.body.classList.remove("theme-transition");
+        }, 400);
+    });
 }
