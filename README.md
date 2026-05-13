@@ -1,8 +1,13 @@
-# 🚀 CodeMotion - IDE for Web Developers
-
-> **The web-first IDE that moves as fast as you code**
 
 <div align="center">
+    <img width="100" height="100" alt="cdmtn-ide-logo" src="https://github.com/user-attachments/assets/76c08ac4-45ac-4f9a-966e-e577d288dd44" />
+</div>
+<h1 align="center">CodeMotion IDE <br>
+(Beta test)</h1>
+
+CodeMotion is a web-focused, advanced 
+open-source code editor (IDE) 
+with native tools for web developers
 
 ![JavaScript](https://img.shields.io/badge/JavaScript-98.6%25-F7DF1E?style=flat-square&logo=javascript)
 ![CSS](https://img.shields.io/badge/CSS-1.2%25-1572B6?style=flat-square&logo=css3)
@@ -11,30 +16,25 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
-</div>
 
----
+
 
 ## ✨ Features
 
-- **⚡ Lightning-Fast Performance** - Optimized for modern web development workflows
-- **🎨 Intuitive UI** - Clean, distraction-free coding environment
-- **🔧 Developer-Friendly** - Built by developers, for developers
-- **📱 Responsive Design** - Code anywhere, anytime
-- **🎯 Smart Editing** - Advanced syntax highlighting and code completion
-- **🚀 Extensible** - Easily customize and extend with plugins
-
----
+- **Work as a team**: built-in tools for collaboration
+- **Intuitive UI**: Clean, distraction-free coding environment
+- **Developer-Friendly**: Built by developers, for developers
+- **Built-in analysis**: Run Python applications and analyze JavaScript directly within them
+- **Smart Editing**: Advanced syntax highlighting and code completion
+- **Extensible**: Easily customize and extend with plugins
 
 ## 🎯 Quick Start
 
-### Prerequisites
+Prerequisites:
 - Node.js (v14 or higher)
-- npm or yarn
+- npm
 
-### Installation
-
-```bash
+```
 # Clone the repository
 git clone https://github.com/cdmtn-dev/codemotion-ide.git
 
@@ -46,83 +46,40 @@ npm install
 
 # Start the development server
 npm start
+
+# Or with dev mode
+npm start -- --d
 ```
-
----
-
 ## 🏗️ Project Structure
 
 ```
 codemotion-ide/
-├── src/               # Source code
-├── public/            # Static assets
-├── styles/            # CSS styles
-├── components/        # Reusable components
-└── utils/             # Utility functions
+├── ace/                 # Ace code editor builds
+├── app/                 # App functions
+├── aseets/              # App assets
+├── extension_modules/   # Public modules for extensions
+├── helpers/             # Renderer helpers
+└── html/                # HTML templates
 ```
-
----
-
-## 🛠️ Tech Stack
+## 🛠️ Stack
 
 - **Frontend**: Pure JavaScript
-- **Styling**: CSS
+- **Styling**: Pure CSS
 - **Markup**: HTML
 - **Architecture**: Modular & Component-based
-
----
-
-## 💡 Usage
-
-Get started with CodeMotion in seconds:
-
-```javascript
-// Your code here!
-console.log('Welcome to CodeMotion! 🎉');
-```
-
----
-
 ## 🤝 Contributing
 
 We love contributions! Whether it's bug reports, feature requests, or pull requests, we welcome your involvement.
 
-### Contributing Guidelines
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-
+#### Contributing Guidelines
+- Fork the repository
+- Create your feature branch ```git checkout -b feature/AmazingFeature```
+- Commit your changes ```git commit -m 'Add some AmazingFeature'```
+- Push to the branch ```git push origin feature/AmazingFeature```
+- Open a Pull Request
 ## 📝 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+## Authors
 
----
-
-## 🙌 Acknowledgments
-
-- Built with ❤️ for web developers everywhere
-- Inspired by the best IDEs and editors in the industry
-- Powered by community contributions
-
----
-
-## 📞 Support
-
-Have questions or need help? 
-- 📖 Check our [Documentation](./docs)
-- 🐛 Report issues on [GitHub Issues](https://github.com/cdmtn-dev/codemotion-ide/issues)
-- 💬 Join our community discussions
-
----
-
-<div align="center">
-
-**Made with passion by the CodeMotion team**
-
-⭐ If you find CodeMotion helpful, please consider giving us a star!
-
-</div>
+- [@cdmtn-dev](https://github.com/cdmtn-dev)
