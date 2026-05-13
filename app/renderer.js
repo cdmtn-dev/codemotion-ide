@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     document.body.addEventListener("wheel", () => { handleOnWheelScrollX() })
 
-    const settings = await window.electron.readSettings()
+    const settings = userSettings
     const appIcon = await window.electron.getAppIcon()
 
     const pathContext = {}
@@ -130,7 +130,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const SEGMENTED_CONTROL_INDIVIDUAL_SEGMENT_SELECTOR = ".segmented-control .option input";
     const SEGMENTED_CONTROL_BACKGROUND_PILL_SELECTOR = ".segmented-control .selection";
 
-    document.addEventListener("DOMContentLoaded", setup);
+    setup()
 
     function setup() {
         forEachElement(SEGMENTED_CONTROL_BASE_SELECTOR, (elem) => {

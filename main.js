@@ -103,6 +103,7 @@ async function createWindow() {
         height,
         show: false,
         frame: dev,
+        backgroundColor: "#0a0a0a",
         webPreferences: {
             preload: path.join(APP_PATH, "preload.js"),
             contextIsolation: true
@@ -132,7 +133,6 @@ async function createWindow() {
 
                 if (userCheckLogin.success) {
                     await mainWindow.loadFile(path.join(HTML_PATH, "index.html"));
-                    mainWindow.webContents.session.clearCache()
                 }
                 else {
                     await mainWindow.loadFile(path.join(HTML_PATH, "login.html"));
