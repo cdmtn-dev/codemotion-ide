@@ -81,15 +81,20 @@ function ensureLocalJson() {
     }
 }
 function ensureSettingsJson() {
-    if (!fs.existsSync(LOCAL_FILE_PATH)) {
+    if (!fs.existsSync(SETTINGS_PATH)) {
         const defaultData = {
-            app: {
-                icon: "default",
-                workSeconds: 0,
-                workSecondsSession: 0,
-                devMode: false
+            "app": {
+                "icon": "default",
+                "workSeconds": 0,
+                "workSecondsSession": 0,
+                "devMode": false,
+                "splashScreen": true
+            },
+            "editor": {
+                "smoothScroll": true
             }
-        };
+        }
+
         fs.writeFileSync(SETTINGS_PATH, JSON.stringify(defaultData, null, 4), "utf-8");
     }
 }

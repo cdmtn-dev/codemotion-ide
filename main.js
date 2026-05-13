@@ -74,6 +74,10 @@ const { checkFields } = require('./app/sandbox/tools.js');
 console.log(`App started on ${process.arch} system`)
 
 async function createWindow() {
+    if (!fs.existsSync(JSON_PATH)) {
+        fs.mkdirSync(JSON_PATH, { recursive: true });
+    }
+    
     ensureLocalJson();
     ensureLocalBugs();
     ensureSettingsJson();

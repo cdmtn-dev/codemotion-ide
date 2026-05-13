@@ -1,9 +1,0 @@
-{
-    "name": "html-plus",
-    "displayName": "HTML+",
-    "description": "Extension for HTML",
-    "version": "1.0",
-    "execFile": "index",
-    "dependencies": {},
-    "permissions": ["app.registerLanguage", "app.registerDocumentationTypes", "app.registerDirIcons", "app.events", "app.request"]
-}

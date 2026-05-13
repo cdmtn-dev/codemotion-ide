@@ -1,8 +1,0 @@
-{
-    "name": "prettyscript",
-    "displayName": "PrettyScript",
-    "extensions": ["ps"],
-    "rules": "language/rules",
-    "documentation": "language/documentation",
-    "icon": "icon.png"
-}

@@ -1,9 +1,0 @@
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEzLCJ1c2VybmFtZSI6ImpkZXYiLCJpYXQiOjE3Nzg0NjI4MjcsImV4cCI6MTc3OTA2NzYyN30.DBPnCA1ycCDUtYyMBR6T3mVB2jnFDKIP_qfo7pEf4q4",
-  "user": {
-    "id": 13,
-    "username": "jdev"
-  },
-  "expiresIn": 604800,
-  "savedAt": "2026-05-11T01:27:07.448Z"
-}

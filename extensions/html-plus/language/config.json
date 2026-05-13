@@ -1,7 +1,0 @@
-{
-    "name": "html-plus",
-    "displayName": "HTML+",
-    "extensions": ["html", "htmp"],
-    "rules": "language/rules",
-    "documentation": "documentation/documentation"
-}
