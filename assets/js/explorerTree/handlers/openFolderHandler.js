@@ -1,5 +1,5 @@
 import { closeAllTabs } from "../../../components/tabHandler.js";
-import { buildTreeHtml } from "../render.js";
+import { buildTreeHtml, renderNodes } from "../render.js";
 import { bindFileClicks } from "./bindFileClicksHandler.js";
 import { tabsByPath, recentlyClosed } from "../../../components/tabHandler.js";
 
@@ -38,7 +38,7 @@ export async function openFolder({ pathRoot, filesPanel, addToHistory, pathConte
             `Project in ${pathRoot} created. Now you can edit and create files`
         );
 
-        initializeFolderToggle(filesPanel);
+        initializeFolderToggle(filesPanel, { pathContext, settings });
 
     } catch (error) {
         console.error("Error opening folder:", error);
@@ -59,12 +59,12 @@ function updateTabName(pathContext) {
     }
 }
 
-function initializeFolderToggle(container) {
+export function initializeFolderToggle(container, context = {}) {
     if (container._toggleHandler) {
         container.removeEventListener("click", container._toggleHandler);
     }
 
-    const toggleHandler = (event) => {
+    const toggleHandler = async (event) => {
         const dirTitle = event.target.closest(".dir-title");
 
         if (!dirTitle) return;
@@ -73,9 +73,34 @@ function initializeFolderToggle(container) {
 
         const dirElement = dirTitle.closest(".dir");
         
-        if (dirElement) {
-            dirElement.classList.toggle("expanded");
+        if (!dirElement) return;
+
+        if (dirElement.dataset.loaded === "false" && dirElement.dataset.loading !== "true") {
+            dirElement.dataset.loading = "true";
+            const content = dirElement.querySelector(":scope > .dir-content");
+
+            try {
+                const children = await window.electron.readDirTree(dirElement.dataset.path, { maxDepth: 0 });
+                content.innerHTML = await renderNodes(children);
+                dirElement.dataset.loaded = "true";
+
+                bindFileClicks(
+                    {
+                        scopeEl: content,
+                        tabsByPath: tabsByPath,
+                        recentlyClosed: recentlyClosed,
+                        pathContext: context.pathContext,
+                        settings: context.settings
+                    }
+                );
+            } catch (error) {
+                console.error("Error loading folder:", error);
+            } finally {
+                delete dirElement.dataset.loading;
+            }
         }
+
+        dirElement.classList.toggle("expanded");
     };
 
     container._toggleHandler = toggleHandler;

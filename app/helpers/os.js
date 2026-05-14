@@ -32,10 +32,11 @@ async function saveFile(fullPath, content) {
     }
 }
 
-async function readDirTree(rootPath) {
+async function readDirTree(rootPath, options = {}) {
     const absRoot = path.resolve(rootPath);
+    const maxDepth = Number.isInteger(options.maxDepth) ? options.maxDepth : Infinity;
 
-    async function walk(dir) {
+    async function walk(dir, depth = 0) {
         let entries = [];
 
         try {
@@ -46,8 +47,12 @@ async function readDirTree(rootPath) {
                 const item = { name: d.name, path: full };
 
                 if (d.isDirectory()) {
-                    const children = await walk(full);
-                    entries.push({ ...item, type: 'dir', children });
+                    if (depth < maxDepth) {
+                        const children = await walk(full, depth + 1);
+                        entries.push({ ...item, type: 'dir', children, loaded: true });
+                    } else {
+                        entries.push({ ...item, type: 'dir', loaded: false });
+                    }
                 } else if (d.isSymbolicLink()) {
                     entries.push({ ...item, type: 'symlink' });
                 } else {

@@ -3,7 +3,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 let isRegisteredCustomLanguageRegistration = false
 
 contextBridge.exposeInMainWorld('electron', {
-    readDirTree: (rootPath) => ipcRenderer.invoke('readDirTree', rootPath),
+    readDirTree: (rootPath, options = {}) => ipcRenderer.invoke('readDirTree', rootPath, options),
     readFileContent: (filePath, encoding = 'utf8') => ipcRenderer.invoke('readFileContent', filePath, encoding),
     getUserPcInfo: () => ipcRenderer.invoke("getUserPcInfo"),
     getPackageData: () => ipcRenderer.invoke("getPackageData"),

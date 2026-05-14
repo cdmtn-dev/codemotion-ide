@@ -191,8 +191,8 @@ ipcMain.on("reload", () => {
     app.quit(); 
 });
 
-ipcMain.handle('readDirTree', async (_e, rootPath) => {
-    return readDirTree(rootPath);
+ipcMain.handle('readDirTree', async (_e, rootPath, options = {}) => {
+    return readDirTree(rootPath, options);
 });
 
 ipcMain.handle('saveFile', async (event, fullPath, content) => {
