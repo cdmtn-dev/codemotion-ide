@@ -47,6 +47,11 @@ export async function handleSettings(settingsObject) {
                 icon: "settings",
                 content: [
                     {
+                        type: "category",
+                        label: "Application",
+                        items: []
+                    },
+                    {
                         type: "row",
                         classList: ["background"],
                         items: [
@@ -99,9 +104,169 @@ export async function handleSettings(settingsObject) {
                 ]
             },
             {
+                name: "Sidebar",
+                icon: "dock_to_left",
+                content: [
+                    {
+                        type: "category",
+                        label: "Explorer",
+                        items: []
+                    },
+                    {
+                        type: "row",
+                        classList: ["background"],
+                        items: [
+                            {
+                                type: "switch",
+                                title: "Folders first",
+                                description: "Shows folders before files and sorts each group alphabetically",
+                                id: "setting_explorerFoldersFirst"
+                            },
+                            {
+                                type: "switch",
+                                title: "Show hidden files",
+                                description: "Displays files and folders starting with a dot (e.g. .gitignore)",
+                                id: "setting_explorerShowHidden"
+                            },
+                            {
+                                type: "switch",
+                                title: "Compact mode",
+                                description: "Reduces padding in the file tree for a denser layout",
+                                id: "setting_explorerCompact"
+                            },
+                        ]
+                    },
+                    {
+                        type: "category",
+                        label: "Sidebar",
+                        items: []
+                    },
+                    {
+                        type: "row",
+                        classList: ["background"],
+                        items: [
+                            {
+                                type: "switch",
+                                title: "test",
+                                description: "test",
+                                id: "setting_sidebarTest"
+                            },
+                        ]
+                    }
+                ]
+            },
+            {
+                name: "Terminal",
+                icon: "terminal",
+                content: [
+                    {
+                        type: "category",
+                        label: "Appearance",
+                        items: []
+                    },
+                    {
+                        type: "row",
+                        classList: ["background"],
+                        items: [
+                            {
+                                type: "range",
+                                title: "Font size",
+                                description: "Sets the terminal font size",
+                                id: "setting_terminalFontSize",
+                                min: 10,
+                                max: 24,
+                                value: 14,
+                                step: 1,
+                                prefix: "px"
+                            },
+                            {
+                                type: "switch",
+                                title: "Cursor blink",
+                                description: "Enables cursor blinking animation in the terminal",
+                                id: "setting_terminalCursorBlink"
+                            },
+                        ]
+                    },
+                    {
+                        type: "category",
+                        label: "Behaviour",
+                        items: []
+                    },
+                    {
+                        type: "row",
+                        classList: ["background"],
+                        items: [
+                            {
+                                type: "switch",
+                                title: "Copy on selection",
+                                description: "Copies selected text to the clipboard automatically",
+                                id: "setting_terminalCopyOnSelect"
+                            },
+                            {
+                                type: "switch",
+                                title: "test",
+                                description: "test",
+                                id: "setting_terminalTest"
+                            },
+                        ]
+                    }
+                ]
+            },
+            {
+                name: "File window",
+                icon: "tab",
+                content: [
+                    {
+                        type: "category",
+                        label: "Tabs",
+                        items: []
+                    },
+                    {
+                        type: "row",
+                        classList: ["background"],
+                        items: [
+                            {
+                                type: "switch",
+                                title: "Show tab close button",
+                                description: "Displays the X close button on editor tabs",
+                                id: "setting_tabShowClose"
+                            },
+                            {
+                                type: "switch",
+                                title: "Wrap tabs",
+                                description: "Wrap tabs onto a second row instead of scrolling horizontally",
+                                id: "setting_tabWrap"
+                            },
+                        ]
+                    },
+                    {
+                        type: "category",
+                        label: "Window",
+                        items: []
+                    },
+                    {
+                        type: "row",
+                        classList: ["background"],
+                        items: [
+                            {
+                                type: "switch",
+                                title: "test",
+                                description: "test",
+                                id: "setting_fileWindowTest"
+                            },
+                        ]
+                    }
+                ]
+            },
+            {
                 name: "Editor",
                 icon: "code",
                 content: [
+                    {
+                        type: "category",
+                        label: "Editor",
+                        items: []
+                    },
                     {
                         type: "row",
                         classList: ["background"],
