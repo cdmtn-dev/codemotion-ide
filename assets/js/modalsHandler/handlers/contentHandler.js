@@ -30,6 +30,19 @@ const types = {
         }
 
         return wrapper
+    },
+    category: (wrapper, data) => {
+        const label = valid(data.label) ?? ""
+
+        wrapper.classList.add("modal-section-category")
+
+        const labelEl = document.createElement("div")
+        labelEl.classList.add("modal-section-category__label")
+        labelEl.textContent = label.toUpperCase()
+
+        wrapper.appendChild(labelEl)
+
+        return wrapper
     }
 }
 
@@ -37,6 +50,8 @@ export function sideBarContentHandler(element, contentData, id) {
     const contentWrapper = document.createElement("div")
     contentWrapper.id = `${id}_content`
     contentWrapper.classList.add("modal-body__sidebar-content", "hidden")
+
+    if (!Array.isArray(contentData)) return
 
     contentData.forEach(contentElement => {
         const type = valid(contentElement.type) ?? false
@@ -52,6 +67,8 @@ export function sideBarContentHandler(element, contentData, id) {
             }
         }
     })
+
+    element.appendChild(contentWrapper)
 }
 
 export function defaultContentHandler(element, contentData) {
