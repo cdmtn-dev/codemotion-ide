@@ -11,6 +11,7 @@
 .modal-wrapper .modal-header.no-title {
     padding: 0px;
     height: 0px;
+    border-bottom: 0px;
 }
 .modal-wrapper .modal-header.no-title .modal-header__title {
     display: none;
