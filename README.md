@@ -88,4 +88,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [@cdmtn-dev](https://github.com/cdmtn-dev)
 
 ## Special thanks
-- [@noxy](https://github.com/noxygalaxy)
+- [@noxy](https://github.com/noxygalaxy) (Super contributor)
