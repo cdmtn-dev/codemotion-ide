@@ -802,19 +802,42 @@ export function eventLog(...args) {
     console.warn(`[EVENT LOG] -----------\n`, ...args)
 }
 
+const loadedAceModules = new Set()
+const loadingAceModules = new Map()
+
 export function loadAceModule(moduleName, callback) {
     try {
         const mod = ace.require(moduleName)
-        callback(mod);
+        loadedAceModules.add(moduleName)
+        if (typeof callback === "function") callback(mod);
+        return mod;
     } catch (e) {
+        if (loadedAceModules.has(moduleName)) return null;
+
+        if (loadingAceModules.has(moduleName)) {
+            if (typeof callback === "function") {
+                loadingAceModules.get(moduleName).push(callback)
+            }
+            return null;
+        }
+
         const script = document.createElement("script");
         script.src = `../ace/src-noconflict/${moduleName}.js`;
 
-        if(callback) {
-            script.onload = () => {
-                callback(ace.require(moduleName));
-            };
+        loadingAceModules.set(moduleName, typeof callback === "function" ? [callback] : [])
+
+        script.onload = () => {
+            const mod = ace.require(moduleName);
+            const callbacks = loadingAceModules.get(moduleName) || []
+
+            loadingAceModules.delete(moduleName)
+            loadedAceModules.add(moduleName)
+            callbacks.forEach(cb => cb(mod))
+        };
+        script.onerror = () => {
+            loadingAceModules.delete(moduleName)
         }
+
         document.head.appendChild(script);
     }
 }

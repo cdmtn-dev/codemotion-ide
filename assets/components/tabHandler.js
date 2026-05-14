@@ -84,8 +84,13 @@ export class themeEditors {
 function addThemeModificator(editor) {
     function proccess(theme) {
         if (themeEditors.has(theme)) {
-            loadAceModule(`theme-${themeEditors.themes[theme]}`)
-            editor.setTheme(`ace/theme/${themeEditors.themes[theme]}`)
+            const aceThemeName = themeEditors.themes[theme]
+            const aceTheme = `ace/theme/${aceThemeName}`
+
+            loadAceModule(`theme-${aceThemeName}`)
+            if (editor.getTheme() !== aceTheme) {
+                editor.setTheme(aceTheme)
+            }
         }
     }
     proccess(getTheme())
