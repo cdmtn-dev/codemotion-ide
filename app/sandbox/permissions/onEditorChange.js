@@ -15,6 +15,7 @@ function callback(data) {
                         name: data.editorLanguage,
                         extension: data.editorLanguageExtension
                     },
+                    errors: data.errors || 0,
                     cursor: data.cursor || {
                         line: 1,
                         column: 1

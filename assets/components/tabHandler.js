@@ -471,6 +471,7 @@ export async function openTab(path, content, extension, name, pathContext, isNew
                 editorMode: editor.session.$modeId,
                 editorLanguage: language.mode,
                 editorLanguageExtension: extension,
+                errors: editor.getSession().getAnnotations().filter(item => item.type === "error").length,
                 cursor: {
                     line: editor.getCursorPosition().row + 1,
                     column: editor.getCursorPosition().column + 1
@@ -479,6 +480,16 @@ export async function openTab(path, content, extension, name, pathContext, isNew
         )
 
         sendEvent("aceModeChanged", { extension: extension, editor: editor, mode: editor.session.$modeId })
+    }
+
+    let cursorChangeTimer = null
+
+    function triggerCursorChanged() {
+        updateEditorData()
+        clearTimeout(cursorChangeTimer)
+        cursorChangeTimer = setTimeout(() => {
+            triggerAceChanged(editor)
+        }, 100)
     }
 
     // 
@@ -583,6 +594,8 @@ export async function openTab(path, content, extension, name, pathContext, isNew
         setEditorContext()
         triggerAceChanged(editor)
     });
+
+    editor.selection.on("changeCursor", triggerCursorChanged)
 
     editor.on('mousedown', function () {
         updateEditorData()
