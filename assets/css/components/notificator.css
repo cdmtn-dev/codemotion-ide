@@ -6,7 +6,7 @@
     bottom: 0;
     z-index: 99;
     width: 100%;
-    transition: .4s cubic-bezier(0.6, -0.28, 0.74, 0.05);
+    transition: .4s ease-in-out;
 }
 
 .notificator-wrapper.hidden {
@@ -18,18 +18,18 @@
 
 .notificator-wrapper .notificator {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    background: var(--notificator-body-bg);
+    background: var(--body-color);
     width: 150px;
-    height: 150px;
     backdrop-filter: blur(10px);
     margin-bottom: 30px;
     position: relative;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 5px;
-    border-radius: 20px;
+    border-radius: 10px;
     border: 1px solid var(--block-divider-border-color);
+    padding: 10px;
 }
 
 .notificator-wrapper .notificator .notificator-body {
@@ -37,6 +37,7 @@
     display: flex;
     flex-direction: column;
     gap: 5px;
+    width: 100%;
 }
 
 .notificator-wrapper .notificator .notificator-body p {
@@ -45,13 +46,12 @@
 
 .notificator-wrapper .notificator span[class^="material-symbols"] {
     color: var(--text-color);
-    font-size: 50px;
-    margin-bottom: 10px;
+    font-size: 20px;
+    opacity: .5;
 }
 
 .notificator-wrapper .notificator .notificator-body .notificator-body__value {
-    font-size: 20px;
+    font-size: 15px;
     font-weight: 600;
-    opacity: .5;
     text-align: center;
 }
