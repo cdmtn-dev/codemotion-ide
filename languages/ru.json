@@ -8,6 +8,9 @@
 
     "platformNotSupported": "Ваша платформа (%{platform}) не поддерживается",
 
+    "notAuth": "Не авторизирован",
+    "devModeEnabled": "Режим разработчика",
+
     "popups": {
         "file": {
             "title": "Файл"

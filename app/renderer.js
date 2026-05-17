@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 await window.electron.onDebuggerReady()
 
                 const developerModeTopBar = new TopBarElement("devMode")
-                developerModeTopBar.content({ icon: "bug_report", text: "Developer mode enabled", type: "notification" })
+                developerModeTopBar.content({ icon: "bug_report", text: gls.get("devModeEnabled"), type: "notification" })
 
                 setTimeout(() => {
                     developerModeTopBar.show()
@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         yourOrganizationsPopupItem.classList.add("disabled")
         logoutPopupItem.classList.add("disabled")
 
-        topbarCenterUserData.querySelector("#username").textContent = `Not authorized`
+        topbarCenterUserData.querySelector("#username").textContent = gls.get("notAuth")
         topbarCenterUserData.querySelector("#current_hours").classList.add("v-hidden")
         topbarCenterBugsData.classList.add("v-hidden")
 
@@ -348,29 +348,31 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // open folder btn
 
-    document.querySelector("#open_folder").addEventListener("click", async () => {
-        const l = new Loader(document.querySelector(".explorer-elements[data-tab='files']"),
-            { 
-                size: "20px", 
-                stroke: "1px", 
-                pos: "absolute-center", 
-                method: "inner" 
-            }
-        )
-        l.render()
+    document.querySelectorAll("#open_folder").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const l = new Loader(document.querySelector(".explorer-elements[data-tab='files']"),
+                { 
+                    size: "20px", 
+                    stroke: "1px", 
+                    pos: "absolute-center", 
+                    method: "inner" 
+                }
+            )
+            l.render()
 
-        let openedFile = await window.electron.requestFolder()
+            let openedFile = await window.electron.requestFolder()
 
-        l.remove()
+            l.remove()
 
-        openFolder(
-            {
-                pathRoot: openedFile,
-                filesPanel: filesPanel,
-                addToHistory: addToHistory,
-                pathContext: pathContext,
-                settings: settings
-            }
-        )
+            openFolder(
+                {
+                    pathRoot: openedFile,
+                    filesPanel: filesPanel,
+                    addToHistory: addToHistory,
+                    pathContext: pathContext,
+                    settings: settings
+                }
+            )
+        })
     })
 })

@@ -52,6 +52,8 @@
 
     --link-color: #4165f1;
 
+    --expanded-line: #434343;
+
     --main-font: "Inter", sans-serif;
     --code-font: "JetBrainsMono", monospace;
 
@@ -72,16 +74,12 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-    background: #000000;
+    background: var(--body-color);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #9b9b9b;
+    background: var(--block-divider-border-color);
     cursor: pointer;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #555;
 }
 
 .material-symbols-rounded {
@@ -812,8 +810,26 @@ body.explorer-resizing {
     border-left: 1px solid transparent;
 }
 .explorer-elements .dir.expanded {
-    border-color: #ffffff0a;
-    padding-left: 5px;
+    position: relative;
+    padding-left: 10px;
+}
+.explorer-elements .dir.expanded::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 1px;
+    height: calc(100% - 15px);
+    background: var(--expanded-line);
+}
+.explorer-elements .dir.expanded > .dir-title:first-child::before {
+    content: "";
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    background: var(--expanded-line);
+    border-radius: 100%;
+    left: -2px;
 }
 .explorer-elements .file i {
     font-size: 10px;
