@@ -131,6 +131,7 @@ p, a, input, textarea, button {
     display: flex;
     align-items: center;
     background-color: var(--segment-bg);
+    border: 1px solid var(--block-divider-border-color);
     overflow: hidden;
     width: -webkit-fill-available;
     border-radius: 7px;

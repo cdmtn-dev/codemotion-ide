@@ -207,7 +207,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.querySelectorAll(".sidebar-item").forEach(tab => {
         const id = tab.getAttribute("id");
 
-        tab.addEventListener("click", () => {
+        tab.addEventListener("click", async () => {
             document.querySelectorAll("[visibleOn]").forEach(el => {
                 const tabID = tab.id
                 const visibleID = el.getAttribute("visibleOn")
@@ -259,7 +259,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const root = document.querySelector(`.explorer-elements[data-tab="${id}"] .elements`);
                 const rootParent = document.querySelector(`.explorer-elements[data-tab="${id}"]`);
 
-                handleBugsTab(
+                await handleBugsTab(
                     {
                         root: root,
                         rootParent: rootParent,

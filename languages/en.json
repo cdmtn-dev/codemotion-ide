@@ -62,14 +62,6 @@
         "emptyAfterIcon": "to open a folder"
     },
 
-    "bugs": {
-        "segment": {
-            "all": "All",
-            "private": "Private",
-            "done": "Done"
-        }
-    },
-
     "modals": {
         "needToReloadNote": "Restart the application after changing this setting",
         "appReloadNote": "Changing this setting will restart the application",
@@ -187,6 +179,18 @@
 
             "confirmBtn": "Confirm and add globally",
             "confirmBtnPrivate": "Confirm and add privately"
+        }
+    },
+
+    "bug": {
+        "orgMore": "and %{count} more",
+        "createdBy": "Created by %{name}",
+        "assignedTo": "Assigned to %{name}",
+        "private": "Private",
+        "priority": {
+            "common": "Common priority",
+            "medium": "Medium priority",
+            "high": "High priority"
         }
     }
 }

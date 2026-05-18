@@ -2,8 +2,8 @@
     "name": "Русский",
 
     "greeting": {
-        "default": "Как ты себя чувствуешь сегодня, %{name}?",
-        "withoutUsername": "Как ты себя чувствуешь сегодня?"
+        "default": "Как вы себя чувствуете сегодня, %{name}?",
+        "withoutUsername": "Как вы себя чувствуете сегодня?"
     },
 
     "platformNotSupported": "Ваша платформа (%{platform}) не поддерживается",
@@ -17,7 +17,7 @@
         },
         "tools": {
             "title": "Инструменты",
-            "appearance": "Настройка внешнего вида"
+            "appearance": "Настройки внешнего вида"
         },
         "actions": {
             "title": "Действия",
@@ -31,7 +31,7 @@
             "installedExtensions": "Установленные расширения",
             "yourOrganizations": "Организации",
             "createOrganization": "Создать организацию",
-            "login": "Авторизация",
+            "login": "Войти",
             "logout": "Выйти"
         }
     },
@@ -39,13 +39,13 @@
     "tooltips": {
         "files": "Файлы",
         "history": "История",
-        "bugs": "Баги",
-        "pythonEmulator": "Python эмулятор",
-        "mdPreview": "MD Превью",
-        "htmlLiveServer": "Live-Server",
+        "bugs": "Ошибки",
+        "pythonEmulator": "Эмулятор Python",
+        "mdPreview": "Предпросмотр Markdown",
+        "htmlLiveServer": "Live Server",
         "errors": "Ошибки",
 
-        "codeSnippet": "Сделать скриншот",
+        "codeSnippet": "Сделать снимок экрана",
         "copy": "Копировать",
         "terminal": "Терминал",
         "jsMinify": "Минифицировать JS",
@@ -58,112 +58,139 @@
     },
 
     "explorer": {
-        "emptyBeforeIcon": "Нажмите на",
+        "emptyBeforeIcon": "Нажмите",
         "emptyAfterIcon": "чтобы открыть папку"
     },
 
-    "bugs": {
-        "segment": {
-            "all": "Все",
-            "private": "Приватные",
-            "done": "Готовые"
-        }
-    },
-
     "modals": {
-        "needToReloadNote": "После изменения этой настройки - перезапустите приложение",
+        "needToReloadNote": "Перезапустите приложение после изменения этой настройки",
         "appReloadNote": "Изменение этой настройки перезапустит приложение",
+
         "organizations": {
             "title": "Организации",
             "membersLabel": "Участники",
             "roleLabel": "Роль",
-            "ownerLabel": "Вы являетесь основателем этой организации",
-            "secondRoleLabel": "Ваша вторая роль: %{role}",
+            "ownerLabel": "Вы основатель этой организации",
+            "secondRoleLabel": "Ваша вторичная роль: %{role}",
             "ownerRoleLabel": "Основатель"
         },
+
         "appearance": {
             "title": "{{popups.tools.appearance}}",
-            "generalCategory": "Общее",
+            "generalCategory": "Общие",
             "sideBarCategory": "Боковая панель",
             "terminalCategory": "Терминал",
             "fileWindowCategory": "Окно файлов",
             "editorCategory": "Редактор",
+
             "application": {
                 "applicationLabel": "Приложение",
+
                 "uiScale": {
-                    "title": "Масштаб UI",
-                    "description": "Меняет глобальный масштаб UI"
+                    "title": "Масштаб интерфейса",
+                    "description": "Изменяет глобальный масштаб интерфейса"
                 },
+
                 "language": {
                     "title": "Язык",
-                    "description": "Выберите стандартный язык приложения"
+                    "description": "Выберите язык приложения по умолчанию"
                 },
+
                 "useSystemFonts": {
                     "title": "Использовать системные шрифты",
-                    "description": "В качестве шрифтов используются system-ui для интерфейса и monospace для редактора"
+                    "description": "Использует system-ui для интерфейса и monospace для редактора"
                 },
+
                 "splashWindow": {
-                    "title": "Стартовое окно",
-                    "description": "Следует ли скрывать стартовое окно при запуске?"
+                    "title": "Экран загрузки",
+                    "description": "Скрывать экран загрузки при запуске?"
                 },
+
                 "reduceMotion": {
-                    "title": "Уменьшить движение",
-                    "description": "Уменьшает количество визуальных эффектов во всем приложении: меньше анимации, оптимизированная анимация"
+                    "title": "Уменьшить анимации",
+                    "description": "Уменьшает визуальные эффекты по всему приложению, меньше анимаций и оптимизированные переходы"
                 },
+
                 "boldFont": {
                     "title": "Жирный шрифт",
-                    "description": "Увеличивает насыщенность шрифта во всем приложении"
+                    "description": "Увеличивает толщину шрифта во всем приложении"
                 },
+
                 "theme": {
                     "title": "Тема",
-                    "description": "Смена темы"
+                    "description": "Изменить тему приложения"
                 },
+
                 "developerMode": {
                     "title": "Режим разработчика",
-                    "description": "Включает режим разработчика"
+                    "description": "Включить инструменты разработчика и функции отладки"
                 },
+
                 "appIcons": {
-                    "title": "Значки приложения",
-                    "description": "Изменяет значок приложения во всем приложении"
+                    "title": "Иконки приложения",
+                    "description": "Изменяет иконки по всему приложению"
                 }
             },
+
             "editor": {
                 "editorLabel": "Редактор",
-                "builtInPythonCausePlatformNote": "{{platformNotSupported}}. Используется встроенная среда Python",
+
+                "builtInPythonCausePlatformNote": "{{platformNotSupported}}. Будет использована встроенная среда Python",
+
                 "textSize": {
                     "title": "Размер шрифта",
-                    "description": "Позволяет увеличить текст в редакторе до 200%"
+                    "description": "Позволяет увеличить размер текста редактора до 200%"
                 },
+
                 "smoothScroll": {
                     "title": "Плавная прокрутка",
                     "description": "Отключить плавную прокрутку в редакторе?"
                 },
+
                 "pythonRunner": {
-                    "title": "Python эмулятор",
-                    "description": "Выберите версию Python, которую вы хотите использовать",
+                    "title": "Эмулятор Python",
+                    "description": "Выберите версию Python для использования",
+
                     "select": {
-                        "builtIn": "Встроенная в IDE",
-                        "userDefined": "Пользовательская установленная"
+                        "builtIn": "Встроенный в IDE",
+                        "userDefined": "Установленный пользователем"
                     }
                 }
             }
         },
+
         "addBug": {
-            "title": "Добавить баг",
+            "title": "Добавить ошибку",
+
             "header": {
-                "title": "Добавить информацию о баге",
-                "description": "Перед отправкой сообщения об ошибке заполните все поля"
+                "title": "Добавление информации об ошибке",
+                "description": "Заполните все поля перед отправкой отчета"
             },
+
             "inputs": {
-                "name": "Имя",
+                "name": "Название",
                 "description": "Описание"
             },
+
             "privateBugSwitch": {
-                "title": "Добавить как приватный баг",
-                "description": "В таком случае баг увидите только вы"
+                "title": "Добавить как приватную ошибку",
+                "description": "В этом случае ошибку будете видеть только вы"
             },
-            "confirmBtn": "Подтвердить и добавить баг глобально",
-            "confirmBtnPrivate": "Подтвердить и добавить приватный баг"
+
+            "confirmBtn": "Подтвердить и добавить глобально",
+            "confirmBtnPrivate": "Подтвердить и добавить приватно"
+        }
+    },
+
+    "bug": {
+        "orgMore": "и ещё %{count}",
+        "createdBy": "Создано %{name}",
+        "assignedTo": "Назначено %{name}",
+        "private": "Приватная",
+        "priority": {
+            "common": "Обычный приоритет",
+            "medium": "Средний приоритет",
+            "high": "Высокий приоритет"
         }
     }
 }

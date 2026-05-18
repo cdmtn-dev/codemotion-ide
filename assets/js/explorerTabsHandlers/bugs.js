@@ -1,8 +1,11 @@
 import { setTabNameCounter, escapeHtml, createNotify, capitilize } from "../lib.js"
 import { ELEMENTS_EMPTY_TEXT_COMPONENT } from "./components.js"
 import { priorityClasses } from "../objects.js"
+import { GLS } from "../lib.js"
 
-export function handleBugsTab({ root, rootParent, bugsObject }) {
+export async function handleBugsTab({ root, rootParent, bugsObject }) {
+    const gls = await GLS.init()
+
     if (!root) return
 
     root.innerHTML = ""
@@ -40,7 +43,7 @@ export function handleBugsTab({ root, rootParent, bugsObject }) {
                 organizationsHTML = `
                     <p class="column-element__second-element clickable" data-full-org>
                         <span class="material-symbols-rounded">group</span>
-                        <span data-org-target>${escapeHtml(splitted[0])} and ${splitted.length - 1} more</span>
+                        <span data-org-target>${escapeHtml(splitted[0])} ${gls.get("bug.orgMore", { count: splitted.length - 1 })}</span>
                     </p>`
             }
             else {
@@ -77,20 +80,20 @@ export function handleBugsTab({ root, rootParent, bugsObject }) {
                             ${organizationsHTML}
                             <div class="column-element__second-element">
                                 <span class="material-symbols-rounded">person</span>
-                                Created by ${author}
+                                ${gls.get("bug.createdBy", { name: author })}
                             </div>
                             <div class="column-element__second-element">
                                 <span class="material-symbols-rounded">commit</span>
-                                Assigned to ${assignedTo.name}
+                                ${gls.get("bug.assignedTo", { name: assignedTo.name })}
                             </div>
                             ${self ? `
                             <div class="column-element__second-element">
                                 <span class="material-symbols-rounded">visibility_off</span>
-                                Private
+                                ${gls.get("bug.private")}
                             </div>
                             ` : ""}
                             <div class="column-element__second-element">
-                                ${capitilize(bugPriority.name)} priority
+                                ${gls.get(`bug.priority.${bugPriority.name}`)}
                             </div>
                         </div>
                     </div>
