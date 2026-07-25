@@ -947,8 +947,8 @@ body.explorer-resizing {
 
 
 .explorer-elements .dir-title > span {
-    font-size: 12px;
-    opacity: .2;
+    font-size: 13px;
+    opacity: 1;
     margin-top: 0;
 }
 .explorer-elements .file.ignored,
