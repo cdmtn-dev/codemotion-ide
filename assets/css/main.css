@@ -939,16 +939,9 @@ body.explorer-resizing {
     background: #ffffff12;
     cursor: pointer;
 }
-.explorer-elements .file .explorer-name {
+.explorer-elements .explorer-name {
     font-size: 13px;
     opacity: 1;
-    margin-top: 0;
-}
-
-
-.explorer-elements .dir-title > span {
-    font-size: 12px;
-    opacity: .2;
     margin-top: 0;
 }
 .explorer-elements .file.ignored,
