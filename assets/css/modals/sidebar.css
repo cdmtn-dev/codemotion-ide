@@ -126,6 +126,7 @@
     padding-right: 50px;
     width: 100%;
     position: relative;
+    overflow: auto;
 }
 .modal-body__sidebar-content.modal-columns {
     display: flex;
