@@ -20,7 +20,7 @@
 }
 .options-selector__wrapper .options-selector__items {
     background: var(--body-color-transparent);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(20px);
     border-radius: 10px;
     position: absolute;
     width: -webkit-fill-available;

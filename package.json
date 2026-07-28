@@ -6,6 +6,7 @@
     "main": "app/dist/main.js",
     "scripts": {
         "build": "tsc && tsc -p tsconfig.esm.json",
+        "test": "node --test tests/unit/*.test.mjs",
         "cdbuild": "cd codemirror && npm i && npm run build",
         "check": "biome check .",
         "check:fix": "biome check --write .",
@@ -65,6 +66,7 @@
         "chokidar": "^5.0.0",
         "error-stack-parser": "^2.1.4",
         "flashot": "^1.4.1",
+        "ignore": "^7.0.6",
         "node-global-key-listener": "^0.3.0",
         "node-gyp": "^12.4.0",
         "oxc-parser": "^0.140.0",

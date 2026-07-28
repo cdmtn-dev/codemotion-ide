@@ -668,7 +668,7 @@ body.explorer-resizing {
     left: 0;
     background: var(--body-color-transparent);
     border-bottom: 1px solid var(--block-divider-border-color);
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(20px);
     z-index: 9;
 }
 .explorer-title .gradient-blur {
