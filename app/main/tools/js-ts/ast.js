@@ -39,7 +39,7 @@ function offsetToLoc(offset, lineTable) {
 }
 
 function getLoc(node, lineTable) {
-    if (!node || !Number.isInteger(node.start) || !Number.isInteger(node.end)) {
+    if (!(node && Number.isInteger(node.start) && Number.isInteger(node.end))) {
         return null;
     }
 
@@ -121,14 +121,15 @@ function bindingToString(node) {
         case "ArrayPattern":
             return `[${(node.elements || []).map(bindingToString).join(", ")}]`;
         case "ObjectPattern":
-            return `{ ${(
-                node.properties || []
-            ).map(property => {
-                if (property?.type === "RestElement") return bindingToString(property);
-                const key = keyToString(property?.key);
-                const value = bindingToString(property?.value);
-                return property?.shorthand || key === value ? key : `${key}: ${value}`;
-            }).filter(Boolean).join(", ")} }`;
+            return `{ ${(node.properties || [])
+                .map((property) => {
+                    if (property?.type === "RestElement") return bindingToString(property);
+                    const key = keyToString(property?.key);
+                    const value = bindingToString(property?.value);
+                    return property?.shorthand || key === value ? key : `${key}: ${value}`;
+                })
+                .filter(Boolean)
+                .join(", ")} }`;
         default:
             return "";
     }
@@ -142,7 +143,9 @@ function convertNode(node, lineTable) {
             return {
                 type: "Program",
                 loc: getLoc(node, lineTable),
-                body: (node.body || []).map(child => convertNode(child, lineTable)).filter(Boolean),
+                body: (node.body || [])
+                    .map((child) => convertNode(child, lineTable))
+                    .filter(Boolean),
             };
 
         case "ImportDeclaration":
@@ -210,11 +213,11 @@ function convertImportDeclaration(node, lineTable) {
         source: literalToString(node.source),
         importKind,
         phase: node.phase || null,
-        attributes: (node.attributes || []).map(attribute => ({
+        attributes: (node.attributes || []).map((attribute) => ({
             key: importNameToString(attribute.key),
             value: literalToString(attribute.value),
         })),
-        specifiers: (node.specifiers || []).map(specifier => {
+        specifiers: (node.specifiers || []).map((specifier) => {
             const specifierKind = specifier.importKind || importKind;
             const local = specifier.local?.name || "";
 
@@ -238,9 +241,10 @@ function convertImportDeclaration(node, lineTable) {
 
 function convertImportEqualsDeclaration(node, lineTable) {
     const reference = node.moduleReference;
-    const source = reference?.type === "TSExternalModuleReference"
-        ? literalToString(reference.expression)
-        : expressionToString(reference);
+    const source =
+        reference?.type === "TSExternalModuleReference"
+            ? literalToString(reference.expression)
+            : expressionToString(reference);
 
     return {
         type: "TSImportEqualsDeclaration",
@@ -255,9 +259,9 @@ function convertVariableDeclaration(node, lineTable) {
     return {
         type: "VariableDeclaration",
         loc: getLoc(node, lineTable),
-        declarations: (node.declarations || []).map(declaration =>
-            convertVariableDeclarator(declaration, lineTable)
-        ).filter(Boolean),
+        declarations: (node.declarations || [])
+            .map((declaration) => convertVariableDeclarator(declaration, lineTable))
+            .filter(Boolean),
     };
 }
 
@@ -294,9 +298,9 @@ function convertVariableDeclarator(node, lineTable) {
         return {
             ...base,
             isObject: true,
-            properties: (init.properties || []).map(property =>
-                convertProperty(property, lineTable)
-            ).filter(Boolean),
+            properties: (init.properties || [])
+                .map((property) => convertProperty(property, lineTable))
+                .filter(Boolean),
         };
     }
 
@@ -334,13 +338,13 @@ function convertClass(node, lineTable) {
         id: { name: node.id?.name || "anonymous" },
         isAbstract: Boolean(node.abstract),
         extends: node.superClass ? [expressionToString(node.superClass)] : [],
-        implements: (node.implements || []).map(implementation =>
-            expressionToString(implementation.expression)
-        ).filter(Boolean),
+        implements: (node.implements || [])
+            .map((implementation) => expressionToString(implementation.expression))
+            .filter(Boolean),
         loc: getLoc(node, lineTable),
-        body: (node.body?.body || []).map(member =>
-            convertClassMember(member, lineTable)
-        ).filter(Boolean),
+        body: (node.body?.body || [])
+            .map((member) => convertClassMember(member, lineTable))
+            .filter(Boolean),
     };
 }
 
@@ -397,13 +401,13 @@ function convertInterface(node, lineTable) {
     return {
         type: "InterfaceDeclaration",
         id: { name: node.id?.name || "" },
-        extends: (node.extends || []).map(extension =>
-            expressionToString(extension.expression)
-        ).filter(Boolean),
+        extends: (node.extends || [])
+            .map((extension) => expressionToString(extension.expression))
+            .filter(Boolean),
         loc: getLoc(node, lineTable),
-        body: (node.body?.body || []).map(member =>
-            convertInterfaceMember(member, lineTable)
-        ).filter(Boolean),
+        body: (node.body?.body || [])
+            .map((member) => convertInterfaceMember(member, lineTable))
+            .filter(Boolean),
     };
 }
 
@@ -450,7 +454,7 @@ function convertEnum(node, lineTable) {
         type: "EnumDeclaration",
         id: { name: node.id?.name || "" },
         isConst: Boolean(node.const),
-        members: (node.members || []).map(member => ({
+        members: (node.members || []).map((member) => ({
             type: "EnumMember",
             id: { name: keyToString(member.id) },
             loc: getLoc(member, lineTable),
@@ -460,14 +464,15 @@ function convertEnum(node, lineTable) {
 }
 
 function convertModuleDeclaration(node, lineTable) {
-    const body = node.body?.type === "TSModuleBlock"
-        ? node.body.body
-        : node.body ? [node.body] : [];
+    const body =
+        node.body?.type === "TSModuleBlock" ? node.body.body : node.body ? [node.body] : [];
     return {
         type: "TSModuleDeclaration",
         id: { name: keyToString(node.id) },
         loc: getLoc(node, lineTable),
-        body: Array.isArray(body) ? body.map(child => convertNode(child, lineTable)).filter(Boolean) : [],
+        body: Array.isArray(body)
+            ? body.map((child) => convertNode(child, lineTable)).filter(Boolean)
+            : [],
     };
 }
 
@@ -506,9 +511,9 @@ function convertProperty(node, lineTable) {
             type: "Property",
             ...base,
             isObject: true,
-            properties: (value.properties || []).map(property =>
-                convertProperty(property, lineTable)
-            ).filter(Boolean),
+            properties: (value.properties || [])
+                .map((property) => convertProperty(property, lineTable))
+                .filter(Boolean),
         };
     }
 
@@ -517,10 +522,12 @@ function convertProperty(node, lineTable) {
 }
 
 function convertExpressionStatement(node, lineTable) {
-    return convertExpressionChild(node.expression, lineTable) || {
-        type: "ExpressionStatement",
-        loc: getLoc(node, lineTable),
-    };
+    return (
+        convertExpressionChild(node.expression, lineTable) || {
+            type: "ExpressionStatement",
+            loc: getLoc(node, lineTable),
+        }
+    );
 }
 
 function convertExpressionChild(node, lineTable) {
@@ -549,9 +556,9 @@ function convertExpressionChild(node, lineTable) {
             return {
                 type: "ObjectExpression",
                 loc: getLoc(node, lineTable),
-                properties: (node.properties || []).map(property =>
-                    convertProperty(property, lineTable)
-                ).filter(Boolean),
+                properties: (node.properties || [])
+                    .map((property) => convertProperty(property, lineTable))
+                    .filter(Boolean),
             };
         case "ClassExpression":
             return convertClass(node, lineTable);
@@ -572,9 +579,9 @@ function convertExpressionChild(node, lineTable) {
             return {
                 type: "SequenceExpression",
                 loc: getLoc(node, lineTable),
-                body: (node.expressions || []).map(expression =>
-                    convertExpressionChild(expression, lineTable)
-                ).filter(Boolean),
+                body: (node.expressions || [])
+                    .map((expression) => convertExpressionChild(expression, lineTable))
+                    .filter(Boolean),
             };
         default:
             return null;
@@ -586,18 +593,20 @@ function convertCallExpression(node, lineTable) {
         type: "CallExpression",
         calleeName: `${node.type === "NewExpression" ? "new " : ""}${expressionToString(node.callee)}()`,
         loc: getLoc(node, lineTable),
-        args: (node.arguments || []).map(argument =>
-            convertExpressionChild(argument, lineTable)
-        ).filter(Boolean),
+        args: (node.arguments || [])
+            .map((argument) => convertExpressionChild(argument, lineTable))
+            .filter(Boolean),
     };
 }
 
 function convertAwaitExpression(node, lineTable) {
     return {
         type: "AwaitExpression",
-        calleeName: node.argument?.type === "CallExpression" || node.argument?.type === "OptionalCallExpression"
-            ? `${expressionToString(node.argument.callee)}()`
-            : null,
+        calleeName:
+            node.argument?.type === "CallExpression" ||
+            node.argument?.type === "OptionalCallExpression"
+                ? `${expressionToString(node.argument.callee)}()`
+                : null,
         loc: getLoc(node, lineTable),
         body: [convertExpressionChild(node.argument, lineTable)].filter(Boolean),
     };
@@ -622,17 +631,17 @@ function convertImportExpression(node, lineTable) {
 }
 
 function convertIfStatement(node, lineTable) {
-    const toBlock = statement => statement?.type === "BlockStatement"
-        ? statement
-        : { body: statement ? [statement] : [] };
+    const toBlock = (statement) =>
+        statement?.type === "BlockStatement" ? statement : { body: statement ? [statement] : [] };
 
     return {
         type: "IfStatement",
         loc: getLoc(node, lineTable),
         body: convertBlockBody(toBlock(node.consequent), lineTable),
-        alternate: node.alternate?.type === "IfStatement"
-            ? [convertIfStatement(node.alternate, lineTable)]
-            : convertBlockBody(toBlock(node.alternate), lineTable),
+        alternate:
+            node.alternate?.type === "IfStatement"
+                ? [convertIfStatement(node.alternate, lineTable)]
+                : convertBlockBody(toBlock(node.alternate), lineTable),
     };
 }
 
@@ -641,16 +650,20 @@ function convertTryStatement(node, lineTable) {
         type: "TryStatement",
         loc: getLoc(node, lineTable),
         body: convertBlockBody(node.block, lineTable),
-        handler: node.handler ? {
-            type: "CatchClause",
-            loc: getLoc(node.handler, lineTable),
-            body: convertBlockBody(node.handler.body, lineTable),
-        } : null,
-        finalizer: node.finalizer ? {
-            type: "FinallyClause",
-            loc: getLoc(node.finalizer, lineTable),
-            body: convertBlockBody(node.finalizer, lineTable),
-        } : null,
+        handler: node.handler
+            ? {
+                  type: "CatchClause",
+                  loc: getLoc(node.handler, lineTable),
+                  body: convertBlockBody(node.handler.body, lineTable),
+              }
+            : null,
+        finalizer: node.finalizer
+            ? {
+                  type: "FinallyClause",
+                  loc: getLoc(node.finalizer, lineTable),
+                  body: convertBlockBody(node.finalizer, lineTable),
+              }
+            : null,
     };
 }
 
@@ -660,8 +673,10 @@ function convertLoopStatement(node, lineTable) {
         loc: getLoc(node, lineTable),
         init: convertNode(node.init, lineTable),
         body: convertBlockBody(
-            node.body?.type === "BlockStatement" ? node.body : { body: node.body ? [node.body] : [] },
-            lineTable
+            node.body?.type === "BlockStatement"
+                ? node.body
+                : { body: node.body ? [node.body] : [] },
+            lineTable,
         ),
     };
 }
@@ -670,8 +685,10 @@ function convertSwitchStatement(node, lineTable) {
     return {
         type: "SwitchStatement",
         loc: getLoc(node, lineTable),
-        body: (node.cases || []).flatMap(switchCase =>
-            (switchCase.consequent || []).map(statement => convertStatement(statement, lineTable)).filter(Boolean)
+        body: (node.cases || []).flatMap((switchCase) =>
+            (switchCase.consequent || [])
+                .map((statement) => convertStatement(statement, lineTable))
+                .filter(Boolean),
         ),
     };
 }
@@ -686,8 +703,8 @@ function convertExportDeclaration(node, lineTable) {
 }
 
 function convertBlockBody(node, lineTable) {
-    if (!node?.body || !Array.isArray(node.body)) return [];
-    return node.body.map(statement => convertStatement(statement, lineTable)).filter(Boolean);
+    if (!(node?.body && Array.isArray(node.body))) return [];
+    return node.body.map((statement) => convertStatement(statement, lineTable)).filter(Boolean);
 }
 
 function convertStatement(node, lineTable) {
@@ -713,9 +730,9 @@ function convertStatement(node, lineTable) {
 }
 
 function typeParameterNames(typeParameters) {
-    return (typeParameters?.params || []).map(parameter => {
-        return parameter.name?.name || parameter.name || "";
-    }).filter(Boolean);
+    return (typeParameters?.params || [])
+        .map((parameter) => parameter.name?.name || parameter.name || "")
+        .filter(Boolean);
 }
 
 function serializeTypeAnnotation(node) {
@@ -727,58 +744,88 @@ function serializeType(node) {
     if (!node) return null;
 
     switch (node.type) {
-        case "TSStringKeyword": return "string";
-        case "TSNumberKeyword": return "number";
-        case "TSBooleanKeyword": return "boolean";
-        case "TSAnyKeyword": return "any";
-        case "TSUnknownKeyword": return "unknown";
-        case "TSNeverKeyword": return "never";
-        case "TSVoidKeyword": return "void";
-        case "TSNullKeyword": return "null";
-        case "TSUndefinedKeyword": return "undefined";
-        case "TSObjectKeyword": return "object";
-        case "TSSymbolKeyword": return "symbol";
-        case "TSBigIntKeyword": return "bigint";
-        case "TSIntrinsicKeyword": return "intrinsic";
-        case "TSArrayType": return `${serializeType(node.elementType)}[]`;
-        case "TSUnionType": return (node.types || []).map(serializeType).join(" | ");
-        case "TSIntersectionType": return (node.types || []).map(serializeType).join(" & ");
+        case "TSStringKeyword":
+            return "string";
+        case "TSNumberKeyword":
+            return "number";
+        case "TSBooleanKeyword":
+            return "boolean";
+        case "TSAnyKeyword":
+            return "any";
+        case "TSUnknownKeyword":
+            return "unknown";
+        case "TSNeverKeyword":
+            return "never";
+        case "TSVoidKeyword":
+            return "void";
+        case "TSNullKeyword":
+            return "null";
+        case "TSUndefinedKeyword":
+            return "undefined";
+        case "TSObjectKeyword":
+            return "object";
+        case "TSSymbolKeyword":
+            return "symbol";
+        case "TSBigIntKeyword":
+            return "bigint";
+        case "TSIntrinsicKeyword":
+            return "intrinsic";
+        case "TSArrayType":
+            return `${serializeType(node.elementType)}[]`;
+        case "TSUnionType":
+            return (node.types || []).map(serializeType).join(" | ");
+        case "TSIntersectionType":
+            return (node.types || []).map(serializeType).join(" & ");
         case "TSTypeReference": {
             const parameters = node.typeArguments?.params || node.typeParameters?.params || [];
             const args = parameters.map(serializeType).join(", ");
             const name = expressionToString(node.typeName);
             return args ? `${name}<${args}>` : name;
         }
-        case "TSLiteralType": return JSON.stringify(node.literal?.value);
-        case "TSTupleType": return `[${(node.elementTypes || []).map(serializeType).join(", ")}]`;
+        case "TSLiteralType":
+            return JSON.stringify(node.literal?.value);
+        case "TSTupleType":
+            return `[${(node.elementTypes || []).map(serializeType).join(", ")}]`;
         case "TSFunctionType": {
-            const parameters = (node.params || []).map(parameter => {
-                const name = bindingToString(parameter);
-                const type = serializeTypeAnnotation(parameter.typeAnnotation);
-                return type ? `${name}: ${type}` : name;
-            }).join(", ");
+            const parameters = (node.params || [])
+                .map((parameter) => {
+                    const name = bindingToString(parameter);
+                    const type = serializeTypeAnnotation(parameter.typeAnnotation);
+                    return type ? `${name}: ${type}` : name;
+                })
+                .join(", ");
             return `(${parameters}) => ${serializeTypeAnnotation(node.returnType)}`;
         }
-        case "TSConstructorType": return `new (...) => ${serializeTypeAnnotation(node.returnType)}`;
-        case "TSParenthesizedType": return `(${serializeType(node.typeAnnotation)})`;
-        case "TSOptionalType": return `${serializeType(node.typeAnnotation)}?`;
-        case "TSRestType": return `...${serializeType(node.typeAnnotation)}`;
+        case "TSConstructorType":
+            return `new (...) => ${serializeTypeAnnotation(node.returnType)}`;
+        case "TSParenthesizedType":
+            return `(${serializeType(node.typeAnnotation)})`;
+        case "TSOptionalType":
+            return `${serializeType(node.typeAnnotation)}?`;
+        case "TSRestType":
+            return `...${serializeType(node.typeAnnotation)}`;
         case "TSConditionalType":
             return `${serializeType(node.checkType)} extends ${serializeType(node.extendsType)} ? ${serializeType(node.trueType)} : ${serializeType(node.falseType)}`;
         case "TSIndexedAccessType":
             return `${serializeType(node.objectType)}[${serializeType(node.indexType)}]`;
-        case "TSTypeOperator": return `${node.operator} ${serializeType(node.typeAnnotation)}`;
-        case "TSInferType": return `infer ${serializeType(node.typeParameter)}`;
+        case "TSTypeOperator":
+            return `${node.operator} ${serializeType(node.typeAnnotation)}`;
+        case "TSInferType":
+            return `infer ${serializeType(node.typeParameter)}`;
         case "TSTypePredicate":
             return `${expressionToString(node.parameterName)} is ${serializeTypeAnnotation(node.typeAnnotation)}`;
-        case "TSImportType": return `import(${JSON.stringify(literalToString(node.argument))})`;
-        case "TSMappedType": return "{ [K in ...]: ... }";
-        case "TSNamedTupleMember": return `${keyToString(node.label)}: ${serializeType(node.elementType)}`;
-        default: return node.type || null;
+        case "TSImportType":
+            return `import(${JSON.stringify(literalToString(node.argument))})`;
+        case "TSMappedType":
+            return "{ [K in ...]: ... }";
+        case "TSNamedTupleMember":
+            return `${keyToString(node.label)}: ${serializeType(node.elementType)}`;
+        default:
+            return node.type || null;
     }
 }
 
-function buildAST(code, language = "js") {
+function buildAst(code, language = "js") {
     const lang = normalizeLanguage(language);
 
     try {
@@ -787,18 +834,24 @@ function buildAST(code, language = "js") {
             sourceType: "unambiguous",
             preserveParens: false,
         });
-        return convertNode(result.program, buildLineTable(code)) || {
-            type: "Program",
-            loc: null,
-            body: [],
-        };
+        return (
+            convertNode(result.program, buildLineTable(code)) || {
+                type: "Program",
+                loc: null,
+                body: [],
+            }
+        );
     } catch (error) {
         console.error("Oxc AST parse error:", error);
         return { type: "Program", loc: null, body: [] };
     }
 }
 
-ipcMain.handle("javascript-ast", (_, code, language = "js") => buildAST(code, normalizeLanguage(language, "js")));
-ipcMain.handle("typescript-ast", (_, code, language = "ts") => buildAST(code, normalizeLanguage(language, "ts")));
+ipcMain.handle("javascript-ast", (_, code, language = "js") =>
+    buildAst(code, normalizeLanguage(language, "js")),
+);
+ipcMain.handle("typescript-ast", (_, code, language = "ts") =>
+    buildAst(code, normalizeLanguage(language, "ts")),
+);
 
-module.exports = { buildAST, normalizeLanguage };
+module.exports = { buildAST: buildAst, normalizeLanguage };

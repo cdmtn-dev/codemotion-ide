@@ -1,55 +1,55 @@
-const explorerSidebar = document.querySelector(".explorer")
-const sidebarHideBottomBtn = document.querySelector("#sidebar-hide")
+const explorerSidebar = document.querySelector(".explorer");
+const sidebarHideBottomBtn = document.querySelector("#sidebar-hide");
 
-const localStorageKey = "codemotion.explorerSidebarVisible"
+const localStorageKey = "codemotion.explorerSidebarVisible";
 
 export class ExplorerSidebar {
     static init() {
-        if(this.getState()) {
-            explorerSidebar.classList.remove("zero-width")
-        }
-        else {
-            explorerSidebar.classList.add("zero-width")
+        if (ExplorerSidebar.getState()) {
+            explorerSidebar.classList.remove("zero-width");
+        } else {
+            explorerSidebar.classList.add("zero-width");
         }
     }
     static getState() {
-        return localStorage.getItem(localStorageKey) == null ? false : JSON.parse(localStorage.getItem(localStorageKey))
+        return localStorage.getItem(localStorageKey) == null
+            ? false
+            : JSON.parse(localStorage.getItem(localStorageKey));
     }
     static setZeroWidth() {
-        localStorage.setItem(localStorageKey, false)
+        localStorage.setItem(localStorageKey, false);
 
-        explorerSidebar.classList.add("zero-width")
-        sidebarHideBottomBtn.classList.remove("active")
+        explorerSidebar.classList.add("zero-width");
+        sidebarHideBottomBtn.classList.remove("active");
     }
     static setDefaultWidth() {
-        localStorage.setItem(localStorageKey, true)
+        localStorage.setItem(localStorageKey, true);
 
-        explorerSidebar.classList.remove("zero-width")
-        sidebarHideBottomBtn.classList.add("active")
+        explorerSidebar.classList.remove("zero-width");
+        sidebarHideBottomBtn.classList.add("active");
     }
     static isToggled() {
-        return explorerSidebar.classList.contains("zero-width")
+        return explorerSidebar.classList.contains("zero-width");
     }
     static toggleWidth() {
-        if(this.isToggled()) {
-            this.setDefaultWidth()
-        }
-        else {
-            this.setZeroWidth()
+        if (ExplorerSidebar.isToggled()) {
+            ExplorerSidebar.setDefaultWidth();
+        } else {
+            ExplorerSidebar.setZeroWidth();
         }
     }
 
     static bindEvent(name) {
         setTimeout(() => {
-            if(name == "showInSidebarItemClick") {
-                const sidebarItems = document.querySelectorAll(".sidebar-item")
+            if (name == "showInSidebarItemClick") {
+                const sidebarItems = document.querySelectorAll(".sidebar-item");
 
-                sidebarItems.forEach(i => {
+                sidebarItems.forEach((i) => {
                     i.addEventListener("click", () => {
-                        this.setDefaultWidth()
-                    })
-                })
+                        ExplorerSidebar.setDefaultWidth();
+                    });
+                });
             }
-        }, 500)
+        }, 500);
     }
 }

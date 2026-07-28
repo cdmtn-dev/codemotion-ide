@@ -1,5 +1,9 @@
-import { ipcMain, IpcMainInvokeEvent } from "electron";
-import os from "node:os"
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import process from "node:process";
+import { type IpcMainInvokeEvent, ipcMain } from "electron";
+import { ASSETS_PATH } from "../helpers/paths";
 import {
     getAllLanguages,
     getAllLanguagesJSON,
@@ -10,37 +14,28 @@ import {
     getUsedLanguagesByPath,
     getUserToken,
     readFilesInFolder,
-    readSettings
+    readSettings,
 } from "../helpers/requests";
-import path from "node:path";
-import fs from "node:fs"
-import { ASSETS_PATH } from "../helpers/paths";
 
-ipcMain.handle('get-package-data', async () => {
-    return getPackageData()
-});
-ipcMain.handle('get-local-bugs-data', async () => {
-    return getLocalBugsData()
-});
-ipcMain.handle("get-user-pc-info", async () => {
-    return {
-        platform: process.platform,
-        arch: process.arch,
-        cpus: os.cpus().length,
-        totalMemory: os.totalmem(),
-        freeMemory: os.freemem(),
-        hostname: os.hostname(),
-        homedir: os.homedir()
-    };
-});
-ipcMain.handle('get-all-app-icons', () => {
+ipcMain.handle("get-package-data", async () => getPackageData());
+ipcMain.handle("get-local-bugs-data", async () => getLocalBugsData());
+ipcMain.handle("get-user-pc-info", async () => ({
+    platform: process.platform,
+    arch: process.arch,
+    cpus: os.cpus().length,
+    totalMemory: os.totalmem(),
+    freeMemory: os.freemem(),
+    hostname: os.hostname(),
+    homedir: os.homedir(),
+}));
+ipcMain.handle("get-all-app-icons", () => {
     try {
         return readFilesInFolder("assets/media/icons/symbols/files");
     } catch (e) {
         return [];
     }
 });
-ipcMain.handle('get-all-filenames-app-icons', () => {
+ipcMain.handle("get-all-filenames-app-icons", () => {
     try {
         return readFilesInFolder("assets/media/icons/symbols/files");
     } catch (e) {
@@ -49,49 +44,34 @@ ipcMain.handle('get-all-filenames-app-icons', () => {
 });
 ipcMain.handle("get-app-icons", async () => {
     try {
-        const dir = path.join(ASSETS_PATH, "media", "app-icons")
-        const files = await fs.promises.readdir(dir)
-        const result = []
+        const dir = path.join(ASSETS_PATH, "media", "app-icons");
+        const files = await fs.promises.readdir(dir);
+        const result = [];
 
         for (const file of files) {
-            const fullPath = path.join(dir, file)
-            const stat = await fs.promises.stat(fullPath)
+            const fullPath = path.join(dir, file);
+            const stat = await fs.promises.stat(fullPath);
 
             if (stat.isFile()) {
-                result.push(file)
+                result.push(file);
             }
         }
 
-        return result
+        return result;
     } catch (err) {
-        console.error("get-app-icons error:", err)
-        return []
+        console.error("get-app-icons error:", err);
+        return [];
     }
-})
-ipcMain.handle("get-app-local", async () => {
-    return await getLocalAppData()
-})
-ipcMain.handle("get-all-languages", async () => {
-    return await getAllLanguages()
-})
-ipcMain.handle("get-all-languages-json", async () => {
-    return await getAllLanguagesJSON()
-})
-ipcMain.handle("get-app-icon", async () => {
-    return await getAppIcon()
-})
-ipcMain.handle("get-dirname", async () => {
-    return __dirname
-})
-ipcMain.handle("get-platform", () => {
-    return process.platform
-})
-ipcMain.handle("get-user-token", async () => {
-    return await getUserToken()
-})
-ipcMain.handle("get-used-languages-by-path", async (_: IpcMainInvokeEvent, targetPath: string) => {
-    return await getUsedLanguagesByPath(targetPath)
-})
-ipcMain.handle("read-settings", () => {
-    return readSettings();
 });
+ipcMain.handle("get-app-local", async () => await getLocalAppData());
+ipcMain.handle("get-all-languages", async () => await getAllLanguages());
+ipcMain.handle("get-all-languages-json", async () => await getAllLanguagesJSON());
+ipcMain.handle("get-app-icon", async () => await getAppIcon());
+ipcMain.handle("get-dirname", async () => __dirname);
+ipcMain.handle("get-platform", () => process.platform);
+ipcMain.handle("get-user-token", async () => await getUserToken());
+ipcMain.handle(
+    "get-used-languages-by-path",
+    async (_: IpcMainInvokeEvent, targetPath: string) => await getUsedLanguagesByPath(targetPath),
+);
+ipcMain.handle("read-settings", () => readSettings());

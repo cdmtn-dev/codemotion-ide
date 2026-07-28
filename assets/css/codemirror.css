@@ -29,11 +29,11 @@
 }
 
 .cm-scroller::-webkit-scrollbar-thumb:hover {
-    opacity: .5;
+    opacity: 0.5;
 }
 
 /* data color */
 
 span[data-color] {
-    outline: 1px solid var(--block-divider-border-color)!important;
+    outline: 1px solid var(--block-divider-border-color) !important;
 }

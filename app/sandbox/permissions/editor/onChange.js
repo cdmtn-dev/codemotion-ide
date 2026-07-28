@@ -11,8 +11,8 @@ function callback(data) {
         cb(
             getAceTriggeredData({
                 data: rawData,
-                mainSender
-            })
+                mainSender,
+            }),
         );
     });
 }

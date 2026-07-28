@@ -1,7 +1,7 @@
-const { spawn, spawnSync } = require('child_process');
-const { ipcMain } = require('electron');
-const fs = require('fs');
-const os = require('os');
+const { spawn, spawnSync } = require("child_process");
+const { ipcMain } = require("electron");
+const fs = require("fs");
+const os = require("os");
 
 class TerminalManager {
     constructor() {
@@ -14,9 +14,9 @@ class TerminalManager {
         // configure fish, bash, or other shells. Hardcoding /bin/bash
         // breaks terminal for non-bash users. We read $SHELL and
         // validate the binary exists before using it.
-        
-        if (process.platform === 'win32') {
-            return 'cmd.exe';
+
+        if (process.platform === "win32") {
+            return "cmd.exe";
         }
 
         const userShell = process.env.SHELL;
@@ -25,25 +25,25 @@ class TerminalManager {
             return userShell;
         }
 
-        for (const shell of ['/bin/zsh', '/bin/bash', '/bin/sh']) {
+        for (const shell of ["/bin/zsh", "/bin/bash", "/bin/sh"]) {
             if (fs.existsSync(shell)) {
                 return shell;
             }
         }
 
-        return '/bin/sh';
+        return "/bin/sh";
     }
 
     validateWorkDir(cwd) {
-        if (!cwd || !fs.existsSync(cwd)) {
+        if (!(cwd && fs.existsSync(cwd))) {
             console.log("[Terminal] Path does not exist, using default: " + process.cwd());
             return process.cwd();
         }
 
         const stat = fs.statSync(cwd);
-        
+
         if (stat.isFile()) {
-            const path = require('path');
+            const path = require("path");
             const dirname = path.dirname(cwd);
             console.log(`[Terminal] Path is a file, using directory: ${dirname}`);
             return dirname;
@@ -53,20 +53,22 @@ class TerminalManager {
             return cwd;
         }
 
-        console.log("[Terminal] Path is neither file nor directory, using default: " + process.cwd());
+        console.log(
+            "[Terminal] Path is neither file nor directory, using default: " + process.cwd(),
+        );
         return process.cwd();
     }
 
     handleOutput(data, type, event) {
         const output = data.toString();
-        const prefix = type === 'stderr' ? '[ERR] ' : '';
-        
+        const prefix = type === "stderr" ? "[ERR] " : "";
+
         console.log(`[Terminal ${type}] ${output}`);
-        
+
         event.sender.send("terminal-result", {
-            type: type === 'stderr' ? 'error' : 'output',
+            type: type === "stderr" ? "error" : "output",
             data: prefix + output,
-            timestamp: Date.now()
+            timestamp: Date.now(),
         });
     }
 
@@ -89,16 +91,16 @@ class TerminalManager {
         const pid = this.activeProcess.pid;
 
         try {
-            if (process.platform === 'win32') {
-                const args = ['/pid', String(pid), '/T'];
-                if (force) args.push('/F');
+            if (process.platform === "win32") {
+                const args = ["/pid", String(pid), "/T"];
+                if (force) args.push("/F");
 
-                spawnSync('taskkill.exe', args, {
+                spawnSync("taskkill.exe", args, {
                     windowsHide: true,
-                    stdio: 'ignore'
+                    stdio: "ignore",
                 });
             } else {
-                this.activeProcess.kill(force ? 'SIGKILL' : 'SIGTERM');
+                this.activeProcess.kill(force ? "SIGKILL" : "SIGTERM");
             }
         } catch (err) {
             console.error(`[Terminal] Error killing process tree: ${err.message}`);
@@ -110,8 +112,8 @@ class TerminalManager {
 
         if (this.activeProcess) {
             event.sender.send("terminal-result", {
-                type: 'warning',
-                data: 'Another process is already running. Kill it first.\r\n'
+                type: "warning",
+                data: "Another process is already running. Kill it first.\r\n",
             });
             return;
         }
@@ -123,22 +125,22 @@ class TerminalManager {
         console.log(`[Terminal] Using shell: ${shell}`);
 
         try {
-            const isWindows = process.platform === 'win32';
-            const spawnArgs = isWindows ? ['/c', cmd] : ['-c', cmd];
-            const spawnShell = isWindows ? 'cmd.exe' : shell;
+            const isWindows = process.platform === "win32";
+            const spawnArgs = isWindows ? ["/c", cmd] : ["-c", cmd];
+            const spawnShell = isWindows ? "cmd.exe" : shell;
 
             this.activeProcess = spawn(spawnShell, spawnArgs, {
                 cwd: workDir,
                 shell: false,
-                stdio: ['pipe', 'pipe', 'pipe'],
+                stdio: ["pipe", "pipe", "pipe"],
                 env: {
                     ...process.env,
-                    TERM: 'xterm-256color'
-                }
+                    TERM: "xterm-256color",
+                },
             });
 
-            if (!this.activeProcess || !this.activeProcess.pid) {
-                const errorMsg = 'Failed to spawn process - check shell path and arguments';
+            if (!(this.activeProcess && this.activeProcess.pid)) {
+                const errorMsg = "Failed to spawn process - check shell path and arguments";
                 console.error(`[Terminal] ${errorMsg}`);
                 throw new Error(errorMsg);
             }
@@ -146,20 +148,20 @@ class TerminalManager {
             console.log(`[Terminal] Process spawned with PID: ${this.activeProcess.pid}`);
 
             this.activeProcess.stdout.on("data", (data) => {
-                this.handleOutput(data, 'stdout', event);
+                this.handleOutput(data, "stdout", event);
             });
 
             this.activeProcess.stderr.on("data", (data) => {
-                this.handleOutput(data, 'stderr', event);
+                this.handleOutput(data, "stderr", event);
             });
 
             this.activeProcess.on("close", (code) => {
                 console.log(`[Terminal] Process exited with code ${code}`);
-                
+
                 event.sender.send("terminal-result", {
-                    type: 'exit',
+                    type: "exit",
                     data: `\r\nProcess exited with code ${code}\r\n`,
-                    exitCode: code
+                    exitCode: code,
                 });
 
                 this.activeProcess = null;
@@ -168,10 +170,10 @@ class TerminalManager {
 
             this.activeProcess.on("error", (err) => {
                 console.error(`[Terminal] Error: ${err.message}`);
-                
+
                 event.sender.send("terminal-result", {
-                    type: 'error',
-                    data: `Error: ${err.message}\r\n`
+                    type: "error",
+                    data: `Error: ${err.message}\r\n`,
                 });
 
                 this.activeProcess = null;
@@ -183,27 +185,26 @@ class TerminalManager {
             this.inputHandler = (e, input) => {
                 if (this.activeProcess && !this.activeProcess.killed) {
                     try {
-                        const inputWithNewline = input.endsWith('\n') ? input : input + '\n';
+                        const inputWithNewline = input.endsWith("\n") ? input : input + "\n";
                         this.activeProcess.stdin.write(inputWithNewline);
                         console.log(`[Terminal] Sent input: ${input}`);
                     } catch (err) {
                         console.error("Error writing to stdin:", err.message);
                         event.sender.send("terminal-result", {
-                            type: 'error',
-                            data: `Error writing to stdin: ${err.message}\r\n`
+                            type: "error",
+                            data: `Error writing to stdin: ${err.message}\r\n`,
                         });
                     }
                 }
             };
 
             ipcMain.on("terminal-input", this.inputHandler);
-
         } catch (err) {
             console.error(`[Terminal] Catch error: ${err.message}`);
-            
+
             event.sender.send("terminal-result", {
-                type: 'error',
-                data: `Failed to execute command: ${err.message}\r\n`
+                type: "error",
+                data: `Failed to execute command: ${err.message}\r\n`,
             });
 
             this.activeProcess = null;
@@ -228,20 +229,19 @@ class TerminalManager {
 
             const forceKillTimeout = setTimeout(() => {
                 if (this.activeProcess && !this.activeProcess.killed) {
-                    console.log(`[Terminal] Force killing process`);
+                    console.log("[Terminal] Force killing process");
                     this.killProcessTree(true);
                 }
             }, 2000);
 
-            this.activeProcess.on('exit', () => {
+            this.activeProcess.on("exit", () => {
                 clearTimeout(forceKillTimeout);
             });
-
         } catch (err) {
             console.error(`[Terminal] Error killing process: ${err.message}`);
             event.sender.send("terminal-result", {
-                type: 'error',
-                data: `Error killing process: ${err.message}\r\n`
+                type: "error",
+                data: `Error killing process: ${err.message}\r\n`,
             });
         }
     }

@@ -1,68 +1,65 @@
 function createRangeLabels(properties = {}) {
-    const min = properties.min
-    const max = properties.max
-    const prefix = properties.prefix
+    const min = properties.min;
+    const max = properties.max;
+    const prefix = properties.prefix;
 
-    const middle = (min + max) / 2
+    const middle = (min + max) / 2;
 
     return `
         <div>${min}${prefix}</div>
         <div>${middle}${prefix}</div>
         <div>${max}${prefix}</div>
-    `
+    `;
 }
 
 export function renderRange(properties = {}) {
-    const id = properties.id
-    const title = properties.title
-    const description = properties.description
+    const id = properties.id;
+    const title = properties.title;
+    const description = properties.description;
 
-    const min = properties.min
-    const max = properties.max
-    const value = properties.value
-    const step = properties.step
-    const prefix = properties.prefix
+    const min = properties.min;
+    const max = properties.max;
+    const value = properties.value;
+    const step = properties.step;
+    const prefix = properties.prefix;
 
-    const wrapper = document.createElement("div")
-    wrapper.classList.add("modal-category__item")
-    
-    const element = document.createElement("div")
-    element.classList.add("modal-category__range")
+    const wrapper = document.createElement("div");
+    wrapper.classList.add("modal-category__item");
 
-    const input = document.createElement("input")
-    input.type = "range"
-    input.id = id
-    input.min = min
-    input.max = max
-    input.value = value
-    input.step = step
+    const element = document.createElement("div");
+    element.classList.add("modal-category__range");
 
-    const footer = document.createElement("div")
-    footer.classList.add("modal-category__range-footer")
+    const input = document.createElement("input");
+    input.type = "range";
+    input.id = id;
+    input.min = min;
+    input.max = max;
+    input.value = value;
+    input.step = step;
 
-    footer.innerHTML = createRangeLabels(
-        {
-            min: min,
-            max: max,
-            prefix: prefix
-        }
-    )
+    const footer = document.createElement("div");
+    footer.classList.add("modal-category__range-footer");
 
-    const elementTitle = document.createElement("div")
-    elementTitle.classList.add("modal-category__item-title")
-    elementTitle.textContent = title
+    footer.innerHTML = createRangeLabels({
+        min,
+        max,
+        prefix,
+    });
 
-    const elementDesc = document.createElement("div")
-    elementDesc.classList.add("modal-category__item-desc")
-    elementDesc.textContent = description
-    
+    const elementTitle = document.createElement("div");
+    elementTitle.classList.add("modal-category__item-title");
+    elementTitle.textContent = title;
 
-    element.appendChild(input)
-    element.appendChild(footer)
+    const elementDesc = document.createElement("div");
+    elementDesc.classList.add("modal-category__item-desc");
+    elementDesc.textContent = description;
 
-    wrapper.appendChild(elementTitle)
-    wrapper.appendChild(elementDesc)
-    wrapper.appendChild(element)
+    element.appendChild(input);
+    element.appendChild(footer);
 
-    return wrapper
+    wrapper.appendChild(elementTitle);
+    wrapper.appendChild(elementDesc);
+    wrapper.appendChild(element);
+
+    return wrapper;
 }

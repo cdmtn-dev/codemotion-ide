@@ -4,7 +4,7 @@ export class _GetOrgAvatar {
     static async get(id, size = "default") {
         if (!id || id <= 0) return false;
 
-        const url = `${host}/media/org-avatar/${id}.jpg?s=${size}&v=${Math.floor(Math.random() * 99999)}`;
+        const url = `${host}/media/org-avatar/${id}.jpg?s=${size}&v=${Math.floor(Math.random() * 99_999)}`;
 
         try {
             const response = await fetch(url, {

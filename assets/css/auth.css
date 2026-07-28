@@ -7,7 +7,7 @@
     justify-content: center;
     flex-direction: column;
     opacity: 0;
-    transition: .4s;
+    transition: 0.4s;
 }
 
 .auth-visibility__change {
@@ -16,6 +16,6 @@
     right: -40px;
     top: 15px;
     color: var(--text-color);
-    opacity: .2;
+    opacity: 0.2;
     cursor: pointer;
 }

@@ -1,114 +1,114 @@
-import { idify } from "../lib.js"
+import { idify } from "../lib.js";
 
 export class _TopBarElement {
-    static instances = new Map()
+    static instances = new Map();
 
     constructor(id) {
-        const normalizedId = idify(id)
+        const normalizedId = idify(id);
 
         if (_TopBarElement.instances.has(normalizedId)) {
-	        return _TopBarElement.instances.get(normalizedId)
+            return _TopBarElement.instances.get(normalizedId);
         }
 
-	    this.parent = document.querySelector("#topbarCenter .status-indicator")
+        this.parent = document.querySelector("#topbarCenter .status-indicator");
 
-        let item = document.querySelector(`#${normalizedId}`)
+        let item = document.querySelector(`#${normalizedId}`);
 
         if (!item) {
-            item = document.createElement("div")
-            item.className = "topbar-center hidden"
-            item.id = normalizedId
+            item = document.createElement("div");
+            item.className = "topbar-center hidden";
+            item.id = normalizedId;
 
-            this.parent.before(item)
+            this.parent.before(item);
         }
 
-        this.item = item
-        this._animationToken = 0
+        this.item = item;
+        this._animationToken = 0;
 
-        _TopBarElement.instances.set(normalizedId, this)
+        _TopBarElement.instances.set(normalizedId, this);
     }
 
     content({ text, icon, type, image }) {
-        this.item.innerHTML = ""
+        this.item.innerHTML = "";
 
-        const container = document.createElement("div")
-        container.className = "topbar-center__row"
+        const container = document.createElement("div");
+        container.className = "topbar-center__row";
 
-        if(image) {
-            icon = false
+        if (image) {
+            icon = false;
 
-            const imageEl = document.createElement("img")
-            imageEl.className = "topbar-center__image-icon"
-            imageEl.src = image
-            imageEl.id = "icon"
+            const imageEl = document.createElement("img");
+            imageEl.className = "topbar-center__image-icon";
+            imageEl.src = image;
+            imageEl.id = "icon";
 
-            container.appendChild(imageEl)
+            container.appendChild(imageEl);
         }
 
         if (icon) {
-            const iconEl = document.createElement("span")
-            iconEl.className = "material-symbols-rounded"
-            iconEl.id = "icon"
-            iconEl.textContent = icon
+            const iconEl = document.createElement("span");
+            iconEl.className = "material-symbols-rounded";
+            iconEl.id = "icon";
+            iconEl.textContent = icon;
 
-            container.appendChild(iconEl)
+            container.appendChild(iconEl);
         }
 
         if (text) {
-            const textEl = document.createElement("div")
-            textEl.className = "topbar-center__text"
-            textEl.textContent = text
+            const textEl = document.createElement("div");
+            textEl.className = "topbar-center__text";
+            textEl.textContent = text;
 
-            container.appendChild(textEl)
+            container.appendChild(textEl);
         }
 
         if (type) {
-            const types = ["default", "notification", "danger"]
+            const types = ["default", "notification", "danger"];
 
-            this.item.classList.remove(...types)
+            this.item.classList.remove(...types);
 
             if (types.includes(type)) {
-                this.item.classList.add(type)
+                this.item.classList.add(type);
             }
         }
 
-        this.item.appendChild(container)
+        this.item.appendChild(container);
     }
 
     show() {
-        const el = this.item
-        const icon = el.querySelector("#icon")
-        const text = el.querySelector(".topbar-center__text")
+        const el = this.item;
+        const icon = el.querySelector("#icon");
+        const text = el.querySelector(".topbar-center__text");
 
-        el.classList.remove("hidden")
+        el.classList.remove("hidden");
 
-        if (icon) icon.style.marginLeft = "0px"
-        if (text) text.classList.remove("hidden")
+        if (icon) icon.style.marginLeft = "0px";
+        if (text) text.classList.remove("hidden");
 
-        const container = el.querySelector(".topbar-center__row")
-        const targetWidth = container ? container.scrollWidth : el.scrollWidth
-        void el.offsetHeight
+        const container = el.querySelector(".topbar-center__row");
+        const targetWidth = container ? container.scrollWidth : el.scrollWidth;
+        void el.offsetHeight;
 
-        el.style.maxWidth = targetWidth + "px"
-        el.style.minWidth = targetWidth + "px"
+        el.style.maxWidth = targetWidth + "px";
+        el.style.minWidth = targetWidth + "px";
     }
 
     hide({ iconVisible = false } = {}) {
-        const el = this.item
-        const icon = el.querySelector("#icon")
-        const text = el.querySelector(".topbar-center__text")
+        const el = this.item;
+        const icon = el.querySelector("#icon");
+        const text = el.querySelector(".topbar-center__text");
 
-        const token = ++this._animationToken
+        const token = ++this._animationToken;
 
-        if (!iconVisible) {
-            el.style.maxWidth = "0px"
-            el.style.minWidth = "0px"
+        if (iconVisible) {
+            el.style.maxWidth = "20px";
+            el.style.minWidth = "20px";
+
+            if (icon) icon.style.marginLeft = "-5px";
+            if (text) text.classList.add("hidden");
         } else {
-            el.style.maxWidth = "20px"
-            el.style.minWidth = "20px"
-
-            if (icon) icon.style.marginLeft = "-5px"
-            if (text) text.classList.add("hidden")
+            el.style.maxWidth = "0px";
+            el.style.minWidth = "0px";
         }
     }
 
@@ -116,18 +116,18 @@ export class _TopBarElement {
         const events = {
             hover: "mouseenter",
             unhover: "mouseleave",
-            click: "click"
-        }
+            click: "click",
+        };
 
         if (event in events) {
             this.item.addEventListener(events[event], () => {
-                callback(this)
-            })
+                callback(this);
+            });
         }
     }
 
     destroy() {
-        this.item.remove()
-        _TopBarElement.instances.delete(this.item.id)
+        this.item.remove();
+        _TopBarElement.instances.delete(this.item.id);
     }
 }

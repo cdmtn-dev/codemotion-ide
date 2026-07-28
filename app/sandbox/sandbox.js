@@ -1,12 +1,12 @@
-const { app, ipcMain, BrowserWindow } = require("electron")
-const fs = require("fs")
-const path = require("path")
-const bus = require("../../helpers/eventBus.js")
-const { APP_PATH } = require("../main/helpers/paths.js")
-const ErrorStackParser = require("error-stack-parser")
+const { app, ipcMain, BrowserWindow } = require("electron");
+const fs = require("fs");
+const path = require("path");
+const bus = require("../../helpers/eventBus.js");
+const { APP_PATH } = require("../main/helpers/paths.js");
+const ErrorStackParser = require("error-stack-parser");
 
-const { 
-    getType, 
+const {
+    getType,
     createNativeImageFromUrl,
     checkType,
     ok,
@@ -17,27 +17,27 @@ const {
     isFileExists,
     checkFields,
     createSandboxConsole,
-    getArgumentNames
-} = require("../sandbox/tools.js")
-const { basicMinifyCSS } = require("../../helpers/minify.js")
+    getArgumentNames,
+} = require("../sandbox/tools.js");
+const { basicMinifyCSS } = require("../../helpers/minify.js");
 
 const vm = require("vm");
-const { config } = require("process")
+const { config } = require("process");
 
 const EXTENSIONS_DIR = path.resolve(
-    app.isPackaged ? process.resourcesPath : app.getAppPath(), 
-    "extensions"
-)
+    app.isPackaged ? process.resourcesPath : app.getAppPath(),
+    "extensions",
+);
 
-console.log("EXTENSIONS PATH:", EXTENSIONS_DIR)
+console.log("EXTENSIONS PATH:", EXTENSIONS_DIR);
 
 let debuggerSender = null;
 let mainSender = null;
 
-const rendererBus = require("../../assets/js/bus.js")
+const rendererBus = require("../../assets/js/bus.js");
 
 function parsePackageJson(raw) {
-    return JSON.parse(raw.replace(/^\uFEFF/, ""))
+    return JSON.parse(raw.replace(/^\uFEFF/, ""));
 }
 
 bus.on("debugger-ready", (sender) => {
@@ -49,102 +49,96 @@ bus.on("main-ready", (sender) => {
     console.log("ExtensionManager: main connected");
 });
 
-ipcMain.handle("get-extensions-dir", () => {
-    return EXTENSIONS_DIR
-})
+ipcMain.handle("get-extensions-dir", () => EXTENSIONS_DIR);
 
 ipcMain.handle("request-extensions", async () => {
     try {
         if (!fs.existsSync(EXTENSIONS_DIR)) {
-            return fail("Extensions directory does not exist")
+            return fail("Extensions directory does not exist");
         }
 
-        const files = await fs.promises.readdir(EXTENSIONS_DIR, { withFileTypes: true })
+        const files = await fs.promises.readdir(EXTENSIONS_DIR, { withFileTypes: true });
 
-        const dirs = files
-            .filter(f => f.isDirectory())
-            .map(f => f.name)
+        const dirs = files.filter((f) => f.isDirectory()).map((f) => f.name);
 
-        return ok(dirs)
-
+        return ok(dirs);
     } catch (err) {
-        return fail(err)
+        return fail(err);
     }
-})
+});
 
 ipcMain.handle("request-extension", async (event, name) => {
     try {
         if (!isSafeName(name)) {
-            return fail("Invalid extension name")
+            return fail("Invalid extension name");
         }
 
-        const extPath = path.join(EXTENSIONS_DIR, name)
+        const extPath = path.join(EXTENSIONS_DIR, name);
 
         if (!fs.existsSync(extPath)) {
-            return fail("Extension not found")
+            return fail("Extension not found");
         }
 
-        const stat = await fs.promises.stat(extPath)
+        const stat = await fs.promises.stat(extPath);
 
         if (!stat.isDirectory()) {
-            return fail("Extension is not a directory")
+            return fail("Extension is not a directory");
         }
 
-        const packagePath = path.join(extPath, "package.json")
+        const packagePath = path.join(extPath, "package.json");
 
         if (!fs.existsSync(packagePath)) {
-            return fail("package.json not found")
+            return fail("package.json not found");
         }
 
-        const raw = await fs.promises.readFile(packagePath, "utf-8")
+        const raw = await fs.promises.readFile(packagePath, "utf-8");
 
-        let json
+        let json;
         try {
-            json = parsePackageJson(raw)
+            json = parsePackageJson(raw);
         } catch {
-            return fail("Invalid JSON in package.json")
+            return fail("Invalid JSON in package.json");
         }
 
-        return ok({ package: json, path: extPath })
-
+        return ok({ package: json, path: extPath });
     } catch (err) {
-        return fail(err)
+        return fail(err);
     }
-})
+});
 
 ipcMain.handle("run-extension", async (event, code, permissions, meta) => {
-    const extensionName = meta.extensionName != undefined ? meta.extensionName : "Unknown"
-    const extensionVersion = meta.extensionVersion != undefined ? meta.extensionVersion : null
-    const extensionPath = meta.extensionPath != undefined ? meta.extensionPath : null
-    const isDev = meta.isDev != undefined ? meta.isDev : false
-    const activeOn = meta.activeOn
-    const isPackaged = app.isPackaged
-    const extensionSettings = meta.extensionSettings || {}
+    const extensionName = meta.extensionName == undefined ? "Unknown" : meta.extensionName;
+    const extensionVersion = meta.extensionVersion == undefined ? null : meta.extensionVersion;
+    const extensionPath = meta.extensionPath == undefined ? null : meta.extensionPath;
+    const isDev = meta.isDev == undefined ? false : meta.isDev;
+    const activeOn = meta.activeOn;
+    const isPackaged = app.isPackaged;
+    const extensionSettings = meta.extensionSettings || {};
 
-    let allCSSVariables = meta.allCSSVariables != undefined ? meta.allCSSVariables : []
+    const allCssVariables = meta.allCSSVariables == undefined ? [] : meta.allCSSVariables;
 
-    function createAPI(permissions) {
-        const os = require("os")
-        const platformRaw = os.platform()
+    function createApi(permissions) {
+        const os = require("os");
+        const platformRaw = os.platform();
         const platformMap = {
             win32: "windows",
             darwin: "macos",
             linux: "linux",
-            freebsd: "freebsd"
-        }
+            freebsd: "freebsd",
+        };
 
         const app = {
             name: extensionName,
-            permissions: permissions,
+            permissions,
             version: extensionVersion,
             path: extensionPath,
-            isDev: isDev,
-            CSSVariables: allCSSVariables,
-            isPackaged: isPackaged,
+            isDev,
+            CSSVariables: allCssVariables,
+            isPackaged,
             settings: extensionSettings,
             os: {
                 platform: platformMap[platformRaw] || platformRaw,
-                platformRaw: platformRaw,
+                platformRaw,
                 arch: os.arch(),
                 release: os.release(),
                 hostname: os.hostname(),
@@ -152,38 +146,42 @@ ipcMain.handle("run-extension", async (event, code, permissions, meta) => {
                 totalMemory: os.totalmem(),
                 freeMemory: os.freemem(),
                 homeDir: os.homedir(),
-                tmpDir: os.tmpdir()
-            }
+                tmpDir: os.tmpdir(),
+            },
         };
 
         function setNestedProperty(obj, path, value) {
-            const parts = path.split(".")
+            const parts = path.split(".");
 
-            let current = obj
+            let current = obj;
 
-            for(let i = 0; i < parts.length - 1; i++) {
-                const part = parts[i]
+            for (let i = 0; i < parts.length - 1; i++) {
+                const part = parts[i];
 
-                if(!current[part]) {
-                    current[part] = {}
+                if (!current[part]) {
+                    current[part] = {};
                 }
 
-                current = current[part]
+                current = current[part];
             }
 
-            current[parts.at(-1)] = value
+            current[parts.at(-1)] = value;
         }
 
-        permissions.forEach(p => {
-            const checkRegex = /^[A-Za-z]+(?:\.[A-Za-z]+)+$/gm
+        permissions.forEach((p) => {
+            const checkRegex = /^[A-Za-z]+(?:\.[A-Za-z]+)+$/gm;
 
-            if(checkRegex.test(p)) {
-                let appPermissionFile = p.replaceAll(".", "/")
+            if (checkRegex.test(p)) {
+                const appPermissionFile = p.replaceAll(".", "/");
 
-                if (fs.existsSync(path.join(APP_PATH, "sandbox", "permissions", appPermissionFile + ".js"))) {
-                    const { callback } = require(`./permissions/${appPermissionFile}.js`)
+                if (
+                    fs.existsSync(
+                        path.join(APP_PATH, "sandbox", "permissions", appPermissionFile + ".js"),
+                    )
+                ) {
+                    const { callback } = require(`./permissions/${appPermissionFile}.js`);
 
-                    debuggerSender = debuggerSender ?? mainSender
+                    debuggerSender = debuggerSender ?? mainSender;
 
                     setNestedProperty(app, p, (...args) => {
                         const factory = callback({
@@ -192,65 +190,67 @@ ipcMain.handle("run-extension", async (event, code, permissions, meta) => {
                             extensionName,
                             extensionPath,
                             permissionName: "app." + p,
-                            allCSSVariables,
+                            allCSSVariables: allCssVariables,
                             selfArgs: args,
-                            activeOn: activeOn
-                        })
+                            activeOn,
+                        });
 
                         if (factory && typeof factory === "function") {
                             return factory(...args);
                         }
-                    })
-                }
-                else {
-                    throw new Error(`Permission "${p}" is not exists`)
+                    });
+                } else {
+                    throw new Error(`Permission "${p}" is not exists`);
                 }
             }
-        })
+        });
 
         return Object.freeze(app);
     }
 
     try {
-        let app = createAPI(permissions);
+        const app = createApi(permissions);
 
         const sandbox = {
             console: createSandboxConsole(extensionName, debuggerSender),
-            Map: Map,
-            app
+            Map,
+            app,
         };
 
         const context = vm.createContext(sandbox);
 
-        await vm.runInContext(`
+        await vm.runInContext(
+            `
             (async function(){
                 "use strict";
                 ${code}
             })()
-        `, context);
+        `,
+            context,
+        );
 
         return { success: true };
     } catch (err) {
-        const stack = err?.stack || String(err)
-        const evalLocation = stack.match(/evalmachine\.<anonymous>:(\d+):(\d+)/)
+        const stack = err?.stack || String(err);
+        const evalLocation = stack.match(/evalmachine\.<anonymous>:(\d+):(\d+)/);
 
         if (!evalLocation) {
             return {
                 success: false,
-                error: `\n${err?.message || stack}`
+                error: `\n${err?.message || stack}`,
             };
         }
 
-        const lineNumber = Number(evalLocation[1])
-        const columnNumber = Number(evalLocation[2])
-        let message = stack.replaceAll(evalLocation[0], "").split("at")[0].trim()
+        const lineNumber = Number(evalLocation[1]);
+        const columnNumber = Number(evalLocation[2]);
+        let message = stack.replaceAll(evalLocation[0], "").split("at")[0].trim();
 
-        message += `\n\tat line: ${lineNumber - 3}`
-        message += `\n\tat column: ${columnNumber}`
+        message += `\n\tat line: ${lineNumber - 3}`;
+        message += `\n\tat column: ${columnNumber}`;
 
-        return { 
+        return {
             success: false,
-            error: String(err)
+            error: String(err),
         };
     }
 });

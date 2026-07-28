@@ -1,0 +1,84 @@
+{
+    "$schema": "https://biomejs.dev/schemas/2.5.6/schema.json",
+    "vcs": {
+        "enabled": true,
+        "clientKind": "git",
+        "useIgnoreFile": true
+    },
+    "files": {
+        "includes": [
+            "**",
+            "!!ace",
+            "!!app/dist",
+            "!!app/dist-esm",
+            "!!app/main/runtime/python",
+            "!!assets/css/material-icons",
+            "!!assets/fonts",
+            "!!assets/js/external",
+            "!!assets/media",
+            "!!assets/plugins",
+            "!!codemirror/dist",
+            "!!codemirror/package-lock.json",
+            "!!package-lock.json"
+        ],
+        "ignoreUnknown": true
+    },
+    "formatter": {
+        "enabled": true,
+        "formatWithErrors": false,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineEnding": "lf",
+        "lineWidth": 100,
+        "attributePosition": "auto",
+        "bracketSpacing": true,
+        "expand": "auto",
+        "useEditorconfig": true
+    },
+    "linter": {
+        "enabled": true,
+        "rules": {
+            "preset": "recommended",
+            "a11y": "warn",
+            "complexity": "warn",
+            "correctness": "warn",
+            "performance": "warn",
+            "security": "warn",
+            "style": "warn",
+            "suspicious": "warn"
+        }
+    },
+    "assist": {
+        "enabled": false
+    },
+    "javascript": {
+        "formatter": {
+            "arrowParentheses": "always",
+            "bracketSameLine": false,
+            "jsxQuoteStyle": "double",
+            "quoteProperties": "asNeeded",
+            "quoteStyle": "double",
+            "semicolons": "always",
+            "trailingCommas": "all"
+        }
+    },
+    "json": {
+        "parser": {
+            "allowComments": false,
+            "allowTrailingCommas": false
+        }
+    },
+    "css": {
+        "linter": {
+            "enabled": true
+        }
+    },
+    "overrides": [
+        {
+            "includes": ["languages/*.json", "codemirror/src/snippets/**/*.json"],
+            "linter": {
+                "enabled": false
+            }
+        }
+    ]
+}

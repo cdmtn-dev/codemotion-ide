@@ -1,10 +1,10 @@
-import { ipcMain, IpcMainInvokeEvent } from "electron"
-import { readSettings, writeSettings } from "../helpers/requests"
+import { type IpcMainInvokeEvent, ipcMain } from "electron";
+import { readSettings, writeSettings } from "../helpers/requests";
 
 ipcMain.handle("set-settings", (_: IpcMainInvokeEvent, data: unknown) => {
     if (!data || typeof data !== "object" || Array.isArray(data)) {
-        return readSettings()
+        return readSettings();
     }
 
-    return writeSettings(data as object)
-})
+    return writeSettings(data as object);
+});

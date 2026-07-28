@@ -1,8 +1,8 @@
-import { createDIV, createSpan } from "../handlers/helpers.js"
+import { createDIV, createSpan } from "../handlers/helpers.js";
 
 export function renderDivider() {
-    const wrapper = createDIV()
-    wrapper.classList.add("modal-divider")
+    const wrapper = createDIV();
+    wrapper.classList.add("modal-divider");
 
-    return wrapper
+    return wrapper;
 }

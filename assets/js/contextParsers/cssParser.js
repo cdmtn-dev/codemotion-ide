@@ -16,7 +16,8 @@ export class CSSParser {
 
             if (line.includes("{")) {
                 const selector = this._parseSelector(line);
-                if (selector) stack.push({ type: selector.type, label: selector.label, line: i + 1 });
+                if (selector)
+                    stack.push({ type: selector.type, label: selector.label, line: i + 1 });
             }
 
             if (line.includes("}")) {
@@ -63,7 +64,12 @@ export class CSSParser {
         }
 
         if (raw.match(/^\d+%$/) || raw === "from" || raw === "to") {
-            return { type: "keyframe-stop", label: raw, icon: "radio_button_checked", class: "method" };
+            return {
+                type: "keyframe-stop",
+                label: raw,
+                icon: "radio_button_checked",
+                class: "method",
+            };
         }
 
         if (raw.startsWith("#")) {
@@ -72,7 +78,12 @@ export class CSSParser {
 
         if (raw.startsWith(".")) {
             const pseudo = this._extractPseudo(raw);
-            return { type: "class", label: raw, icon: pseudo ? "filter_alt" : "circle", class: "function" };
+            return {
+                type: "class",
+                label: raw,
+                icon: pseudo ? "filter_alt" : "circle",
+                class: "function",
+            };
         }
 
         if (raw.includes(":")) {
@@ -84,7 +95,10 @@ export class CSSParser {
         }
 
         if (raw.includes(",")) {
-            const short = raw.split(",").map(s => s.trim()).join(", ");
+            const short = raw
+                .split(",")
+                .map((s) => s.trim())
+                .join(", ");
             return { type: "selector", label: short, icon: "select_all", class: "function" };
         }
 
@@ -97,7 +111,14 @@ export class CSSParser {
     }
 
     _parseProperty(line) {
-        if (!line || line.includes("{") || line.includes("}") || line.startsWith("//") || line.startsWith("/*")) return null;
+        if (
+            !line ||
+            line.includes("{") ||
+            line.includes("}") ||
+            line.startsWith("//") ||
+            line.startsWith("/*")
+        )
+            return null;
 
         const match = line.match(/^([\w-]+)\s*:\s*(.+?);?$/);
         if (!match) return null;
@@ -112,17 +133,83 @@ export class CSSParser {
     }
 
     _iconForProperty(prop) {
-        if (["color", "background", "background-color", "border-color", "outline-color"].includes(prop)) return "palette";
-        if (["width", "height", "min-width", "max-width", "min-height", "max-height"].includes(prop)) return "straighten";
-        if (["margin", "margin-top", "margin-right", "margin-bottom", "margin-left",
-             "padding", "padding-top", "padding-right", "padding-bottom", "padding-left"].includes(prop)) return "space_bar";
-        if (["font", "font-size", "font-family", "font-weight", "font-style", "line-height", "letter-spacing"].includes(prop)) return "text_fields";
-        if (["display", "flex", "flex-direction", "flex-wrap", "justify-content", "align-items", "align-self", "gap"].includes(prop)) return "grid_view";
-        if (["position", "top", "right", "bottom", "left", "z-index"].includes(prop)) return "open_with";
+        if (
+            ["color", "background", "background-color", "border-color", "outline-color"].includes(
+                prop,
+            )
+        )
+            return "palette";
+        if (
+            ["width", "height", "min-width", "max-width", "min-height", "max-height"].includes(prop)
+        )
+            return "straighten";
+        if (
+            [
+                "margin",
+                "margin-top",
+                "margin-right",
+                "margin-bottom",
+                "margin-left",
+                "padding",
+                "padding-top",
+                "padding-right",
+                "padding-bottom",
+                "padding-left",
+            ].includes(prop)
+        )
+            return "space_bar";
+        if (
+            [
+                "font",
+                "font-size",
+                "font-family",
+                "font-weight",
+                "font-style",
+                "line-height",
+                "letter-spacing",
+            ].includes(prop)
+        )
+            return "text_fields";
+        if (
+            [
+                "display",
+                "flex",
+                "flex-direction",
+                "flex-wrap",
+                "justify-content",
+                "align-items",
+                "align-self",
+                "gap",
+            ].includes(prop)
+        )
+            return "grid_view";
+        if (["position", "top", "right", "bottom", "left", "z-index"].includes(prop))
+            return "open_with";
         if (["transition", "animation", "transform"].includes(prop)) return "animation";
-        if (["border", "border-radius", "border-top", "border-right", "border-bottom", "border-left"].includes(prop)) return "border_style";
-        if (["opacity", "visibility", "overflow", "pointer-events"].includes(prop)) return "visibility";
-        if (["grid", "grid-template", "grid-template-columns", "grid-template-rows", "grid-column", "grid-row"].includes(prop)) return "grid_on";
+        if (
+            [
+                "border",
+                "border-radius",
+                "border-top",
+                "border-right",
+                "border-bottom",
+                "border-left",
+            ].includes(prop)
+        )
+            return "border_style";
+        if (["opacity", "visibility", "overflow", "pointer-events"].includes(prop))
+            return "visibility";
+        if (
+            [
+                "grid",
+                "grid-template",
+                "grid-template-columns",
+                "grid-template-rows",
+                "grid-column",
+                "grid-row",
+            ].includes(prop)
+        )
+            return "grid_on";
         if (["cursor"].includes(prop)) return "mouse";
         if (["content"].includes(prop)) return "notes";
         if (["box-shadow", "text-shadow"].includes(prop)) return "shadow";
@@ -148,7 +235,7 @@ export class CSSParser {
             container.appendChild(el);
 
             if (i < chain.length - 1) {
-                const sep = renderSeparator()
+                const sep = renderSeparator();
                 container.appendChild(sep);
             }
         });

@@ -27,12 +27,18 @@ body {
     background-color: #212121;
 }
 
-p, h1, h2, h3, h4, h5, h6 {
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     margin: 0;
 }
 
 .transparent {
-    opacity: .5;
+    opacity: 0.5;
 }
 
 .marking::after {
@@ -80,8 +86,8 @@ p, h1, h2, h3, h4, h5, h6 {
 }
 
 important {
-   color: #3da4ff;
-   font-weight: 700; 
+    color: #3da4ff;
+    font-weight: 700;
 }
 
 .commands {
@@ -119,7 +125,9 @@ important {
     color: white;
     cursor: pointer;
     white-space: nowrap;
-    transition: background .15s, opacity .15s;
+    transition:
+        background 0.15s,
+        opacity 0.15s;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -128,7 +136,7 @@ important {
     background: #333333cc;
 }
 .commands button:active {
-    opacity: .7;
+    opacity: 0.7;
 }
 
 .commands .commands-suggest {
@@ -141,7 +149,7 @@ important {
     font-size: 12px;
     display: flex;
     gap: 5px;
-    transition: .2s;
+    transition: 0.2s;
     overflow: hidden;
     overflow-x: auto;
 }
@@ -156,7 +164,7 @@ important {
     padding: 5px 8px;
     width: fit-content;
     border-radius: 5px;
-    transition: .2s;
+    transition: 0.2s;
     white-space: nowrap;
 }
 .commands .commands-suggest .commands-suggest__item:hover {
@@ -167,11 +175,11 @@ important {
 code {
     background: #222222;
     border-radius: 5px;
-    transition: .2s;
+    transition: 0.2s;
 }
 code:hover {
     cursor: pointer;
-    opacity: .5;
+    opacity: 0.5;
 }
 
 #main {

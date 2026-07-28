@@ -9,11 +9,11 @@
     display: none;
 }
 
-.round-switch input[type=checkbox]:checked+.slider {
+.round-switch input[type="checkbox"]:checked + .slider {
     background-color: var(--switch-checkbox-active);
 }
 
-.round-switch input[type=checkbox]:checked+.slider:before {
+.round-switch input[type="checkbox"]:checked + .slider:before {
     transform: translateX(17px);
 }
 

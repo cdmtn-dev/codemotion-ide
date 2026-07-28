@@ -4,7 +4,11 @@ export class TypescriptParser extends JavascriptParser {
     nodeToChainItem(node) {
         switch (node.type) {
             case "InterfaceDeclaration":
-                return { icon: "integration_instructions", label: node.id?.name || "", class: "class" };
+                return {
+                    icon: "integration_instructions",
+                    label: node.id?.name || "",
+                    class: "class",
+                };
 
             case "InterfaceMethod": {
                 const returnType = node.returnType ? `: ${node.returnType}` : "";
@@ -41,8 +45,12 @@ export class TypescriptParser extends JavascriptParser {
                 return { icon: "tag", label: "[index]", class: "variable" };
 
             case "ClassDeclaration": {
-                const extendsClause = node.extends?.length ? ` extends ${node.extends.join(", ")}` : "";
-                const implementsClause = node.implements?.length ? ` implements ${node.implements.join(", ")}` : "";
+                const extendsClause = node.extends?.length
+                    ? ` extends ${node.extends.join(", ")}`
+                    : "";
+                const implementsClause = node.implements?.length
+                    ? ` implements ${node.implements.join(", ")}`
+                    : "";
                 return {
                     icon: node.isAbstract ? "indeterminate_check_box" : "category",
                     label: `${node.id?.name || "anonymous"}${extendsClause}${implementsClause}`,

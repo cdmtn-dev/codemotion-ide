@@ -9,36 +9,36 @@ function getPythonInfo() {
 
         for (const cmd of commands) {
             exec(`${cmd} --version`, (err, stdout, stderr) => {
-                if (!err) {
-                    const versionOutput = stdout || stderr;
-
-                    exec(process.platform === "win32" ? `where ${cmd}` : `which ${cmd}`, (err2, stdout2) => {
-                        if (!err2) {
-                            resolve({
-                                version: versionOutput.replace("Python", "").trim(),
-                                path: stdout2.split("\n")[0].trim(),
-                                command: cmd
-                            });
-                        } else {
-                            resolve({
-                                version: versionOutput.replace("Python", "").trim(),
-                                path: null,
-                                command: cmd
-                            });
-                        }
-                    });
-
-                } else {
+                if (err) {
                     checked++;
                     if (checked === commands.length) {
                         resolve(false);
                     }
+                } else {
+                    const versionOutput = stdout || stderr;
+
+                    exec(
+                        process.platform === "win32" ? `where ${cmd}` : `which ${cmd}`,
+                        (err2, stdout2) => {
+                            if (err2) {
+                                resolve({
+                                    version: versionOutput.replace("Python", "").trim(),
+                                    path: null,
+                                    command: cmd,
+                                });
+                            } else {
+                                resolve({
+                                    version: versionOutput.replace("Python", "").trim(),
+                                    path: stdout2.split("\n")[0].trim(),
+                                    command: cmd,
+                                });
+                            }
+                        },
+                    );
                 }
             });
         }
     });
 }
 
-ipcMain.handle("get-python-info", async (event) => {
-    return await getPythonInfo()
-})
+ipcMain.handle("get-python-info", async (event) => await getPythonInfo());

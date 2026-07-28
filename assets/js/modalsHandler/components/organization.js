@@ -1,165 +1,175 @@
-import { generateAvatar, GLS, idify, truncateString } from "../../lib.js"
-import { valid } from "../engine.js"
-import { createDIV, createParagraph, createIcon, createLink, createBadge, createSpan, wrapTags } from "../handlers/helpers.js"
+import { GLS, generateAvatar, idify, truncateString } from "../../lib.js";
+import { valid } from "../engine.js";
+import {
+    createBadge,
+    createDIV,
+    createIcon,
+    createLink,
+    createParagraph,
+    createSpan,
+    wrapTags,
+} from "../handlers/helpers.js";
 
 export function renderOrganization(properties = {}) {
-    const gls = GLS.initLocal()
+    const gls = GLS.initLocal();
 
     function lgls(key, replacements = {}) {
-        return gls.get(`modals.organizations.${key}`, replacements)
+        return gls.get(`modals.organizations.${key}`, replacements);
     }
 
-    let id = properties.id
-    const name = properties.name
-    const description = properties.description
-    const website = properties.website
-    const columns = properties.columns
-    const badgeOwner = properties.badgeOwner
-    const badgeVerified = properties.badgeVerified
-    const avatar = properties.avatar
-    const repos = properties.repos
+    let id = properties.id;
+    const name = properties.name;
+    const description = properties.description;
+    const website = properties.website;
+    const columns = properties.columns;
+    const badgeOwner = properties.badgeOwner;
+    const badgeVerified = properties.badgeVerified;
+    const avatar = properties.avatar;
+    const repos = properties.repos;
 
     function createSection() {
-        const sectionEl = createDIV()
-        sectionEl.classList.add("modal-org__section")
+        const sectionEl = createDIV();
+        sectionEl.classList.add("modal-org__section");
 
-        return sectionEl
+        return sectionEl;
     }
     function createCounter() {
-        const counterItemEl = createDIV()
-        counterItemEl.classList.add("modal-org__section-counter")
+        const counterItemEl = createDIV();
+        counterItemEl.classList.add("modal-org__section-counter");
 
-        return counterItemEl
+        return counterItemEl;
     }
     function createSectionComponent() {
-        const sectionEl = createDIV()
-        sectionEl.classList.add("modal-org__section-component")
+        const sectionEl = createDIV();
+        sectionEl.classList.add("modal-org__section-component");
 
-        return sectionEl
+        return sectionEl;
     }
 
-    if(!id) {
-        id = idify(name)
+    if (!id) {
+        id = idify(name);
     }
 
-    const wrapper = document.createElement("div")
-    wrapper.classList.add("modal-org")
-    wrapper.id = id
+    const wrapper = document.createElement("div");
+    wrapper.classList.add("modal-org");
+    wrapper.id = id;
 
     // first section
-    const firstSectionEl = createSection()
-    firstSectionEl.classList.add("row")
+    const firstSectionEl = createSection();
+    firstSectionEl.classList.add("row");
 
-    if(avatar) {
-        const avatarEl = document.createElement("img")
-        avatarEl.src = avatar
-        avatarEl.classList.add("modal-org__section-avatar")
+    if (avatar) {
+        const avatarEl = document.createElement("img");
+        avatarEl.src = avatar;
+        avatarEl.classList.add("modal-org__section-avatar");
 
-        firstSectionEl.appendChild(avatarEl)
+        firstSectionEl.appendChild(avatarEl);
+    } else {
+        firstSectionEl.innerHTML = generateAvatar(name);
     }
-    else {
-        firstSectionEl.innerHTML = generateAvatar(name)
-    }
 
-    const countersEl = createDIV()
-    countersEl.classList.add("modal-org__section-counters")
+    const countersEl = createDIV();
+    countersEl.classList.add("modal-org__section-counters");
 
-    columns.forEach(col => {
-        const name = valid(col.name) ?? "Unnamed"
-        const value = valid(col.value) ?? "..."
+    columns.forEach((col) => {
+        const name = valid(col.name) ?? "Unnamed";
+        const value = valid(col.value) ?? "...";
 
-        const itemEl = createCounter()
-        
-        const itemTitleEl = createParagraph(name)
-        itemTitleEl.classList.add("title")
+        const itemEl = createCounter();
 
-        const itemValueEl = createParagraph(value)
-        itemValueEl.classList.add("value")
+        const itemTitleEl = createParagraph(name);
+        itemTitleEl.classList.add("title");
 
-        itemEl.appendChild(itemTitleEl)
-        itemEl.appendChild(itemValueEl)
+        const itemValueEl = createParagraph(value);
+        itemValueEl.classList.add("value");
 
-        countersEl.appendChild(itemEl)
-    })
+        itemEl.appendChild(itemTitleEl);
+        itemEl.appendChild(itemValueEl);
 
-    firstSectionEl.appendChild(countersEl)
+        countersEl.appendChild(itemEl);
+    });
+
+    firstSectionEl.appendChild(countersEl);
 
     // second section
 
-    const secondSectionEl = createSection()
+    const secondSectionEl = createSection();
 
-    const secondSectionInfoComponent = createSectionComponent()
-    
-    const secondSectionInfoComponentTitle = createParagraph(name, true)
-    secondSectionInfoComponentTitle.classList.add("modal-org__title")
+    const secondSectionInfoComponent = createSectionComponent();
+
+    const secondSectionInfoComponentTitle = createParagraph(name, true);
+    secondSectionInfoComponentTitle.classList.add("modal-org__title");
 
     const secondSectionInfoComponentDesc = createParagraph(
-        wrapTags(
-            truncateString(description, 400)
-        ), false, true)
-    secondSectionInfoComponentDesc.classList.add("modal-org-description")
+        wrapTags(truncateString(description, 400)),
+        false,
+        true,
+    );
+    secondSectionInfoComponentDesc.classList.add("modal-org-description");
 
-    secondSectionInfoComponent.appendChild(secondSectionInfoComponentTitle)
-    secondSectionInfoComponent.appendChild(secondSectionInfoComponentDesc)
+    secondSectionInfoComponent.appendChild(secondSectionInfoComponentTitle);
+    secondSectionInfoComponent.appendChild(secondSectionInfoComponentDesc);
 
-    const secondSectionIconTextWrapper = createDIV()
-    secondSectionIconTextWrapper.classList.add("modal-org-icontext__wrapper")
+    const secondSectionIconTextWrapper = createDIV();
+    secondSectionIconTextWrapper.classList.add("modal-org-icontext__wrapper");
 
-    if(badgeVerified) {
-        const badge = createBadge("check")
-        badge.classList.add("modal-verified__badge")
+    if (badgeVerified) {
+        const badge = createBadge("check");
+        badge.classList.add("modal-verified__badge");
 
-        secondSectionInfoComponentTitle.appendChild(badge)
+        secondSectionInfoComponentTitle.appendChild(badge);
     }
-    if(badgeOwner) {
-        const badge = createBadge("crown")
-        badge.classList.add("modal-owner__badge")
+    if (badgeOwner) {
+        const badge = createBadge("crown");
+        badge.classList.add("modal-owner__badge");
 
-        secondSectionInfoComponentTitle.appendChild(badge)
+        secondSectionInfoComponentTitle.appendChild(badge);
     }
 
-    if(website) {
-        let url = website.startsWith("https://") ? new URL(website) : new URL("https://" + website)
-        let urlPreview = url.host
+    if (website) {
+        const url = website.startsWith("https://")
+            ? new URL(website)
+            : new URL("https://" + website);
+        let urlPreview = url.host;
 
         if (url.pathname != "/") {
-            urlPreview += url.pathname
+            urlPreview += url.pathname;
         }
 
-        const secondSectionIconText = createDIV()
-        secondSectionIconText.classList.add("modal-org-icontext")
+        const secondSectionIconText = createDIV();
+        secondSectionIconText.classList.add("modal-org-icontext");
 
-        const secondSectionIconTextIcon = createIcon("link_2")
-        const secondSectionIconTextLink = createLink(url.href)
-        secondSectionIconTextLink.textContent = urlPreview
+        const secondSectionIconTextIcon = createIcon("link_2");
+        const secondSectionIconTextLink = createLink(url.href);
+        secondSectionIconTextLink.textContent = urlPreview;
 
-        secondSectionIconText.appendChild(secondSectionIconTextIcon)
-        secondSectionIconText.appendChild(secondSectionIconTextLink)
+        secondSectionIconText.appendChild(secondSectionIconTextIcon);
+        secondSectionIconText.appendChild(secondSectionIconTextLink);
 
-        secondSectionIconTextWrapper.appendChild(secondSectionIconText)
+        secondSectionIconTextWrapper.appendChild(secondSectionIconText);
 
-        secondSectionInfoComponent.appendChild(secondSectionIconTextWrapper)
+        secondSectionInfoComponent.appendChild(secondSectionIconTextWrapper);
     }
-    if(repos.length > 0) {
-        const secondSectionIconText = createDIV()
-        secondSectionIconText.classList.add("modal-org-icontext")
+    if (repos.length > 0) {
+        const secondSectionIconText = createDIV();
+        secondSectionIconText.classList.add("modal-org-icontext");
 
-        const secondSectionIconTextIcon = createIcon("commit")
-        const secondSectionIconTextLink = createSpan()
-        secondSectionIconTextLink.textContent = lgls("repos", { count: repos.length })
+        const secondSectionIconTextIcon = createIcon("commit");
+        const secondSectionIconTextLink = createSpan();
+        secondSectionIconTextLink.textContent = lgls("repos", { count: repos.length });
 
-        secondSectionIconText.appendChild(secondSectionIconTextIcon)
-        secondSectionIconText.appendChild(secondSectionIconTextLink)
+        secondSectionIconText.appendChild(secondSectionIconTextIcon);
+        secondSectionIconText.appendChild(secondSectionIconTextLink);
 
-        secondSectionIconTextWrapper.appendChild(secondSectionIconText)
+        secondSectionIconTextWrapper.appendChild(secondSectionIconText);
 
-        secondSectionInfoComponent.appendChild(secondSectionIconTextWrapper)
+        secondSectionInfoComponent.appendChild(secondSectionIconTextWrapper);
     }
 
-    secondSectionEl.appendChild(secondSectionInfoComponent)
+    secondSectionEl.appendChild(secondSectionInfoComponent);
 
-    wrapper.appendChild(firstSectionEl)
-    wrapper.appendChild(secondSectionEl)
+    wrapper.appendChild(firstSectionEl);
+    wrapper.appendChild(secondSectionEl);
 
-    return wrapper
+    return wrapper;
 }

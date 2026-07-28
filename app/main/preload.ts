@@ -1,12 +1,14 @@
-import { RunPythonPayload, SaveContentPayload } from "./payloads";
+import type { RunPythonPayload, SaveContentPayload } from "./payloads";
 
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer } = require("electron");
 
 let isRegisteredCustomLanguageRegistration = false;
 
-contextBridge.exposeInMainWorld('electron', {
-    readDirTree: (rootPath: any, options = {}) => ipcRenderer.invoke('readDirTree', rootPath, options),
-    readFileContent: (filePath: any, encoding = 'utf8') => ipcRenderer.invoke('readFileContent', filePath, encoding),
+contextBridge.exposeInMainWorld("electron", {
+    readDirTree: (rootPath: any, options = {}) =>
+        ipcRenderer.invoke("readDirTree", rootPath, options),
+    readFileContent: (filePath: any, encoding = "utf8") =>
+        ipcRenderer.invoke("readFileContent", filePath, encoding),
     getUserPcInfo: () => ipcRenderer.invoke("get-user-pc-info"),
     getPackageData: () => ipcRenderer.invoke("get-package-data"),
     getLocalBugsData: () => ipcRenderer.invoke("get-local-bugs-data"),
@@ -24,8 +26,10 @@ contextBridge.exposeInMainWorld('electron', {
     createOrganization: (params: any) => ipcRenderer.invoke("create-organization", params),
     requestExploreOrganizations: () => ipcRenderer.invoke("get-explore-organizations"),
     requestRecoveryCode: (email: string) => ipcRenderer.invoke("request-recovery-code", email),
-    verifyRecoveryCode: (email: string, code: string) => ipcRenderer.invoke("verify-recovery-code", email, code),
-    resetPassword: (recoveryToken: string, newPassword: string) => ipcRenderer.invoke("reset-password", recoveryToken, newPassword),
+    verifyRecoveryCode: (email: string, code: string) =>
+        ipcRenderer.invoke("verify-recovery-code", email, code),
+    resetPassword: (recoveryToken: string, newPassword: string) =>
+        ipcRenderer.invoke("reset-password", recoveryToken, newPassword),
 
     createNotification: (data: any) => ipcRenderer.send("spawn-notification", data),
 
@@ -34,9 +38,11 @@ contextBridge.exposeInMainWorld('electron', {
     setNonAccountMode: (value: boolean) => ipcRenderer.invoke("set-non-account-mode", value),
     setAppTitle: (title: string) => ipcRenderer.send("set-app-title", title),
 
-    askToSaveNewFile: (properties: SaveContentPayload) => ipcRenderer.invoke("ask-to-save-content", properties),
+    askToSaveNewFile: (properties: SaveContentPayload) =>
+        ipcRenderer.invoke("ask-to-save-content", properties),
 
-    keyboardAction: (callback: any) => ipcRenderer.on("keyboard_action", (_: any, data: any) => callback(data)),
+    keyboardAction: (callback: any) =>
+        ipcRenderer.on("keyboard_action", (_: any, data: any) => callback(data)),
 
     getCurrentUserDataFromAPI: () => ipcRenderer.invoke("get-user-data-from-api"),
     getUser: (userid: number) => ipcRenderer.invoke("get-user", userid),
@@ -45,7 +51,8 @@ contextBridge.exposeInMainWorld('electron', {
     joinOrg: (inviteCode: string) => ipcRenderer.invoke("join-org", inviteCode),
     resetOrgInviteCode: (orgid: number) => ipcRenderer.invoke("reset-org-invite-code", orgid),
     uploadOrgAvatar: (orgid: number) => ipcRenderer.invoke("upload-org-avatar", orgid),
-    setOrgGithubRepos: (orgid: number, repos: object) => ipcRenderer.invoke("set-github-repos", orgid, repos),
+    setOrgGithubRepos: (orgid: number, repos: object) =>
+        ipcRenderer.invoke("set-github-repos", orgid, repos),
     searchOrg: (query: string) => ipcRenderer.invoke("search-orgs", query),
 
     close: () => ipcRenderer.send("close"),
@@ -55,7 +62,8 @@ contextBridge.exposeInMainWorld('electron', {
     getAllFilenamesIcons: () => ipcRenderer.invoke("get-all-filenames-app-icons"),
 
     login: (email: string, password: string) => ipcRenderer.invoke("login", email, password),
-    register: (username: string, email: string, password: string, passwordConfirm: string) => ipcRenderer.invoke("register", username, email, password, passwordConfirm),
+    register: (username: string, email: string, password: string, passwordConfirm: string) =>
+        ipcRenderer.invoke("register", username, email, password, passwordConfirm),
     isLoggedIn: () => ipcRenderer.invoke("is-logged-in"),
     logout: () => ipcRenderer.invoke("logout"),
 
@@ -67,7 +75,8 @@ contextBridge.exposeInMainWorld('electron', {
     revealInFileExplorer: (path: string) => ipcRenderer.invoke("reveal-in-file-explorer", path),
     createFile: (path: string) => ipcRenderer.invoke("create-file", path),
     createFolder: (path: string) => ipcRenderer.invoke("create-folder", path),
-    renamePath: (oldPath: string, newPath: string) => ipcRenderer.invoke("rename-path", oldPath, newPath),
+    renamePath: (oldPath: string, newPath: string) =>
+        ipcRenderer.invoke("rename-path", oldPath, newPath),
 
     getLocal: () => ipcRenderer.invoke("get-app-local"),
 
@@ -89,41 +98,46 @@ contextBridge.exposeInMainWorld('electron', {
     killProcess: () => ipcRenderer.send("terminal-kill"),
     cleanupTerminal: () => ipcRenderer.send("terminal-cleanup"),
     onCommandResult: (callback: any) => {
-        const listener = (event: any, result: any) => callback(result)
-        ipcRenderer.on("terminal-result", listener)
-        return () => ipcRenderer.removeListener("terminal-result", listener)
+        const listener = (event: any, result: any) => callback(result);
+        ipcRenderer.on("terminal-result", listener);
+        return () => ipcRenderer.removeListener("terminal-result", listener);
     },
 
     requestExtensions: () => ipcRenderer.invoke("request-extensions"),
     requestExtension: (name: string) => ipcRenderer.invoke("request-extension", name),
     createDebuggerWindow: () => ipcRenderer.invoke("create-debugger-window"),
-    loadExtensionModule: (name: string, version: string) => ipcRenderer.invoke("load-module", name, version),
+    loadExtensionModule: (name: string, version: string) =>
+        ipcRenderer.invoke("load-module", name, version),
 
-    readFile: (path: string, parentPath: string) => ipcRenderer.invoke("read-file", path, parentPath),
+    readFile: (path: string, parentPath: string) =>
+        ipcRenderer.invoke("read-file", path, parentPath),
 
     removeByPath: (path: string) => ipcRenderer.invoke("remove-by-path", path),
 
     sendDebuggerData: (data: any) => ipcRenderer.send("debugger-data", data),
-    onDebuggerReady: () => {
-        return new Promise((resolve) => {
+    onDebuggerReady: () =>
+        new Promise((resolve) => {
             const handler = (_: any, args: any[]) => {
-                resolve(args)
-                ipcRenderer.removeListener("debugger-ready", handler)
-            }
+                resolve(args);
+                ipcRenderer.removeListener("debugger-ready", handler);
+            };
 
-            ipcRenderer.on("debugger-ready", handler)
-        })
-    },
+            ipcRenderer.on("debugger-ready", handler);
+        }),
     mainReady: () => ipcRenderer.send("main-ready"),
 
     getPython: () => ipcRenderer.invoke("get-python-info"),
     getDirname: () => ipcRenderer.invoke("get-dirname"),
     getPlatform: () => ipcRenderer.invoke("get-platform"),
 
-    typescriptDiagnostic: (code: string, language?: string) => ipcRenderer.invoke("typescript-diagnostic", code, language),
-    javascriptDiagnostic: (code: string, language?: string) => ipcRenderer.invoke("javascript-diagnostic", code, language),
-    javascriptAST: (code: string, language?: string) => ipcRenderer.invoke("javascript-ast", code, language),
-    typescriptAST: (code: string, language?: string) => ipcRenderer.invoke("typescript-ast", code, language),
+    typescriptDiagnostic: (code: string, language?: string) =>
+        ipcRenderer.invoke("typescript-diagnostic", code, language),
+    javascriptDiagnostic: (code: string, language?: string) =>
+        ipcRenderer.invoke("javascript-diagnostic", code, language),
+    javascriptAST: (code: string, language?: string) =>
+        ipcRenderer.invoke("javascript-ast", code, language),
+    typescriptAST: (code: string, language?: string) =>
+        ipcRenderer.invoke("typescript-ast", code, language),
     golangAST: (code: string) => ipcRenderer.invoke("golang-ast", code),
 
     sendCodeSuggestRequest: (data: any) => ipcRenderer.send("code-suggest-request", data),
@@ -138,108 +152,131 @@ contextBridge.exposeInMainWorld('electron', {
     ext: {
         ui: {
             theme: {
-                onRegister: (callback: any) => 
-                    ipcRenderer.on("new-theme-register", (event: string, name: string, data: any) => callback(name, data)),
+                onRegister: (callback: any) =>
+                    ipcRenderer.on("new-theme-register", (event: string, name: string, data: any) =>
+                        callback(name, data),
+                    ),
             },
             css: {
-                onLoad: (callback: any) => 
-                    ipcRenderer.on("load-css", (event: any, name: any, content: any) => callback(name, content)),
+                onLoad: (callback: any) =>
+                    ipcRenderer.on("load-css", (event: any, name: any, content: any) =>
+                        callback(name, content),
+                    ),
             },
             element: {
-                onCreate: (callback: any) => 
-                    ipcRenderer.on("extension-create-element", (event: any, data: object) => callback(data)),
-                onMod: (callback: any) => 
-                    ipcRenderer.on("extension-mod-element", (event: any, data: object) => callback(data)),
-                sendTo: (data: object) => 
-                    ipcRenderer.send("extension-send-element", data)
-            }
+                onCreate: (callback: any) =>
+                    ipcRenderer.on("extension-create-element", (event: any, data: object) =>
+                        callback(data),
+                    ),
+                onMod: (callback: any) =>
+                    ipcRenderer.on("extension-mod-element", (event: any, data: object) =>
+                        callback(data),
+                    ),
+                sendTo: (data: object) => ipcRenderer.send("extension-send-element", data),
+            },
         },
         editor: {
             language: {
-                register: (data: any) =>
-                    ipcRenderer.send("language-register", data),
-                onRegister: (callback: any) => 
-                    ipcRenderer.on("on-language-register", (event: any, data: any) => callback(data)),
-                onIconsRegister: (callback: any) => 
-                    ipcRenderer.on("new-language-icons-register", (event: any, data: any) => callback(data)),
-                onChangeHLRules: (callback: any) => 
-                    ipcRenderer.on("on-editor-change-new-hl-rules", (event: any, data: any) => callback(data)),
+                register: (data: any) => ipcRenderer.send("language-register", data),
+                onRegister: (callback: any) =>
+                    ipcRenderer.on("on-language-register", (event: any, data: any) =>
+                        callback(data),
+                    ),
+                onIconsRegister: (callback: any) =>
+                    ipcRenderer.on("new-language-icons-register", (event: any, data: any) =>
+                        callback(data),
+                    ),
+                onChangeHLRules: (callback: any) =>
+                    ipcRenderer.on("on-editor-change-new-hl-rules", (event: any, data: any) =>
+                        callback(data),
+                    ),
             },
             api: {
-                onReplace: (callback: any) => 
-                    ipcRenderer.on("editor-api-replace", (event: any, data: any) => callback(data)),  
+                onReplace: (callback: any) =>
+                    ipcRenderer.on("editor-api-replace", (event: any, data: any) => callback(data)),
             },
             dir: {
-                onIconsRegister: (callback: any) => 
-                    ipcRenderer.on("new-dir-icon-register", (event: any, data: any) => callback(data)),
+                onIconsRegister: (callback: any) =>
+                    ipcRenderer.on("new-dir-icon-register", (event: any, data: any) =>
+                        callback(data),
+                    ),
             },
             docs: {
-                register: (data: any) =>
-                    ipcRenderer.send("docs-register", data),
-                onRegister: (callback: any) => 
-                    ipcRenderer.on("new-documentation-register", (event: any, data: any) => callback(data)),
+                register: (data: any) => ipcRenderer.send("docs-register", data),
+                onRegister: (callback: any) =>
+                    ipcRenderer.on("new-documentation-register", (event: any, data: any) =>
+                        callback(data),
+                    ),
             },
             filenames: {
-                register: (data: any) =>
-                    ipcRenderer.send("filenames-register", data),
+                register: (data: any) => ipcRenderer.send("filenames-register", data),
                 onRegister: (callback: any) =>
-                    ipcRenderer.on("new-filenames-register", (event: any, data: any) => callback(data)),
+                    ipcRenderer.on("new-filenames-register", (event: any, data: any) =>
+                        callback(data),
+                    ),
             },
             fileExtensions: {
-                register: (data: any) =>
-                    ipcRenderer.send("file-extensions-register", data),
+                register: (data: any) => ipcRenderer.send("file-extensions-register", data),
                 onRegister: (callback: any) =>
-                    ipcRenderer.on("new-file-extensions-register", (event: any, data: any) => callback(data)),
+                    ipcRenderer.on("new-file-extensions-register", (event: any, data: any) =>
+                        callback(data),
+                    ),
             },
             templates: {
-                register: (data: any) =>
-                    ipcRenderer.send("templates-register", data),
+                register: (data: any) => ipcRenderer.send("templates-register", data),
                 onRegister: (callback: any) =>
-                    ipcRenderer.on("new-templates-register", (event: any, data: any) => callback(data)),
-            }
+                    ipcRenderer.on("new-templates-register", (event: any, data: any) =>
+                        callback(data),
+                    ),
+            },
         },
         app: {
-            onNotification: (callback: any) => 
-                ipcRenderer.on("extension-notification", (event: any, name: any, data: any) => callback(name, data)),
-            onLog: (callback: any) => 
+            onNotification: (callback: any) =>
+                ipcRenderer.on("extension-notification", (event: any, name: any, data: any) =>
+                    callback(name, data),
+                ),
+            onLog: (callback: any) =>
                 ipcRenderer.on("extension-log", (event: any, data: any) => callback(data)),
-            onAudioPlay: (callback: any) => 
+            onAudioPlay: (callback: any) =>
                 ipcRenderer.on("extension-play-sound", (event: any, data: any) => callback(data)),
             onLocalizationRegister: (callback: any) =>
-                ipcRenderer.on("extension-localization-register", (event: any, data: any) => callback(data)),
-        }
+                ipcRenderer.on("extension-localization-register", (event: any, data: any) =>
+                    callback(data),
+                ),
+        },
     },
 
-    runExtension: (code: string, permissions: object, meta: object) => ipcRenderer.invoke("run-extension", code, permissions, meta),
-    
-    onCustomLanguageRegistration: () => {
-        return new Promise((resolve) => {
+    runExtension: (code: string, permissions: object, meta: object) =>
+        ipcRenderer.invoke("run-extension", code, permissions, meta),
+
+    onCustomLanguageRegistration: () =>
+        new Promise((resolve) => {
             if (isRegisteredCustomLanguageRegistration) {
-                resolve(null)
-                return
+                resolve(null);
+                return;
             }
 
             ipcRenderer.once("custom-language-registered", () => {
-                isRegisteredCustomLanguageRegistration = true
-                resolve(null)
-            })
-        })
-    },
+                isRegisteredCustomLanguageRegistration = true;
+                resolve(null);
+            });
+        }),
     sendCustomLanguageRegistrationReady: () => {
-        ipcRenderer.send("custom-language-registration-ready")
+        ipcRenderer.send("custom-language-registration-ready");
     },
-    
+
     triggers: {
         sendFileOpened: (data: any) => ipcRenderer.send("file-opened-event", data),
         sendEditorChanged: (data: any) => ipcRenderer.send("editor-changed-event", data),
         sendEditorClicked: (data: any) => ipcRenderer.send("editor-clicked-event", data),
     },
 
-    // 
+    //
 
-    onAuthMsg: (callback: any) => ipcRenderer.on("auth-msg", (event: any, data: any) => callback(data)),
+    onAuthMsg: (callback: any) =>
+        ipcRenderer.on("auth-msg", (event: any, data: any) => callback(data)),
     sendAuthMsg: (data: any) => ipcRenderer.send("auth-msg", data),
-    
+
     on: (event: any, msg: any) => ipcRenderer.on(event, msg),
     oncb: (event: any, cb: any) => ipcRenderer.on(event, (_: any, data: any) => cb(data)),
 });

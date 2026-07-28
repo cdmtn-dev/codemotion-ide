@@ -1,9 +1,9 @@
 export type SaveContentPayload = {
-    filename: string
-    content: string
-}
+    filename: string;
+    content: string;
+};
 export type RunPythonPayload = {
-    code: string,
-    filePath: string, 
-    useEmbed: boolean
-}
+    code: string;
+    filePath: string;
+    useEmbed: boolean;
+};

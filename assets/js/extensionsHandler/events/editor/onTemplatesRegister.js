@@ -1,9 +1,9 @@
-import { CodeTemplates } from "../../../lib.js"
+import { CodeTemplates } from "../../../lib.js";
 
 export function onTemplatesRegister(data) {
-    const config = data.config
+    const config = data.config;
 
-    Object.keys(config).forEach(item => {
-        CodeTemplates.add(item, config[item])
-    })
+    Object.keys(config).forEach((item) => {
+        CodeTemplates.add(item, config[item]);
+    });
 }

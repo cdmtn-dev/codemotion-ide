@@ -1,7 +1,7 @@
 export function onEditorChangeNewHLRulesCallback({ data, contexts, refreshEditorHighlight }) {
     const { fileId, rules } = data;
 
-    console.log(data)
+    console.log(data);
 
     contexts[fileId] = new Map();
 

@@ -4,7 +4,10 @@ const oxc = require("oxc-parser");
 const OXC_LANGUAGES = new Set(["js", "jsx", "ts", "tsx", "dts"]);
 
 function normalizeLanguage(language, fallback = "js") {
-    const normalized = String(language || "").trim().toLowerCase().replace(/^\./, "");
+    const normalized = String(language || "")
+        .trim()
+        .toLowerCase()
+        .replace(/^\./, "");
     if (OXC_LANGUAGES.has(normalized)) return normalized;
     if (["mjs", "cjs", "es6"].includes(normalized)) return "js";
     if (["mts", "cts"].includes(normalized)) return "ts";
@@ -22,7 +25,7 @@ function getDiagnostics(code, language = "js") {
             showSemanticErrors: true,
         });
         const lineTable = buildLineTable(source);
-        return (result.errors || []).map(error => formatError(error, source, lineTable));
+        return (result.errors || []).map((error) => formatError(error, source, lineTable));
     } catch (error) {
         return [formatThrownError(error, source)];
     }
@@ -50,8 +53,8 @@ function offsetToLoc(offset, lineTable) {
 }
 
 function formatError(error, code, lineTable) {
-    const label = (error.labels || []).find(candidate =>
-        Number.isInteger(candidate?.start) && Number.isInteger(candidate?.end)
+    const label = (error.labels || []).find(
+        (candidate) => Number.isInteger(candidate?.start) && Number.isInteger(candidate?.end),
     );
     const start = clampOffset(label?.start, code.length);
     const end = clampOffset(label?.end, code.length);
@@ -87,10 +90,13 @@ function clampOffset(offset, length) {
 
 function severityToCategory(severity) {
     switch (severity) {
-        case "Warning": return "Warning";
-        case "Advice": return "Suggestion";
+        case "Warning":
+            return "Warning";
+        case "Advice":
+            return "Suggestion";
         case "Error":
-        default: return "Error";
+        default:
+            return "Error";
     }
 }
 

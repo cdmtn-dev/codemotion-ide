@@ -7,18 +7,18 @@ export class _Notificator {
         this._hideTimer = null;
         this._visible = !this.element.classList.contains("hidden");
 
-        this.notificatorValue = document.querySelector("#notificator_value")
-        this.notificatorIcon = document.querySelector("#notificator_icon")
+        this.notificatorValue = document.querySelector("#notificator_value");
+        this.notificatorIcon = document.querySelector("#notificator_icon");
 
-        this.text = "Example"
-        this.icon = "search"
+        this.text = "Example";
+        this.icon = "search";
     }
 
     setSize(size = "default") {
-        const sizes = ["default", "small", "medium", "large", "pill"]
+        const sizes = ["default", "small", "medium", "large", "pill"];
 
-        if(sizes.includes(size)) {
-            this.element.classList.add(size)
+        if (sizes.includes(size)) {
+            this.element.classList.add(size);
         }
     }
 
@@ -28,8 +28,8 @@ export class _Notificator {
             this._hideTimer = null;
         }
 
-        this.notificatorValue.textContent = this.text
-        this.notificatorIcon.textContent = this.icon
+        this.notificatorValue.textContent = this.text;
+        this.notificatorIcon.textContent = this.icon;
 
         if (!this._visible && this._rafId === null) {
             this._rafId = requestAnimationFrame(() => {

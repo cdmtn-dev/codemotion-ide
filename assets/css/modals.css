@@ -22,12 +22,37 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: .4s linear(0 0%, 0 1.8%, 0.01 3.6%, 0.03 6.35%, 0.07 9.1%, 0.13 11.4%, 0.19 13.4%, 0.27 15%, 0.34 16.1%, 0.54 18.35%, 0.66 20.6%, 0.72 22.4%, 0.77 24.6%, 0.81 27.3%, 0.85 30.4%, 0.88 35.1%, 0.92 40.6%, 0.94 47.2%, 0.96 55%, 0.98 64%, 0.99 74.4%, 1 86.4%, 1 100%);
+    transition: 0.4s
+        linear(
+            0 0%,
+            0 1.8%,
+            0.01 3.6%,
+            0.03 6.35%,
+            0.07 9.1%,
+            0.13 11.4%,
+            0.19 13.4%,
+            0.27 15%,
+            0.34 16.1%,
+            0.54 18.35%,
+            0.66 20.6%,
+            0.72 22.4%,
+            0.77 24.6%,
+            0.81 27.3%,
+            0.85 30.4%,
+            0.88 35.1%,
+            0.92 40.6%,
+            0.94 47.2%,
+            0.96 55%,
+            0.98 64%,
+            0.99 74.4%,
+            1 86.4%,
+            1 100%
+        );
 }
 .modal-wrapper.hidden {
     transform: translateY(100%);
     pointer-events: none;
-    display: flex!important;
+    display: flex !important;
 }
 .modal-wrapper .modal,
 .modal-wrapper .modal.lg {
@@ -70,8 +95,8 @@
 }
 
 .modal.confirm {
-    width: 400px!important;
-    height: 200px!important;
+    width: 400px !important;
+    height: 200px !important;
 }
 .modal.confirm .confirm-title {
     font-size: 15px;
@@ -81,7 +106,7 @@
 .modal.confirm .confirm-desc {
     font-size: 14px;
     font-weight: 400;
-    opacity: .5;
+    opacity: 0.5;
 }
 .modal.confirm .confirm-buttons {
     position: absolute;
@@ -95,13 +120,13 @@
     color: var(--text-color);
     padding: 8px 12px;
     border-radius: 5px;
-    transition: .2s;
+    transition: 0.2s;
 }
 .modal.confirm .confirm-buttons button.danger {
     background: var(--danger);
 }
 .modal.confirm .confirm-buttons button:hover {
-    opacity: .5;
+    opacity: 0.5;
     cursor: pointer;
 }
 
@@ -118,8 +143,11 @@
 }
 .modal-note::before {
     content: "\e000";
-    font-family: 'Material Symbols Rounded';
-    font-variation-settings: 'FILL' 1, 'wght' 700, 'opzs' 24;
+    font-family: "Material Symbols Rounded";
+    font-variation-settings:
+        "FILL" 1,
+        "wght" 700,
+        "opzs" 24;
     margin-right: 5px;
     font-size: 15px;
     color: var(--warning);

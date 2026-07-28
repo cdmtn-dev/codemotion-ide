@@ -1,19 +1,23 @@
-const { checkFields } = require("../../tools.js")
+const { checkFields } = require("../../tools.js");
 
 function callback(data) {
-    const input = data.selfArgs[0]
-    const extName = data.extensionName
+    const input = data.selfArgs[0];
+    const extName = data.extensionName;
 
     checkFields("APP.registerCommand", input, {
         name: "string",
-        response: "string"
-    })
+        response: "string",
+    });
 
     if (/\s/g.test(input.name)) {
-        throw new Error(`The command cannot contain spaces. Use characters such as "-", "_", etc., instead. Example: ${data.name.replaceAll(/\s/g, "-")}`)
+        throw new Error(
+            `The command cannot contain spaces. Use characters such as "-", "_", etc., instead. Example: ${data.name.replaceAll(/\s/g, "-")}`,
+        );
     }
     if (input.name.startsWith("-")) {
-        throw new Error(`A command name cannot begin with a hyphen (-) when registering a command, because commands that start with this character may be reserved by the program`)
+        throw new Error(
+            "A command name cannot begin with a hyphen (-) when registering a command, because commands that start with this character may be reserved by the program",
+        );
     }
 
     data.debuggerSender.send("debug-event", {
@@ -22,12 +26,12 @@ function callback(data) {
             command: {
                 name: input.name,
                 arguments: input.arguments,
-                response: input.response
+                response: input.response,
             },
-            from: extName
+            from: extName,
         },
-        time: Date.now()
-    })
+        time: Date.now(),
+    });
 }
 
-module.exports = { callback }
+module.exports = { callback };

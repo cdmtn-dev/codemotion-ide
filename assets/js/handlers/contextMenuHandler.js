@@ -1,83 +1,82 @@
-import { idify } from "../lib.js"
+import { idify } from "../lib.js";
 
 export class ContextMenu {
     constructor(id, elements = {}) {
-        const context = document.createElement("div")
-        context.classList.add("context-menu", "hidden")
-        context.id = idify(id)
-        this.context = context
+        const context = document.createElement("div");
+        context.classList.add("context-menu", "hidden");
+        context.id = idify(id);
+        this.context = context;
 
         context.addEventListener("contextmenu", (e) => {
             e.preventDefault();
             e.stopPropagation();
         });
 
-        document.body.appendChild(context)
+        document.body.appendChild(context);
 
-        if(Object.keys(elements).length > 0) {
-            Object.keys(elements).forEach(key => {
-                this.add(elements[key])
-            })
+        if (Object.keys(elements).length > 0) {
+            Object.keys(elements).forEach((key) => {
+                this.add(elements[key]);
+            });
         }
     }
 
     on(eventName, callback) {
         const events = {
-            open: "contextmenu"
-        }
+            open: "contextmenu",
+        };
 
-        if(eventName in events) {
-            this.scope.addEventListener(events[eventName], () => { 
-                callback(
-                    {
-                        element: this.context
-                    }
-                ) 
-            })
+        if (eventName in events) {
+            this.scope.addEventListener(events[eventName], () => {
+                callback({
+                    element: this.context,
+                });
+            });
         }
     }
 
     removeItem(id) {
-        const existing = this.context.querySelector(`.context-menu__item[id="${id}"]`)
-        if(existing) {
-            existing.remove()
+        const existing = this.context.querySelector(`.context-menu__item[id="${id}"]`);
+        if (existing) {
+            existing.remove();
         }
     }
 
     add({ id, content, icon, shortcut, func, type }) {
-        if(this.context.querySelector(`.context-menu__item[id="${id}"]`)) {
-            return
+        if (this.context.querySelector(`.context-menu__item[id="${id}"]`)) {
+            return;
         }
 
-        let iconHTML = icon == undefined ? "" : `<span class="material-symbols-rounded">${icon}</span>`
-        type = type == undefined ? "default" : type
+        const iconHtml =
+            icon == undefined ? "" : `<span class="material-symbols-rounded">${icon}</span>`;
+        type = type == undefined ? "default" : type;
 
-        const item = document.createElement("div")
-        item.classList.add("context-menu__item")
-        item.id = id
+        const item = document.createElement("div");
+        item.classList.add("context-menu__item");
+        item.id = id;
         item.innerHTML = `
-            <div class="context-menu__item-block ${icon != undefined ? `` : `no-icon`}">
-                ${iconHTML}
+            <div class="context-menu__item-block ${icon == undefined ? "no-icon" : ""}">
+                ${iconHtml}
                 <div class="content">${content}</div>
             </div>
             <div class="context-menu__item-block">
-                ${shortcut != undefined ? `<div class="shortcut">${shortcut}</div>` : ""}
+                ${shortcut == undefined ? "" : `<div class="shortcut">${shortcut}</div>`}
             </div>
-        `
+        `;
 
-        if(type == "divider") {
-            item.innerHTML = ""
-            item.className = "context-menu__item-divider"
-            item.innerHTML = `<div></div>`
-            item.removeAttribute("id")
+        if (type == "divider") {
+            item.innerHTML = "";
+            item.className = "context-menu__item-divider";
+            item.innerHTML = "<div></div>";
+            item.removeAttribute("id");
         }
 
-        this.context.appendChild(item)
+        this.context.appendChild(item);
 
         item.addEventListener("click", () => {
-            this._hide()
-            func()
-        })
+            this._hide();
+            func();
+        });
     }
 
     _show(x, y) {
@@ -108,8 +107,8 @@ export class ContextMenu {
     }
 
     bindOn(scope) {
-        if(scope) {
-            this.scope = scope
+        if (scope) {
+            this.scope = scope;
             scope.addEventListener("contextmenu", (e) => {
                 e.preventDefault();
                 this._show(e.clientX, e.clientY);
@@ -125,7 +124,7 @@ export class ContextMenu {
         this.scope = editorContainer;
 
         this._showMenu = (x, y) => {
-            document.querySelectorAll(".context-menu").forEach(m => {
+            document.querySelectorAll(".context-menu").forEach((m) => {
                 if (m !== this.context) m.classList.add("hidden");
             });
             this._show(x, y);

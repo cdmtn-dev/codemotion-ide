@@ -1,49 +1,52 @@
-const path = require("node:path")
-const { saveReadFile, createSandboxConsole, checkFields } = require("../../tools.js")
+const path = require("node:path");
+const { saveReadFile, createSandboxConsole, checkFields } = require("../../tools.js");
 
 function callback(data) {
-    const langName = data.selfArgs[0]
-    const configPath = data.selfArgs[1]
-    const extPath = data.extensionPath
-    const extName = data.extensionName
-    const permName = data.permissionName
-    const mainSender = data.mainSender
-    const debuggerSender = data.debuggerSender
+    const langName = data.selfArgs[0];
+    const configPath = data.selfArgs[1];
+    const extPath = data.extensionPath;
+    const extName = data.extensionName;
+    const permName = data.permissionName;
+    const mainSender = data.mainSender;
+    const debuggerSender = data.debuggerSender;
 
-    const c = createSandboxConsole(extName, debuggerSender)
+    const c = createSandboxConsole(extName, debuggerSender);
 
-    if(!langName) {
-        c.error(`[${permName}] Each language must have a unique name-id. For example: en`)
-        return
+    if (!langName) {
+        c.error(`[${permName}] Each language must have a unique name-id. For example: en`);
+        return;
     }
 
-    if(configPath) {
-        let configContent = saveReadFile(path.join(extPath, configPath + ".json"))
-        configContent = JSON.parse(configContent)
+    if (configPath) {
+        let configContent = saveReadFile(path.join(extPath, configPath + ".json"));
+        configContent = JSON.parse(configContent);
 
-        if(!configContent) {
-            c.error(`[${permName}] Config "${configPath}.json" is empty or not exists`)
-            return
-        }
-        else {
+        if (configContent) {
             try {
                 checkFields(`${permName}:config`, configContent, {
-                    name: "string"
-                })
+                    name: "string",
+                });
 
-                mainSender.send("extension-localization-register", { langName, configContent, from: extName })
+                mainSender.send("extension-localization-register", {
+                    langName,
+                    configContent,
+                    from: extName,
+                });
+            } catch (e) {
+                c.error(String(e));
             }
-            catch(e) {
-                c.error(String(e))
-            }
+        } else {
+            c.error(`[${permName}] Config "${configPath}.json" is empty or not exists`);
+            return;
         }
-    }
-    else {
-        c.error(`[${permName}] The language configuration must be the second argument after the name-id`)
-        return 
+    } else {
+        c.error(
+            `[${permName}] The language configuration must be the second argument after the name-id`,
+        );
+        return;
     }
 
-    return () => {}
+    return () => {};
 }
 
-module.exports = { callback }
+module.exports = { callback };

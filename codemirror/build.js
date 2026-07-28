@@ -1,11 +1,13 @@
 const esbuild = require("esbuild");
 
-esbuild.build({
-    entryPoints: ["src/index.js"],
-    bundle: true,
-    format: "iife",
-    globalName: "CodeMirrorBundle",
-    outfile: "dist/codemirror.js",
-    sourcemap: true,
-    minify: false
-}).catch(() => process.exit(1));
+esbuild
+    .build({
+        entryPoints: ["src/index.js"],
+        bundle: true,
+        format: "iife",
+        globalName: "CodeMirrorBundle",
+        outfile: "dist/codemirror.js",
+        sourcemap: true,
+        minify: false,
+    })
+    .catch(() => process.exit(1));

@@ -1,44 +1,48 @@
+import { fromJSONToTextMate } from "../../../app/dist-esm/textmate/compile.js";
 import { Languages } from "../lib.js";
-import { fromJSONToTextMate } from "../../../app/dist-esm/textmate/compile.js"
 
 export class _EditorAdapter {
-    constructor(
-        { 
-            view, compartments, setOnChange, commands, recreateState, editorView,
-            editorState, tools
-        }
-    ) {
-        this.instance = view
+    constructor({
+        view,
+        compartments,
+        setOnChange,
+        commands,
+        recreateState,
+        editorView,
+        editorState,
+        tools,
+    }) {
+        this.instance = view;
         this.languageCompartment = compartments.languageCompartment;
         this.themeCompartment = compartments.themeCompartment;
-        this.tabSizeCompartment = compartments.tabSizeCompartment
+        this.tabSizeCompartment = compartments.tabSizeCompartment;
         this.setDiagnosticsInternal = compartments.setDiagnostics;
-        this.wordWrapCompartment = compartments.wordWrapCompartment
-        this.scrollCompartment = compartments.scrollCompartment
-        this.readOnlyCompartment = compartments.readOnlyCompartment
+        this.wordWrapCompartment = compartments.wordWrapCompartment;
+        this.scrollCompartment = compartments.scrollCompartment;
+        this.readOnlyCompartment = compartments.readOnlyCompartment;
 
         this.setOnChangeInternal = setOnChange;
-        this.commands = commands
-        this.recreateState = recreateState
+        this.commands = commands;
+        this.recreateState = recreateState;
 
-        this.editorView = editorView
-        this.editorState = editorState
-        this.tools = tools
+        this.editorView = editorView;
+        this.editorState = editorState;
+        this.tools = tools;
 
-        this.language = undefined
-        this.theme = undefined
-        this.tabSize = undefined
-        this.listeners = {}
+        this.language = undefined;
+        this.theme = undefined;
+        this.tabSize = undefined;
+        this.listeners = {};
 
-        this.dom = view.dom
+        this.dom = view.dom;
     }
 
-    // 
+    //
     // other
-    // 
+    //
 
     openSearch() {
-        this.commands.openSearchPanel(this.instance)
+        this.commands.openSearchPanel(this.instance);
     }
 
     resetUndoManager() {
@@ -50,10 +54,10 @@ export class _EditorAdapter {
             effects: this.scrollCompartment.reconfigure(
                 this.editorView.theme({
                     ".cm-content": {
-                        paddingBottom: value === 0 ? "0px" : `${value * 100}vh`
-                    }
-                })
-            )
+                        paddingBottom: value === 0 ? "0px" : `${value * 100}vh`,
+                    },
+                }),
+            ),
         });
 
         return this;
@@ -64,38 +68,38 @@ export class _EditorAdapter {
     //
 
     getValue() {
-        return this.instance.state.doc.toString()
+        return this.instance.state.doc.toString();
     }
 
     getTheme() {
-        return this.theme
+        return this.theme;
     }
 
     getSelectedText() {
-        const { from, to } = this.instance.state.selection.main
-        return this.instance.state.sliceDoc(from, to)
+        const { from, to } = this.instance.state.selection.main;
+        return this.instance.state.sliceDoc(from, to);
     }
 
     getCurrentLanguage() {
-        return this.language
+        return this.language;
     }
 
     getAnnotations() {
-        return []
+        return [];
     }
 
     getScrollTop() {
-        return this.instance.scrollDOM.scrollTop
+        return this.instance.scrollDOM.scrollTop;
     }
 
     getCursorPosition() {
-        const pos = this.instance.state.selection.main.head
-        const line = this.instance.state.doc.lineAt(pos)
+        const pos = this.instance.state.selection.main.head;
+        const line = this.instance.state.doc.lineAt(pos);
 
         return {
             row: line.number - 1,
-            column: pos - line.from
-        }
+            column: pos - line.from,
+        };
     }
 
     // lines api
@@ -112,7 +116,7 @@ export class _EditorAdapter {
     }
 
     currentLanguageId() {
-        return this.language
+        return this.language;
     }
 
     removeFullLines(fromRow, toRow = fromRow) {
@@ -127,8 +131,8 @@ export class _EditorAdapter {
         this.instance.dispatch({
             changes: {
                 from: fromLine.from,
-                to: toLine.to < doc.length ? toLine.to + 1 : toLine.to
-            }
+                to: toLine.to < doc.length ? toLine.to + 1 : toLine.to,
+            },
         });
     }
 
@@ -141,8 +145,8 @@ export class _EditorAdapter {
         view.dispatch({
             changes: {
                 from: line.from,
-                to: line.to < state.doc.length ? line.to + 1 : line.to
-            }
+                to: line.to < state.doc.length ? line.to + 1 : line.to,
+            },
         });
     }
 
@@ -151,12 +155,12 @@ export class _EditorAdapter {
             changes: {
                 from: range.start,
                 to: range.end,
-                insert: text
-            }
+                insert: text,
+            },
         });
     }
 
-    // 
+    //
 
     //
     // setters
@@ -164,9 +168,7 @@ export class _EditorAdapter {
 
     readOnly(enabled) {
         this.instance.dispatch({
-            effects: this.readOnlyCompartment.reconfigure(
-                this.editorState.readOnly.of(enabled)
-            )
+            effects: this.readOnlyCompartment.reconfigure(this.editorState.readOnly.of(enabled)),
         });
 
         return this;
@@ -175,8 +177,8 @@ export class _EditorAdapter {
     wordWrap(enabled) {
         this.instance.dispatch({
             effects: this.wordWrapCompartment.reconfigure(
-                enabled ? this.editorView.lineWrapping : []
-            )
+                enabled ? this.editorView.lineWrapping : [],
+            ),
         });
 
         return this;
@@ -185,7 +187,7 @@ export class _EditorAdapter {
     setMaxLines(lines) {
         const container = this.instance.dom.parentElement;
 
-        if (lines === Infinity) {
+        if (lines === Number.POSITIVE_INFINITY) {
             container.style.height = "auto";
             container.style.maxHeight = "";
         } else {
@@ -203,22 +205,22 @@ export class _EditorAdapter {
             changes: {
                 from: 0,
                 to: this.instance.state.doc.length,
-                insert: value
-            }
-        })
+                insert: value,
+            },
+        });
     }
 
     setLanguage(name) {
         this.language = name;
 
         const langInfo = Languages.get(name);
-        const mode = langInfo ? langInfo.mode : (name || "text");
+        const mode = langInfo ? langInfo.mode : name || "text";
 
         const targetLang = window.CodeMirror?.Languages?.[mode];
 
         if (targetLang) {
             this.instance.dispatch({
-                effects: this.languageCompartment.reconfigure(targetLang)
+                effects: this.languageCompartment.reconfigure(targetLang),
             });
         }
     }
@@ -231,10 +233,10 @@ export class _EditorAdapter {
             return;
         }
 
-        this.theme = name
+        this.theme = name;
 
         this.instance.dispatch({
-            effects: this.themeCompartment.reconfigure(theme)
+            effects: this.themeCompartment.reconfigure(theme),
         });
     }
 
@@ -246,10 +248,10 @@ export class _EditorAdapter {
             return;
         }
 
-        this.tabSize = size
+        this.tabSize = size;
 
         this.instance.dispatch({
-            effects: this.tabSizeCompartment.reconfigure(tabSize)
+            effects: this.tabSizeCompartment.reconfigure(tabSize),
         });
     }
 
@@ -270,17 +272,17 @@ export class _EditorAdapter {
     }
 
     setScrollTop(value) {
-        this.instance.scrollDOM.scrollTop = value
+        this.instance.scrollDOM.scrollTop = value;
     }
 
     moveCursorTo(row, column) {
-        const line = this.instance.state.doc.line(row + 1)
+        const line = this.instance.state.doc.line(row + 1);
 
         this.instance.dispatch({
             selection: {
-                anchor: line.from + column
-            }
-        })
+                anchor: line.from + column,
+            },
+        });
     }
 
     //
@@ -288,22 +290,18 @@ export class _EditorAdapter {
     //
 
     pasteContent(text) {
-        this.instance.dispatch(
-            this.instance.state.replaceSelection(text)
-        );
+        this.instance.dispatch(this.instance.state.replaceSelection(text));
     }
 
     async pasteBufferContent() {
         const text = await navigator.clipboard.readText();
 
-        this.instance.dispatch(
-            this.instance.state.replaceSelection(text)
-        );
+        this.instance.dispatch(this.instance.state.replaceSelection(text));
     }
 
     selectAll() {
         this.instance.focus();
-        this.commands.selectAll(this.instance)
+        this.commands.selectAll(this.instance);
     }
 
     duplicateSelection() {
@@ -317,12 +315,12 @@ export class _EditorAdapter {
             view.dispatch({
                 changes: {
                     from: to,
-                    insert: text
+                    insert: text,
                 },
                 selection: {
                     anchor: to,
-                    head: to + text.length
-                }
+                    head: to + text.length,
+                },
             });
 
             return;
@@ -333,26 +331,26 @@ export class _EditorAdapter {
         view.dispatch({
             changes: {
                 from: line.to,
-                insert: "\n" + line.text
+                insert: "\n" + line.text,
             },
             selection: {
                 anchor: from + line.length + 1,
-                head: from + line.length + 1
-            }
+                head: from + line.length + 1,
+            },
         });
     }
 
     undo() {
-        this.commands.undo(this.instance)
+        this.commands.undo(this.instance);
     }
 
     redo() {
-        this.commands.redo(this.instance)
+        this.commands.redo(this.instance);
     }
 
     toggleCommentLine() {
-        this.instance.focus()
-        this.commands.toggleComment(this.instance)
+        this.instance.focus();
+        this.commands.toggleComment(this.instance);
     }
 
     //
@@ -360,19 +358,19 @@ export class _EditorAdapter {
     //
 
     onWheel(cb) {
-        this.instance.scrollDOM.addEventListener("wheel", cb)
+        this.instance.scrollDOM.addEventListener("wheel", cb);
     }
 
     onMouseDown(cb) {
-        this.instance.dom.addEventListener("mousedown", cb)
+        this.instance.dom.addEventListener("mousedown", cb);
     }
 
     onFocus(cb) {
-        this.instance.dom.addEventListener("focus", cb)
+        this.instance.dom.addEventListener("focus", cb);
     }
 
     onClick(cb) {
-        this.instance.dom.addEventListener("click", cb)
+        this.instance.dom.addEventListener("click", cb);
     }
 
     onChange(cb) {
@@ -380,34 +378,38 @@ export class _EditorAdapter {
     }
 
     onChangeCursor(cb) {
-        this.listeners.cursor = cb
+        this.listeners.cursor = cb;
     }
 
     onAfterRender(cb) {
-        this.listeners.render = cb
+        this.listeners.render = cb;
     }
 
     on(name, cb) {
-        this.listeners[name] = cb
+        this.listeners[name] = cb;
     }
 
     off(name) {
-        delete this.listeners[name]
+        delete this.listeners[name];
     }
 
     // regs
 
     static async registerLanguage({ id, rules }) {
-        const { keywords, comment, operators, types } = rules.syntax
+        const { keywords, comment, operators, types } = rules.syntax;
 
         const textMateCompiled = fromJSONToTextMate({
-            id, keywords, comment, operators, types
-        })
+            id,
+            keywords,
+            comment,
+            operators,
+            types,
+        });
 
         return await window.CodeMirror.registerLanguage({
-            id: id,
+            id,
             grammar: textMateCompiled,
-            extends: rules.extends
-        })
+            extends: rules.extends,
+        });
     }
 }

@@ -2,105 +2,103 @@ export class _Dirs {
     static dirs = {
         default: {
             icon: "default",
-            iconExt: "svg"
+            iconExt: "svg",
         },
         js: {
             icon: "js",
-            iconExt: "svg"
+            iconExt: "svg",
         },
         javascript: {
             icon: "js",
-            iconExt: "svg"
+            iconExt: "svg",
         },
         fonts: {
             icon: "fonts",
-            iconExt: "svg"
+            iconExt: "svg",
         },
         font: {
             icon: "fonts",
-            iconExt: "svg"
+            iconExt: "svg",
         },
         json: {
             icon: "json",
-            iconExt: "svg"
+            iconExt: "svg",
         },
         css: {
             icon: "css",
-            iconExt: "svg"
+            iconExt: "svg",
         },
         styles: {
             icon: "css",
-            iconExt: "svg"
+            iconExt: "svg",
         },
         style: {
             icon: "css",
-            iconExt: "svg"
+            iconExt: "svg",
         },
         plugins: {
             icon: "plugins",
-            iconExt: "svg"
+            iconExt: "svg",
         },
         extensions: {
             icon: "plugins",
-            iconExt: "svg"
+            iconExt: "svg",
         },
         assets: {
             icon: "assets",
-            iconExt: "svg"
+            iconExt: "svg",
         },
         media: {
             icon: "assets",
-            iconExt: "svg"
+            iconExt: "svg",
         },
         static: {
             icon: "assets",
-            iconExt: "svg"
+            iconExt: "svg",
         },
         public: {
             icon: "assets",
-            iconExt: "svg"
+            iconExt: "svg",
         },
         svg: {
             icon: "svg",
-            iconExt: "svg"
+            iconExt: "svg",
         },
         icons: {
             icon: "svg",
-            iconExt: "svg"
+            iconExt: "svg",
         },
         temp: {
             icon: "temp",
-            iconExt: "svg"
-        }
-    }
+            iconExt: "svg",
+        },
+    };
 
     static getIcon(name) {
-        if(name in this.dirs) {
-            if("customIcon" in this.dirs[name]) {
-                return this.dirs[name].icon
+        if (name in _Dirs.dirs) {
+            if ("customIcon" in _Dirs.dirs[name]) {
+                return _Dirs.dirs[name].icon;
             }
 
-            return `../assets/media/icons/folders/${this.dirs[name].icon}.${this.dirs[name].iconExt}`
+            return `../assets/media/icons/folders/${_Dirs.dirs[name].icon}.${_Dirs.dirs[name].iconExt}`;
         }
-        else {
-            return `../assets/media/icons/folders/${this.dirs["default"].icon}.${this.dirs["default"].iconExt}`
-        }
+        return `../assets/media/icons/folders/${_Dirs.dirs["default"].icon}.${_Dirs.dirs["default"].iconExt}`;
     }
 
     static add({ id, icon, ext, custom }) {
-        const dirID = id == undefined ? crypto.randomUUID() : id
-        const dirIcon = icon
-        const dirExt = ext == undefined ? "svg" : ext
-        const customIcon = custom == undefined ? false : custom
+        const dirId = id == undefined ? crypto.randomUUID() : id;
+        const dirIcon = icon;
+        const dirExt = ext == undefined ? "svg" : ext;
+        const customIcon = custom == undefined ? false : custom;
 
-        this.dirs[dirID] = {
+        _Dirs.dirs[dirId] = {
             icon: dirIcon,
             iconExt: dirExt,
-            customIcon: customIcon
-        }
+            customIcon,
+        };
     }
 
     static list() {
-        return this.dirs
+        return _Dirs.dirs;
     }
 }

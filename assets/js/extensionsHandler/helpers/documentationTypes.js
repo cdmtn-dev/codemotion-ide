@@ -3,45 +3,45 @@ export class DocumentationTypes {
         {
             name: "keyword",
             displayName: "Keyword",
-            className: "keyword"
+            className: "keyword",
         },
         {
             name: "function",
             displayName: "Function",
-            className: "function"
+            className: "function",
         },
         {
             name: "variable",
             displayName: "Variable",
-            className: "variable"
+            className: "variable",
         },
         {
             name: "type",
             displayName: "Type",
-            className: "type"
+            className: "type",
         },
         {
             name: "string",
             displayName: "String",
-            className: "string"
+            className: "string",
         },
         {
             name: "number",
             displayName: "Number",
-            className: "number"
+            className: "number",
         },
         {
             name: "operator",
             displayName: "Operator",
-            className: "operator"
-        }
-    ]
+            className: "operator",
+        },
+    ];
 
     static list() {
-        return this.types
+        return DocumentationTypes.types;
     }
 
     static add(object) {
-        this.types.push(object)
+        DocumentationTypes.types.push(object);
     }
 }

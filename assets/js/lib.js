@@ -1,73 +1,82 @@
-import { ErrorReporter } from "./ErrorReporter.js"
-import { BottomWindow } from "./handlers/BottomWindowHandler.js"
+import { ErrorReporter } from "./ErrorReporter.js";
+import { BottomWindow } from "./handlers/BottomWindowHandler.js";
+import { _GetOrgAvatar } from "./libClasses/avatar.js";
+import { _CodeTemplates } from "./libClasses/codeTemplates.js";
+import { _ContextMenuLoader } from "./libClasses/contextMenuLoader.js";
+import { _Dirs } from "./libClasses/dirs.js";
+import { _DragDrop } from "./libClasses/dragndrop.js";
+import { _EditorAdapter } from "./libClasses/EditorAdapter.js";
+import { _Filenames } from "./libClasses/fillenames.js";
+import { _GLS } from "./libClasses/gls.js";
+import { _Languages } from "./libClasses/languages.js";
+import { _Loader } from "./libClasses/loader.js";
+import { _Notificator } from "./libClasses/notificator.js";
+import { _Options } from "./libClasses/options.js";
+import { _SideBarIconManager } from "./libClasses/sidebarIconManager.js";
+import { _TopBarElement } from "./libClasses/topbarElement.js";
+import { valid } from "./modalsHandler/engine.js";
+import { createDIV, createIcon } from "./modalsHandler/handlers/helpers.js";
 
-import { _Languages } from "./libClasses/languages.js"
-import { _Dirs } from "./libClasses/dirs.js"
-import { _Notificator } from "./libClasses/notificator.js"
-import { _DragDrop } from "./libClasses/dragndrop.js"
-import { _TopBarElement } from "./libClasses/topbarElement.js"
-import { _SideBarIconManager } from "./libClasses/sidebarIconManager.js"
-import { _Options } from "./libClasses/options.js"
-import { _ContextMenuLoader } from "./libClasses/contextMenuLoader.js"
-import { _Loader } from "./libClasses/loader.js"
-import { valid } from "./modalsHandler/engine.js"
-import { createDIV, createIcon } from "./modalsHandler/handlers/helpers.js"
-import { _GLS } from "./libClasses/gls.js"
-import { _Filenames } from "./libClasses/fillenames.js"
-import { _CodeTemplates } from "./libClasses/codeTemplates.js"
-import { _EditorAdapter } from "./libClasses/EditorAdapter.js"
-import { _GetOrgAvatar } from "./libClasses/avatar.js"
+let runtimeErrors = [];
+let runtimeErrorsCount = 0;
 
-let runtimeErrors = []
-let runtimeErrorsCount = 0
+export const GLOBAL = {};
 
-export const GLOBAL = {}
+export const Languages = _Languages;
+export const Filenames = _Filenames;
+export const Dirs = _Dirs;
+export const DragDrop = _DragDrop;
+export const Notificator = _Notificator;
+export const TopBarElement = _TopBarElement;
+export const SideBarIconManager = _SideBarIconManager;
+export const Options = _Options;
+export const ContextMenuLoader = _ContextMenuLoader;
+export const Loader = _Loader;
+export const GLS = _GLS;
+export const CodeTemplates = _CodeTemplates;
+export const EditorAdapter = _EditorAdapter;
 
-export const Languages = _Languages
-export const Filenames = _Filenames
-export const Dirs = _Dirs
-export const DragDrop = _DragDrop
-export const Notificator = _Notificator
-export const TopBarElement = _TopBarElement
-export const SideBarIconManager = _SideBarIconManager
-export const Options = _Options
-export const ContextMenuLoader = _ContextMenuLoader
-export const Loader = _Loader
-export const GLS = _GLS
-export const CodeTemplates = _CodeTemplates
-export const EditorAdapter = _EditorAdapter
-
-export const GetOrgAvatar = _GetOrgAvatar
+export const GetOrgAvatar = _GetOrgAvatar;
 
 // Language: adds a image icons
-const imageIcons = ["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg", "ico", "avif", "tif", "tiff", "heic", "heif"]
+const imageIcons = [
+    "png",
+    "jpg",
+    "jpeg",
+    "gif",
+    "webp",
+    "bmp",
+    "svg",
+    "ico",
+    "avif",
+    "tif",
+    "tiff",
+    "heic",
+    "heif",
+];
 
-imageIcons.forEach(id => {
-    Languages.add(
-        {
-            id: id,
-            name: "Image",
-            icon: "image",
-            iconExt: "svg",
-            mode: "text"
-        }
-    )
-})
+imageIcons.forEach((id) => {
+    Languages.add({
+        id,
+        name: "Image",
+        icon: "image",
+        iconExt: "svg",
+        mode: "text",
+    });
+});
 
 // Language: adds a font icons
-const fontIcons = ["ttf", "otf", "woff", "woff2", "eot"]
+const fontIcons = ["ttf", "otf", "woff", "woff2", "eot"];
 
-fontIcons.forEach(id => {
-    Languages.add(
-        {
-            id: id,
-            name: "Font",
-            icon: "font",
-            iconExt: "svg",
-            mode: "text"
-        }
-    )
-})
+fontIcons.forEach((id) => {
+    Languages.add({
+        id,
+        name: "Font",
+        icon: "font",
+        iconExt: "svg",
+        mode: "text",
+    });
+});
 
 export const tabName = document.querySelector("#tab-name");
 
@@ -79,13 +88,13 @@ export function setTabNameCounter(count) {
         if (old) old.remove();
         return;
     }
-    
+
     if (old) old.remove();
     tabName.insertAdjacentHTML("beforeend", `<span class="counter">${count}</span>`);
 }
 export function setTabName(text) {
     if (!tabName) return;
-    tabName.innerHTML = text
+    tabName.innerHTML = text;
 }
 
 export function toBase64(str) {
@@ -111,7 +120,7 @@ export function getCodeByName(name, raw = false) {
         todo: "markdown",
         ps: "prettyscript",
         py: "python",
-        php: "php"
+        php: "php",
     };
     const rawNames = {
         html: "html",
@@ -120,7 +129,7 @@ export function getCodeByName(name, raw = false) {
         py: "python",
         md: "markdown",
         css: "css",
-        php: "php"
+        php: "php",
     };
 
     if (!raw) return names[ext] || "plaintext";
@@ -129,139 +138,155 @@ export function getCodeByName(name, raw = false) {
 async function getFileIconByName(name) {
     // fileicon - file name
     // ext - extenstion of icon, default: svg
-    let ext = "svg"
+    let ext = "svg";
 
-    let alts = {
+    const alts = {
         ps: {
             ext: "svg",
-            fileicon: "prettyscript"
+            fileicon: "prettyscript",
         },
         todo: {
             ext: "svg",
-            fileicon: "todo"
+            fileicon: "todo",
         },
         ttc: {
             ext: "svg",
-            fileicon: "ttf"
+            fileicon: "ttf",
         },
         otf: {
             ext: "svg",
-            fileicon: "ttf"
+            fileicon: "ttf",
         },
         woff: {
             ext: "svg",
-            fileicon: "ttf"
-        }
-    }
+            fileicon: "ttf",
+        },
+    };
 
     if (name in alts) {
-        ext = alts[name].ext
-        name = alts[name].fileicon
-    }
-    else {
-        name = getCodeByName(name).replaceAll(/[0-9]/g, "")
+        ext = alts[name].ext;
+        name = alts[name].fileicon;
+    } else {
+        name = getCodeByName(name).replaceAll(/[0-9]/g, "");
     }
 
-    let list = await window.electron.getAllIcons();
-    let listNames = []
+    const list = await window.electron.getAllIcons();
+    const listNames = [];
 
-    list.forEach(e => {
-        let filteredName = e.name.replaceAll("." + e.name.split(".").pop(), "")
+    list.forEach((e) => {
+        const filteredName = e.name.replaceAll("." + e.name.split(".").pop(), "");
 
         if (filteredName != "default") {
-            listNames.push(e.name.replaceAll("." + e.name.split(".").pop(), ""))
+            listNames.push(e.name.replaceAll("." + e.name.split(".").pop(), ""));
         }
-    })
+    });
 
     if (listNames.includes(name)) {
-        return `./assets/media/icons/symbols/files/${name}.${ext}`
+        return `./assets/media/icons/symbols/files/${name}.${ext}`;
     }
-    else {
-        return `./assets/media/icons/symbols/files/document.svg`
-    }
+    return "./assets/media/icons/symbols/files/document.svg";
 }
 
-let inputs = document.querySelectorAll("input")
+const inputs = document.querySelectorAll("input");
 
 if (inputs.length > 0) {
-    inputs.forEach(input => {
+    inputs.forEach((input) => {
         input.addEventListener("input", () => {
             if (input.value > 0) {
-                input.classList.add("focused")
+                input.classList.add("focused");
+            } else {
+                input.classList.remove("focused");
             }
-            else {
-                input.classList.remove("focused")
-            }
-        })
-    })
+        });
+    });
 }
 
 export function capitilize(text) {
-    return String(text).charAt(0).toUpperCase() + String(text).slice(1)
+    return String(text).charAt(0).toUpperCase() + String(text).slice(1);
 }
 
 export function addToHistory({ id, actionType, value, desc, today }) {
-    const historyID = id != undefined ? id : Object.keys(historyObject).length + 1
-    const historyValue = value != undefined ? value : "Untitled"
-    const historyDesc = desc != undefined ? desc : "No description provided"
-    const historyToday = today != undefined ? today : new Date().format("H:i")
+    const historyId = id == undefined ? Object.keys(historyObject).length + 1 : id;
+    const historyValue = value == undefined ? "Untitled" : value;
+    const historyDesc = desc == undefined ? "No description provided" : desc;
+    const historyToday = today == undefined ? new Date().format("H:i") : today;
 
-    historyObject[historyID] = { 
-        time: historyToday, 
-        action: actionType, 
-        value: historyValue, 
-        description: historyDesc 
+    historyObject[historyId] = {
+        time: historyToday,
+        action: actionType,
+        value: historyValue,
+        description: historyDesc,
     };
 }
 
-export function addToBug({ id, priority, value, desc, today, isSelf, org, resolved, author, assignedTo, type }) {
-    const bugID = id != undefined ? id : Object.keys(bugsObject).length + 1
-    const bugPriority = priority != undefined ? priority : 0
-    const bugDesc = desc != undefined ? desc : "No description provided"
-    const bugToday = today != undefined ? today : new Date().format("H:i")
-    const bugIsSelf = isSelf != undefined ? isSelf : false
-    const bugResolved = resolved != undefined ? resolved : false
-    const bugAuthor = author != undefined ? author : false
-    const bugAssignedTo = assignedTo != undefined ? assignedTo : {}
+export function addToBug({
+    id,
+    priority,
+    value,
+    desc,
+    today,
+    isSelf,
+    org,
+    resolved,
+    author,
+    assignedTo,
+    type,
+}) {
+    const bugId = id == undefined ? Object.keys(bugsObject).length + 1 : id;
+    const bugPriority = priority == undefined ? 0 : priority;
+    const bugDesc = desc == undefined ? "No description provided" : desc;
+    const bugToday = today == undefined ? new Date().format("H:i") : today;
+    const bugIsSelf = isSelf == undefined ? false : isSelf;
+    const bugResolved = resolved == undefined ? false : resolved;
+    const bugAuthor = author == undefined ? false : author;
+    const bugAssignedTo = assignedTo == undefined ? {} : assignedTo;
 
-    addToHistory({ actionType: "bug-added", value: value, desc: `Bug "${value}" added with ${priorityClasses[String(priority)].name} priority` });
+    addToHistory({
+        actionType: "bug-added",
+        value,
+        desc: `Bug "${value}" added with ${priorityClasses[String(priority)].name} priority`,
+    });
 
-    bugsObject[bugID] = {
-        id: bugID,
+    bugsObject[bugId] = {
+        id: bugId,
         time: bugToday,
         priority: bugPriority,
-        value: value,
+        value,
         description: bugDesc,
         self: bugIsSelf,
         organization: org,
         resolved: bugResolved,
         author: bugAuthor,
         assignedTo: bugAssignedTo,
-        type: type
+        type,
     };
 
-    return bugsObject
+    return bugsObject;
 }
 
 export function showIndicator(time = 1500, callback) {
-    let statusIndicator = document.querySelector(".status-indicator")
+    const statusIndicator = document.querySelector(".status-indicator");
 
-    statusIndicator.classList.remove("hidden")
+    statusIndicator.classList.remove("hidden");
 
     if (typeof callback === "function") {
-        callback(statusIndicator)
+        callback(statusIndicator);
     }
 
-    statusIndicator.addEventListener("transitionend", () => {
-        setTimeout(() => {
-            statusIndicator.classList.add("hidden")
-        }, time)
-    }, { once: true })
+    statusIndicator.addEventListener(
+        "transitionend",
+        () => {
+            setTimeout(() => {
+                statusIndicator.classList.add("hidden");
+            }, time);
+        },
+        { once: true },
+    );
 }
 
 export const animate = {
     blurReplace: ({ add, remove }) => {
-        if (!add || !remove) return;
+        if (!(add && remove)) return;
 
         add.classList.remove("hidden", "blur-hidden");
         remove.classList.remove("hidden", "blur-hidden");
@@ -281,7 +306,7 @@ export const animate = {
         };
 
         remove.addEventListener("transitionend", onTransitionEnd);
-    }
+    },
 };
 
 export function handlePopups() {
@@ -290,7 +315,7 @@ export function handlePopups() {
     document.addEventListener("click", (e) => {
         let clickedInsidePopup = false;
 
-        popups.forEach(popup => {
+        popups.forEach((popup) => {
             const popupContent = popup.querySelector(".popup-content");
             const popupTitle = popup.querySelector(".popup-title");
 
@@ -299,12 +324,12 @@ export function handlePopups() {
 
                 const isOpen = !popupContent.classList.contains("hidden");
 
-                popups.forEach(p => p.querySelector(".popup-content").classList.add("hidden"));
-                popups.forEach(p => p.querySelector(".popup-title").classList.remove("active"));
+                popups.forEach((p) => p.querySelector(".popup-content").classList.add("hidden"));
+                popups.forEach((p) => p.querySelector(".popup-title").classList.remove("active"));
 
                 if (!isOpen) {
                     popupContent.classList.remove("hidden");
-                    popupTitle.classList.add("active")
+                    popupTitle.classList.add("active");
                 }
 
                 clickedInsidePopup = true;
@@ -312,7 +337,7 @@ export function handlePopups() {
 
             if (e.target.closest(".popup-content__item") && popup.contains(e.target)) {
                 popupContent.classList.add("hidden");
-                popupTitle.classList.remove("active")
+                popupTitle.classList.remove("active");
                 clickedInsidePopup = true;
             }
 
@@ -322,156 +347,148 @@ export function handlePopups() {
         });
 
         if (!clickedInsidePopup) {
-            popups.forEach(p => { p.querySelector(".popup-content").classList.add("hidden"); p.querySelector(".popup-title").classList.remove("active") });
+            popups.forEach((p) => {
+                p.querySelector(".popup-content").classList.add("hidden");
+                p.querySelector(".popup-title").classList.remove("active");
+            });
         }
     });
 }
 
 export function SmoothScroll(target, speed, smooth) {
     if (target === document)
-        target = (document.scrollingElement
-            || document.documentElement
-            || document.body.parentNode
-            || document.body) // cross browser support for document scrolling
+        target =
+            document.scrollingElement ||
+            document.documentElement ||
+            document.body.parentNode ||
+            document.body; // cross browser support for document scrolling
 
-    var moving = false
-    var pos = target.scrollTop
-    var frame = target === document.body
-        && document.documentElement
-        ? document.documentElement
-        : target // safari is the new IE
+    var moving = false;
+    var pos = target.scrollTop;
+    var frame =
+        target === document.body && document.documentElement ? document.documentElement : target; // safari is the new IE
 
-    target.addEventListener('mousewheel', scrolled, { passive: false })
-    target.addEventListener('DOMMouseScroll', scrolled, { passive: false })
+    target.addEventListener("mousewheel", scrolled, { passive: false });
+    target.addEventListener("DOMMouseScroll", scrolled, { passive: false });
 
     function scrolled(e) {
         e.preventDefault(); // disable default scrolling
 
-        var delta = normalizeWheelDelta(e)
+        var delta = normalizeWheelDelta(e);
 
-        pos += -delta * speed
-        pos = Math.max(0, Math.min(pos, target.scrollHeight - frame.clientHeight)) // limit scrolling
+        pos += -delta * speed;
+        pos = Math.max(0, Math.min(pos, target.scrollHeight - frame.clientHeight)); // limit scrolling
 
-        if (!moving) update()
+        if (!moving) update();
     }
 
     function normalizeWheelDelta(e) {
         if (e.detail) {
-            if (e.wheelDelta)
-                return e.wheelDelta / e.detail / 40 * (e.detail > 0 ? 1 : -1) // Opera
-            else
-                return -e.detail / 3 // Firefox
-        } else
-            return e.wheelDelta / 120 // IE,Safari,Chrome
+            if (e.wheelDelta) return (e.wheelDelta / e.detail / 40) * (e.detail > 0 ? 1 : -1);
+            return -e.detail / 3; // Firefox
+        }
+        return e.wheelDelta / 120; // IE,Safari,Chrome
     }
 
     function update() {
-        moving = true
+        moving = true;
 
-        var delta = (pos - target.scrollTop) / smooth
+        var delta = (pos - target.scrollTop) / smooth;
 
-        target.scrollTop += delta
+        target.scrollTop += delta;
 
-        if (Math.abs(delta) > 0.5)
-            requestFrame(update)
-        else
-            moving = false
+        if (Math.abs(delta) > 0.5) requestFrame(update);
+        else moving = false;
     }
 
-    var requestFrame = function () {
-        return (
-            window.requestAnimationFrame ||
-            window.webkitRequestAnimationFrame ||
-            window.mozRequestAnimationFrame ||
-            window.oRequestAnimationFrame ||
-            window.msRequestAnimationFrame ||
-            function (func) {
-                window.setTimeout(func, 1000 / 50);
-            }
-        );
-    }()
+    var requestFrame = (() =>
+        window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.oRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        ((func) => {
+            window.setTimeout(func, 1000 / 50);
+        }))();
 }
 
 export function runSandbox(code) {
-    const logs = []
+    const logs = [];
 
     function getPos() {
-        const stack = new Error().stack.split("\n")[3]
-        const match = stack.match(/:(\d+):(\d+)/)
+        const stack = new Error().stack.split("\n")[3];
+        const match = stack.match(/:(\d+):(\d+)/);
 
         if (match) {
             return {
                 line: Number(match[1]),
-                col: Number(match[2])
-            }
+                col: Number(match[2]),
+            };
         }
 
-        return {}
+        return {};
     }
 
     function formatArgs(args) {
-        return args.map(arg => {
+        return args.map((arg) => {
             if (typeof arg === "object" && arg !== null) {
                 try {
-                    return JSON.stringify(arg)
+                    return JSON.stringify(arg);
                 } catch {
-                    return "[Object]"
+                    return "[Object]";
                 }
             }
-            return arg
-        })
+            return arg;
+        });
     }
 
     const consoleProxy = {
         log: (...args) => {
-            const pos = getPos()
+            const pos = getPos();
 
             logs.push({
                 type: "log",
                 line: pos.line,
                 col: pos.col,
-                args: formatArgs(args)
-            })
+                args: formatArgs(args),
+            });
         },
 
         warn: (...args) => {
-            const pos = getPos()
+            const pos = getPos();
 
             logs.push({
                 type: "warn",
                 line: pos.line,
                 col: pos.col,
-                args: formatArgs(args)
-            })
+                args: formatArgs(args),
+            });
         },
 
         error: (...args) => {
-            const pos = getPos()
+            const pos = getPos();
 
             logs.push({
                 type: "error",
                 line: pos.line,
                 col: pos.col,
-                args: formatArgs(args)
-            })
-        }
-    }
+                args: formatArgs(args),
+            });
+        },
+    };
 
     try {
-        const fn = new Function(
-            "console",
-            code + "\n//# sourceURL=sandbox.js"
-        )
+        const fn = new Function("console", code + "\n//# sourceURL=sandbox.js");
 
-        fn(consoleProxy)
+        fn(consoleProxy);
     } catch (e) {
         logs.push({
             type: "error",
-            args: [e.message]
-        })
+            args: [e.message],
+        });
     }
 
-    return logs
+    return logs;
 }
 export function runCode(code, acorn) {
     try {
@@ -479,91 +496,94 @@ export function runCode(code, acorn) {
         acorn.parse(code, {
             ecmaVersion: "latest",
             locations: true,
-            sourceType: "module"
-        })
+            sourceType: "module",
+        });
     } catch (err) {
-        return ErrorReporter.fromAcorn(err)
+        return ErrorReporter.fromAcorn(err);
     }
 
     try {
         // sandbox run check
-        runSandbox(code)
+        runSandbox(code);
     } catch (err) {
-        return ErrorReporter.fromRuntime(err)
+        return ErrorReporter.fromRuntime(err);
     }
 
-    return null
+    return null;
 }
-export function addRuntimeError({ msg, line = null, col = null, time = null, isNull = false, win = null }) {
-    const exists = runtimeErrors.some(
-        e => e.msg === msg && e.line === line && e.col === col
-    )
+export function addRuntimeError({
+    msg,
+    line = null,
+    col = null,
+    time = null,
+    isNull = false,
+    win = null,
+}) {
+    const exists = runtimeErrors.some((e) => e.msg === msg && e.line === line && e.col === col);
 
-    const wrapper = BottomWindow.get("errorsHistory")
-    const badge = document.querySelector("#runtimeErrors .badge")
-    const el = document.createElement("div")
-    const items = document.querySelectorAll(".runtime-item#runTimeErrorItem")
-    const lastItem = items[items.length - 1]
+    const wrapper = BottomWindow.get("errorsHistory");
+    const badge = document.querySelector("#runtimeErrors .badge");
+    const el = document.createElement("div");
+    const items = document.querySelectorAll(".runtime-item#runTimeErrorItem");
+    const lastItem = items[items.length - 1];
 
-    if (isNull && lastItem?.classList.contains("success")) return
-    if (exists) return
+    if (isNull && lastItem?.classList.contains("success")) return;
+    if (exists) return;
 
-    const error = { msg, line, col }
+    const error = { msg, line, col };
 
-    if (!isNull) {
-        runtimeErrors.push(error)
-        runtimeErrorsCount += 1
+    if (isNull) {
+        runtimeErrors = [];
+        badge.classList.add("hidden");
+    } else {
+        runtimeErrors.push(error);
+        runtimeErrorsCount += 1;
     }
-    else {
-        runtimeErrors = []
-        badge.classList.add("hidden")
-    }
 
-    badge.classList.remove("hidden")
-    badge.textContent = runtimeErrors.length
+    badge.classList.remove("hidden");
+    badge.textContent = runtimeErrors.length;
 
     if (runtimeErrors.length == 0) {
-        badge.classList.add("hidden")
+        badge.classList.add("hidden");
     }
 
-    items.forEach(e => { e.classList.add("prev") })
+    items.forEach((e) => {
+        e.classList.add("prev");
+    });
 
-    el.classList.add("runtime-item", "bottom-window__item")
-    el.id = "runTimeErrorItem"
+    el.classList.add("runtime-item", "bottom-window__item");
+    el.id = "runTimeErrorItem";
 
-    if (!isNull) {
-        el.innerHTML = `
-            <span class="material-symbols-rounded error">error</span>
-            ${msg}
-            ${line !== null ? `<span class="translucent">${line}:${col ?? 0}</span>` : ""}
-            ${time !== null ? `<span class="time">${formatUnix(time)}</span>` : ""}
-        `
-    }
-    else {
-        el.classList.add("success")
+    if (isNull) {
+        el.classList.add("success");
         el.innerHTML = `
             <span class="material-symbols-rounded error">check_circle</span>
             All errors fixed
             ${runtimeErrorsCount > 0 ? `<span class="translucent">(${runtimeErrorsCount})</span>` : ""}
-            ${time !== null ? `<span class="time">${formatUnix(time)}</span>` : ""}
-        `
-        runtimeErrorsCount = 0
+            ${time === null ? "" : `<span class="time">${formatUnix(time)}</span>`}
+        `;
+        runtimeErrorsCount = 0;
+    } else {
+        el.innerHTML = `
+            <span class="material-symbols-rounded error">error</span>
+            ${msg}
+            ${line === null ? "" : `<span class="translucent">${line}:${col ?? 0}</span>`}
+            ${time === null ? "" : `<span class="time">${formatUnix(time)}</span>`}
+        `;
     }
 
-    wrapper.add(el)
+    wrapper.add(el);
 
-    wrapper.win.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    wrapper.win.lastElementChild.scrollIntoView({ behavior: "smooth", block: "end" });
 }
 export function clearRuntimeErrors() {
-    runtimeErrors = []
-    runtimeErrorsCount = 0
+    runtimeErrors = [];
+    runtimeErrorsCount = 0;
 
-    addRuntimeError(
-        {
-            isNull: true,
-            time: Math.floor(Date.now() / 1000)
-        }
-    )
+    addRuntimeError({
+        isNull: true,
+        time: Math.floor(Date.now() / 1000),
+    });
 }
 
 export function formatUnix(ts, format = "{dd}.{mm}.{yyyy}, {hh}:{ii}:{ss}") {
@@ -577,24 +597,25 @@ export function formatUnix(ts, format = "{dd}.{mm}.{yyyy}, {hh}:{ii}:{ss}") {
     const ii = String(date.getMinutes()).padStart(2, "0");
     const ss = String(date.getSeconds()).padStart(2, "0");
 
-    if(format) {
+    if (format) {
         return format
             .replaceAll("{dd}", dd)
             .replaceAll("{mm}", mm)
             .replaceAll("{hh}", hh)
             .replaceAll("{ii}", ii)
             .replaceAll("{ss}", ss)
-            .replaceAll("{yyyy}", yyyy)
+            .replaceAll("{yyyy}", yyyy);
     }
-    else {
-        return `${dd}.${mm}, ${hh}:${ii}:${ss}`;
-    }
+    return `${dd}.${mm}, ${hh}:${ii}:${ss}`;
 }
 
 export function getInitials(name) {
-    if (!name) return 'A';
+    if (!name) return "A";
     const words = name.trim().split(/\s+/);
-    return words.slice(0, 2).map(w => w[0].toUpperCase()).join('');
+    return words
+        .slice(0, 2)
+        .map((w) => w[0].toUpperCase())
+        .join("");
 }
 
 export function generateAvatar(name) {
@@ -611,46 +632,46 @@ export function generateAvatar(name) {
         const hslToHex = (h, s, l) => {
             s /= 100;
             l /= 100;
-            const k = n => (n + h / 30) % 12;
+            const k = (n) => (n + h / 30) % 12;
             const a = s * Math.min(l, 1 - l);
-            const f = n =>
+            const f = (n) =>
                 Math.round(255 * (l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)))))
                     .toString(16)
-                    .padStart(2, '0');
+                    .padStart(2, "0");
             return `#${f(0)}${f(8)}${f(4)}`;
         };
 
         return {
             foreground: hslToHex(hue, saturation, fgLightness),
             background: hslToHex(hue, saturation, bgLightness),
-            background_second: hslToHex(hue, saturation, bgLightness - 10)
+            background_second: hslToHex(hue, saturation, bgLightness - 10),
         };
     }
 
-    let initials = getInitials(name)
-    let color = stringToColorPair(name)
+    const initials = getInitials(name);
+    const color = stringToColorPair(name);
 
-    const generated = document.createElement("div")
-    generated.classList.add("generated-avatar")
-    generated.style.cssText = `--background: ${color.background};--background-second: ${color.background_second};--foreground: ${color.foreground};`
-    generated.textContent = initials
+    const generated = document.createElement("div");
+    generated.classList.add("generated-avatar");
+    generated.style.cssText = `--background: ${color.background};--background-second: ${color.background_second};--foreground: ${color.foreground};`;
+    generated.textContent = initials;
 
-    return generated.outerHTML
+    return generated.outerHTML;
 }
 
 export function isFloat(n) {
-    return typeof n === 'number' && !Number.isInteger(n);
+    return typeof n === "number" && !Number.isInteger(n);
 }
 
 export function isStringifiedObject(str) {
     try {
         const parsed = JSON.parse(str);
 
-        if (Array.isArray(parsed)) return "array"
-        if (typeof parsed === 'object' && parsed !== null) {
-            return "object"
+        if (Array.isArray(parsed)) return "array";
+        if (typeof parsed === "object" && parsed !== null) {
+            return "object";
         }
-        return null
+        return null;
     } catch (e) {
         return false;
     }
@@ -661,62 +682,68 @@ export function truncateString(str, maxLength) {
         return str;
     }
 
-    return str.slice(0, maxLength) + '...';
+    return str.slice(0, maxLength) + "...";
 }
 
 export function createNotify(properties = {}) {
-    const timeDefault = 3000
+    const timeDefault = 3000;
 
-    const type = valid(properties.type) ?? "info_i"
-    const icon = valid(properties.icon) ?? "info_i"
-    const title = valid(properties.title) ?? "Untitled"
-    const content = valid(properties.content) ?? "No description provided"
-    let time = valid(properties.time) ?? 3000
-    const image = valid(properties.image) ?? false
+    const type = valid(properties.type) ?? "info_i";
+    const icon = valid(properties.icon) ?? "info_i";
+    const title = valid(properties.title) ?? "Untitled";
+    const content = valid(properties.content) ?? "No description provided";
+    let time = valid(properties.time) ?? 3000;
+    const image = valid(properties.image) ?? false;
 
-    if(time < timeDefault) {
-        time = timeDefault
+    if (time < timeDefault) {
+        time = timeDefault;
     }
-    if(time > 10000) {
-        time = timeDefault
+    if (time > 10_000) {
+        time = timeDefault;
     }
 
     const notifyObject = {
-        title: title,
+        title,
         description: content,
-        timeout: time
-    }
+        timeout: time,
+    };
 
-    if(icon) notifyObject["icon"] = icon
-    if(type) notifyObject["type"] = type
-    if(image) notifyObject["image"] = image
+    if (icon) notifyObject["icon"] = icon;
+    if (type) notifyObject["type"] = type;
+    if (image) notifyObject["image"] = image;
 
-    window.electron.createNotification(notifyObject)
+    window.electron.createNotification(notifyObject);
 }
 
 export function getTheme() {
-    return document.body.getAttribute("theme") != null ? document.body.getAttribute("theme") : "default"
+    return document.body.getAttribute("theme") == null
+        ? "default"
+        : document.body.getAttribute("theme");
 }
 
 export function handleOnWheelScrollX() {
-    const elements = document.querySelectorAll(".code-tabs, .commands .commands-suggest")
+    const elements = document.querySelectorAll(".code-tabs, .commands .commands-suggest");
 
-    elements.forEach(el => {
-        el.addEventListener("wheel", (event) => {
-            event.preventDefault()
+    elements.forEach((el) => {
+        el.addEventListener(
+            "wheel",
+            (event) => {
+                event.preventDefault();
 
-            el.scrollBy({
-                left: event.deltaY / 5
-            })
-        }, { passive: false })
-    })
+                el.scrollBy({
+                    left: event.deltaY / 5,
+                });
+            },
+            { passive: false },
+        );
+    });
 }
 
 export function idify(string) {
     const bytes = new TextEncoder().encode(string);
     let binary = "";
 
-    bytes.forEach(b => binary += String.fromCharCode(b));
+    bytes.forEach((b) => (binary += String.fromCharCode(b)));
 
     return btoa(binary).replaceAll("=", "");
 }
@@ -725,110 +752,105 @@ export function splitCamelCase(str) {
     return str
         .replace(/([a-z])([A-Z])/g, "$1 $2")
         .split(" ")
-        .map((w, i) => i === 0
-            ? w.charAt(0).toUpperCase() + w.slice(1)
-            : w.toLowerCase()
-        )
+        .map((w, i) => (i === 0 ? w.charAt(0).toUpperCase() + w.slice(1) : w.toLowerCase()));
 }
 
 export function copyText(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        console.log("Text copied to clipboard successfully!");
-    }).catch(err => {
-        console.error('Failed to copy text: ', err);
-    });
+    navigator.clipboard
+        .writeText(text)
+        .then(() => {
+            console.log("Text copied to clipboard successfully!");
+        })
+        .catch((err) => {
+            console.error("Failed to copy text: ", err);
+        });
 }
 
 export function normalizePath(path) {
-    return path
-        .replaceAll("\\", "/")
-        .replaceAll(/\\/g, "/")
+    return path.replaceAll("\\", "/").replaceAll(/\\/g, "/");
 }
 
 export function parseTwemojiString(text) {
     return twemoji.parse(text, {
         folder: "svg",
-        ext: ".svg"
-    })
+        ext: ".svg",
+    });
 }
 
 export function parseTwemojiElement(element) {
-    if (!element) return
+    if (!element) return;
 
     twemoji.parse(element, {
         folder: "svg",
-        ext: ".svg"
-    })
+        ext: ".svg",
+    });
 }
 
 export function scrollToBottomSmooth(el) {
     el.scrollTo({
         top: el.scrollHeight,
-        behavior: "smooth"
+        behavior: "smooth",
     });
 }
 
 export function getAllCSSVariables() {
     return Array.from(document.styleSheets)
-        .filter(
-            sheet =>
-                sheet.href === null || sheet.href.startsWith(window.location.origin)
-        )
+        .filter((sheet) => sheet.href === null || sheet.href.startsWith(window.location.origin))
         .reduce(
             (acc, sheet) =>
-            (acc = [
-                ...acc,
-                ...Array.from(sheet.cssRules).reduce(
-                    (def, rule) =>
-                    (def =
-                        rule.selectorText === ":root"
-                            ? [
-                                ...def,
-                                ...Array.from(rule.style).filter(name =>
-                                    name.startsWith("--")
-                                )
-                            ]
-                            : def),
-                    []
-                )
-            ]),
-            []
+                (acc = [
+                    ...acc,
+                    ...Array.from(sheet.cssRules).reduce(
+                        (def, rule) =>
+                            (def =
+                                rule.selectorText === ":root"
+                                    ? [
+                                          ...def,
+                                          ...Array.from(rule.style).filter((name) =>
+                                              name.startsWith("--"),
+                                          ),
+                                      ]
+                                    : def),
+                        [],
+                    ),
+                ]),
+            [],
         );
 }
 
 export function type(value) {
-    const str = value.toString().trim()
+    const str = value.toString().trim();
 
-    if (/^-?\d+$/.test(str)) return "int"
-    if (/^-?\d*\.\d+$/.test(str)) return "float"
-    if (/^(true|false)$/.test(str)) return "boolean"
-    if (/^\[.*\]$/.test(str)) return "array"
-    if (/^\{.*\}$/.test(str)) return "object"
+    if (/^-?\d+$/.test(str)) return "int";
+    if (/^-?\d*\.\d+$/.test(str)) return "float";
+    if (/^(true|false)$/.test(str)) return "boolean";
+    if (/^\[.*\]$/.test(str)) return "array";
+    if (/^\{.*\}$/.test(str)) return "object";
 
-    return "string"
+    return "string";
 }
 
 export function eventLog(...args) {
-    console.warn(`[EVENT LOG] -----------\n`, ...args)
+    console.warn("[EVENT LOG] -----------\n", ...args);
 }
 
-const CODE_WINDOW_VISUALS_TABS = document.querySelector(".code-tabs")
-const CODE_WINDOW_VISUALS_FOOTER = document.querySelector(".code-footer")
+const CODE_WINDOW_VISUALS_TABS = document.querySelector(".code-tabs");
+const CODE_WINDOW_VISUALS_FOOTER = document.querySelector(".code-footer");
 
 export function isObject(item) {
-    return typeof item == "object" && !Array.isArray(item)
+    return typeof item == "object" && !Array.isArray(item);
 }
 export function isArray(item) {
-    return typeof item == "object" && Array.isArray(item)
+    return typeof item == "object" && Array.isArray(item);
 }
 
 export function showCodeWindowVisuals() {
-    CODE_WINDOW_VISUALS_TABS.classList.remove("hidden")
-    CODE_WINDOW_VISUALS_FOOTER.classList.remove("hidden")
+    CODE_WINDOW_VISUALS_TABS.classList.remove("hidden");
+    CODE_WINDOW_VISUALS_FOOTER.classList.remove("hidden");
 }
 export function hideCodeWindowVisuals() {
-    CODE_WINDOW_VISUALS_TABS.classList.add("hidden")
-    CODE_WINDOW_VISUALS_FOOTER.classList.add("hidden")
+    CODE_WINDOW_VISUALS_TABS.classList.add("hidden");
+    CODE_WINDOW_VISUALS_FOOTER.classList.add("hidden");
 }
 
 export function changeTagName(oldElement, newTagName) {
@@ -846,19 +868,27 @@ export function changeTagName(oldElement, newTagName) {
 }
 
 export function showNeedReloadTopBar() {
-    const needToReloadTopBar = new TopBarElement("needReload")
-    needToReloadTopBar.content({ icon: "cached", text: "You need to reload application", type: "danger" })
+    const needToReloadTopBar = new TopBarElement("needReload");
+    needToReloadTopBar.content({
+        icon: "cached",
+        text: "You need to reload application",
+        type: "danger",
+    });
 
     setTimeout(() => {
-        needToReloadTopBar.show()
+        needToReloadTopBar.show();
 
         setTimeout(() => {
-            needToReloadTopBar.hide({ iconVisible: true })
-        }, 3000)
-    }, 1000)
+            needToReloadTopBar.hide({ iconVisible: true });
+        }, 3000);
+    }, 1000);
 
-    needToReloadTopBar.on("hover", (instance) => { instance.show() })
-    needToReloadTopBar.on("unhover", (instance) => { instance.hide({ iconVisible: true }) })
+    needToReloadTopBar.on("hover", (instance) => {
+        instance.show();
+    });
+    needToReloadTopBar.on("unhover", (instance) => {
+        instance.hide({ iconVisible: true });
+    });
 }
 
 export function secondsToMinutes(seconds) {
@@ -869,27 +899,28 @@ export function transparentColor(color, alpha = 1) {
     alpha = Math.max(0, Math.min(1, alpha));
     color = color.trim();
 
-    if (color.startsWith('#')) {
+    if (color.startsWith("#")) {
         let hex = color.slice(1);
 
         if (hex.length === 3) {
-            hex = hex.split('').map(c => c + c).join('');
+            hex = hex
+                .split("")
+                .map((c) => c + c)
+                .join("");
         }
 
         if (hex.length !== 6) {
-            throw new Error('Invalid HEX color');
+            throw new Error("Invalid HEX color");
         }
 
-        const r = parseInt(hex.slice(0, 2), 16);
-        const g = parseInt(hex.slice(2, 4), 16);
-        const b = parseInt(hex.slice(4, 6), 16);
+        const r = Number.parseInt(hex.slice(0, 2), 16);
+        const g = Number.parseInt(hex.slice(2, 4), 16);
+        const b = Number.parseInt(hex.slice(4, 6), 16);
 
         return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     }
 
-    const match = color.match(
-        /^rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)(?:[,\s/]+([\d.]+))?\s*\)$/i
-    );
+    const match = color.match(/^rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)(?:[,\s/]+([\d.]+))?\s*\)$/i);
 
     if (match) {
         const [, r, g, b] = match;
@@ -897,19 +928,17 @@ export function transparentColor(color, alpha = 1) {
         return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     }
 
-    throw new Error('Unsupported color format');
+    throw new Error("Unsupported color format");
 }
 export function dedent(str) {
     const lines = str.replace(/^\n/, "").split("\n");
 
     const indent = Math.min(
-        ...lines
-            .filter(line => line.trim())
-            .map(line => line.match(/^ */)[0].length)
+        ...lines.filter((line) => line.trim()).map((line) => line.match(/^ */)[0].length),
     );
 
     return lines
-        .map(line => line.slice(indent))
+        .map((line) => line.slice(indent))
         .join("\n")
         .trimEnd();
 }
@@ -917,20 +946,17 @@ export function fitAceHeight(editor, minHeight = 50, maxHeight = 800) {
     const lines = editor.session.getLength();
     const lineHeight = editor.renderer.lineHeight;
 
-    const height = Math.min(
-        maxHeight,
-        Math.max(minHeight, lines * lineHeight)
-    );
+    const height = Math.min(maxHeight, Math.max(minHeight, lines * lineHeight));
 
     editor.container.style.height = height + "px";
     editor.resize();
 }
 export function setAppTitle(title) {
-    window.electron.setAppTitle(title)
+    window.electron.setAppTitle(title);
 }
 
-window.Notificator = Notificator
-window.addToBug = addToBug
-window.addToHistory = addToHistory
-window.showIndicator = showIndicator
-window.animate = animate
+window.Notificator = Notificator;
+window.addToBug = addToBug;
+window.addToHistory = addToHistory;
+window.showIndicator = showIndicator;
+window.animate = animate;

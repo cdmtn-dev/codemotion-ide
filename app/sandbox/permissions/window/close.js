@@ -4,4 +4,4 @@ function callback(data) {
     app.quit();
 }
 
-module.exports = { callback }
+module.exports = { callback };

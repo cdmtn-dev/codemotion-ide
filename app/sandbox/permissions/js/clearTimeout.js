@@ -1,5 +1,5 @@
 function callback(data) {
-    clearTimeout(data.selfArgs[0])
+    clearTimeout(data.selfArgs[0]);
 }
 
-module.exports = { callback }
+module.exports = { callback };

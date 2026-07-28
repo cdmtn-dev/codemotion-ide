@@ -1,4 +1,4 @@
-import { Setting } from "../settings.js"
+import { Setting } from "../settings.js";
 
 export function optionsThemeButtonHandler(themeSelect) {
     themeSelect.on("click", (item) => {

@@ -1,81 +1,102 @@
-import { EditorState, Compartment, EditorSelection, Prec } from "@codemirror/state";
 import {
-    EditorView, keymap, lineNumbers, highlightActiveLine,
-    highlightActiveLineGutter
-} from "@codemirror/view";
-import {
-    closeBrackets, autocompletion, completionKeymap, completeFromList,
-    acceptCompletion, completionStatus
+    acceptCompletion,
+    autocompletion,
+    closeBrackets,
+    completeFromList,
+    completionKeymap,
+    completionStatus,
 } from "@codemirror/autocomplete";
-import { indentUnit, language } from "@codemirror/language";
-import { linter, lintGutter, forceLinting } from "@codemirror/lint";
-
 // commands
 import {
-    defaultKeymap, indentWithTab, history, historyKeymap,
-    selectAll, undo, redo, toggleComment
+    defaultKeymap,
+    history,
+    historyKeymap,
+    indentWithTab,
+    redo,
+    selectAll,
+    toggleComment,
+    undo,
 } from "@codemirror/commands";
+import { indentUnit, language } from "@codemirror/language";
+import { forceLinting, linter, lintGutter } from "@codemirror/lint";
+import { closeSearchPanel, findNext, findPrevious, openSearchPanel } from "@codemirror/search";
+import { Compartment, EditorSelection, EditorState, Prec } from "@codemirror/state";
 import {
-    openSearchPanel, closeSearchPanel, findNext,
-    findPrevious
-} from "@codemirror/search";
-// 
+    EditorView,
+    highlightActiveLine,
+    highlightActiveLineGutter,
+    keymap,
+    lineNumbers,
+} from "@codemirror/view";
+//
 
 // themes
-import { vscodeDark, vscodeLight, atomone, githubDark } from '@uiw/codemirror-themes-all';
-// 
+import { atomone, githubDark, vscodeDark, vscodeLight } from "@uiw/codemirror-themes-all";
 
+//
+
+import { css } from "@codemirror/lang-css";
+import { go } from "@codemirror/lang-go";
+import { html } from "@codemirror/lang-html";
+import { java } from "@codemirror/lang-java";
 // languages
 import { javascript } from "@codemirror/lang-javascript";
-import { html } from "@codemirror/lang-html";
-import { css } from "@codemirror/lang-css";
 import { json } from "@codemirror/lang-json";
-import { php } from "@codemirror/lang-php";
-import { go } from "@codemirror/lang-go";
-import { yaml } from "@codemirror/lang-yaml";
-import { python } from "@codemirror/lang-python";
-import { sass } from "@codemirror/lang-sass";
-import { rust } from "@codemirror/lang-rust";
-import { xml } from "@codemirror/lang-xml";
-import { wast } from "@codemirror/lang-wast";
-import { java } from "@codemirror/lang-java";
-import { vue } from "@codemirror/lang-vue";
 import { markdown } from "@codemirror/lang-markdown";
-// 
+import { php } from "@codemirror/lang-php";
+import { python } from "@codemirror/lang-python";
+import { rust } from "@codemirror/lang-rust";
+import { sass } from "@codemirror/lang-sass";
+import { vue } from "@codemirror/lang-vue";
+import { wast } from "@codemirror/lang-wast";
+import { xml } from "@codemirror/lang-xml";
+import { yaml } from "@codemirror/lang-yaml";
 
+//
+
+import { indentationMarkers } from "@replit/codemirror-indentation-markers";
+import { color } from "@uiw/codemirror-extensions-color";
 // extensions
 import { colorComments, colorCommentsTheme } from "./plugins/colorComments";
 import { fromVSCodeSnippets } from "./plugins/snippets";
-import { suggestionField, suggestionTheme, suggestPlugin, suggestUpdateListener, acceptSuggestion, dismissSuggestion, initSuggestListener } from "./plugins/suggest";
+import {
+    acceptSuggestion,
+    dismissSuggestion,
+    initSuggestListener,
+    suggestionField,
+    suggestionTheme,
+    suggestPlugin,
+    suggestUpdateListener,
+} from "./plugins/suggest";
 import { atomoneOverride, githubDarkOverride, vscodeDarkOverride } from "./themes/overrides";
-import { indentationMarkers } from "@replit/codemirror-indentation-markers";
-import { color } from "@uiw/codemirror-extensions-color";
-// 
 
+//
+
+import javascriptGlobalsJson from "./snippets/js/globals.json";
 // javascript & typescript snippet support
-import javascriptSnippetsJSON from "./snippets/js/snippets.json"
-import javascriptGlobalsJSON from "./snippets/js/globals.json"
+import javascriptSnippetsJson from "./snippets/js/snippets.json";
 import { identifierJavaScriptCompletionSource } from "./snippets/js/source";
-// 
+//
 
 // json snippet support
 import { identifierJSONCompletionSource } from "./snippets/json/source";
-// 
-
-// external
-import { toPng, toBlob } from "html-to-image";
 //
 
+// external
+import { toBlob, toPng } from "html-to-image";
+
+//
+
+import { loadWASM, OnigScanner, OnigString } from "vscode-oniguruma";
 // lang-reg
 import { Registry } from "vscode-textmate";
-import { loadWASM, OnigScanner, OnigString } from "vscode-oniguruma";
 import { textMateHighlighter } from "./plugins/textmate/highlighter.js";
 import { textMateBaseTheme } from "./plugins/textmate/theme.js";
-// 
+//
 
-export const javascriptSnippets = fromVSCodeSnippets(javascriptSnippetsJSON);
+export const javascriptSnippets = fromVSCodeSnippets(javascriptSnippetsJson);
 export const javascriptGlobals = completeFromList(
-    javascriptGlobalsJSON.map(label => ({ label, type: "variable" }))
+    javascriptGlobalsJson.map((label) => ({ label, type: "variable" })),
 );
 
 function forLanguage(name, source) {
@@ -88,21 +109,29 @@ function forLanguage(name, source) {
 
 const javascriptLang = javascript({ jsx: true, typescript: false });
 const typescriptLang = javascript({ jsx: true, typescript: true });
-const htmlLang = html({ matchClosingTags: true, selfClosingTags: true, autoCloseTags: true })
-const jsonLang = json()
+const htmlLang = html({ matchClosingTags: true, selfClosingTags: true, autoCloseTags: true });
+const jsonLang = json();
 
 const javascriptHighlight = javascriptLang;
 const javascriptAutocomplete = [
-    javascriptLang.language.data.of({ autocomplete: forLanguage("javascript", completeFromList(javascriptSnippets)) }),
+    javascriptLang.language.data.of({
+        autocomplete: forLanguage("javascript", completeFromList(javascriptSnippets)),
+    }),
     javascriptLang.language.data.of({ autocomplete: forLanguage("javascript", javascriptGlobals) }),
-    javascriptLang.language.data.of({ autocomplete: forLanguage("javascript", identifierJavaScriptCompletionSource) })
+    javascriptLang.language.data.of({
+        autocomplete: forLanguage("javascript", identifierJavaScriptCompletionSource),
+    }),
 ];
 
 const typescriptHighlight = typescriptLang;
 const typescriptAutocomplete = [
-    typescriptLang.language.data.of({ autocomplete: forLanguage("typescript", completeFromList(javascriptSnippets)) }),
+    typescriptLang.language.data.of({
+        autocomplete: forLanguage("typescript", completeFromList(javascriptSnippets)),
+    }),
     typescriptLang.language.data.of({ autocomplete: forLanguage("typescript", javascriptGlobals) }),
-    typescriptLang.language.data.of({ autocomplete: forLanguage("typescript", identifierJavaScriptCompletionSource) })
+    typescriptLang.language.data.of({
+        autocomplete: forLanguage("typescript", identifierJavaScriptCompletionSource),
+    }),
 ];
 
 const htmlHighlight = [htmlLang, color];
@@ -110,7 +139,9 @@ const cssHighlight = [css(), color];
 
 const jsonHighlight = jsonLang;
 const jsonAutocomplete = [
-    jsonLang.language.data.of({ autocomplete: forLanguage("json", identifierJSONCompletionSource) })
+    jsonLang.language.data.of({
+        autocomplete: forLanguage("json", identifierJSONCompletionSource),
+    }),
 ];
 
 export const Languages = {
@@ -130,7 +161,7 @@ export const Languages = {
     java: java(),
     vue: vue(),
 
-    markdown: markdown()
+    markdown: markdown(),
 };
 
 export const LanguageHighlighters = {
@@ -149,41 +180,32 @@ export const LanguageHighlighters = {
     wast: Languages.wast,
     java: Languages.java,
     vue: Languages.vue,
-    markdown: Languages.markdown
+    markdown: Languages.markdown,
 };
 
 export const LanguageAutocompletes = {
     javascript: javascriptAutocomplete,
     typescript: typescriptAutocomplete,
-    json: jsonAutocomplete
+    json: jsonAutocomplete,
 };
 
 export const Themes = {
-    vscodeDark: [
-        vscodeDark,
-        vscodeDarkOverride
-    ],
-    vscodeLight: vscodeLight,
-    atomone: [
-        atomone,
-        atomoneOverride
-    ],
-    githubDark: [
-        githubDark,
-        githubDarkOverride
-    ]
+    vscodeDark: [vscodeDark, vscodeDarkOverride],
+    vscodeLight,
+    atomone: [atomone, atomoneOverride],
+    githubDark: [githubDark, githubDarkOverride],
 };
 
 export const ThemeParents = {
     default: "vscodeDark",
     light: "vscodeLight",
-    "contrast-dark": "atomone"
-}
+    "contrast-dark": "atomone",
+};
 
 export const TabSizes = {
-    "2": EditorState.tabSize.of(2),
-    "4": EditorState.tabSize.of(4),
-    "8": EditorState.tabSize.of(8)
+    2: EditorState.tabSize.of(2),
+    4: EditorState.tabSize.of(4),
+    8: EditorState.tabSize.of(8),
 };
 
 const insertTab = (view) => {
@@ -199,12 +221,10 @@ const insertTab = (view) => {
             changes: {
                 from: state.selection.main.from,
                 to: state.selection.main.to,
-                insert: "\t"
+                insert: "\t",
             },
-            selection: EditorSelection.cursor(
-                state.selection.main.from + 1
-            )
-        })
+            selection: EditorSelection.cursor(state.selection.main.from + 1),
+        }),
     );
 
     return true;
@@ -223,9 +243,9 @@ const grammarInstances = new Map();
 async function getTextMateRegistry() {
     if (tmRegistry) return tmRegistry;
 
-    onigReady ??= fetch(
-        "../codemirror/node_modules/vscode-oniguruma/release/onig.wasm"
-    ).then(r => r.arrayBuffer()).then(loadWASM);
+    onigReady ??= fetch("../codemirror/node_modules/vscode-oniguruma/release/onig.wasm")
+        .then((r) => r.arrayBuffer())
+        .then(loadWASM);
 
     await onigReady;
 
@@ -236,10 +256,10 @@ async function getTextMateRegistry() {
             },
             createOnigString(text) {
                 return new OnigString(text);
-            }
+            },
         }),
 
-        loadGrammar: async (scopeName) => rawGrammars.get(scopeName) ?? null
+        loadGrammar: async (scopeName) => rawGrammars.get(scopeName) ?? null,
     });
 
     return tmRegistry;
@@ -281,14 +301,14 @@ window.CodeMirror = {
                     keymap.of([
                         {
                             key: "Tab",
-                            run: insertTab
+                            run: insertTab,
                         },
                         {
                             key: "Escape",
-                            run: escapeHandler
+                            run: escapeHandler,
                         },
                         ...defaultKeymap,
-                        ...historyKeymap
+                        ...historyKeymap,
                     ]),
 
                     languageCompartment.of([]),
@@ -318,15 +338,15 @@ window.CodeMirror = {
                             dark: "#ffffff1a",
                             activeLight: "#00000070",
                             activeDark: "#ffffff33",
-                        }
-                    })
-                ]
+                        },
+                    }),
+                ],
             });
         }
 
         const view = new EditorView({
             state: createState(options.value ?? ""),
-            parent
+            parent,
         });
 
         initSuggestListener();
@@ -340,7 +360,7 @@ window.CodeMirror = {
                 tabSizeCompartment,
                 wordWrapCompartment,
                 scrollCompartment,
-                readOnlyCompartment
+                readOnlyCompartment,
             },
 
             setDiagnostics(value) {
@@ -356,7 +376,7 @@ window.CodeMirror = {
                 undo,
                 redo,
                 openSearchPanel,
-                toggleComment
+                toggleComment,
             },
 
             recreateState(doc) {
@@ -365,24 +385,24 @@ window.CodeMirror = {
 
             editorView: {
                 theme: EditorView.theme,
-                lineWrapping: EditorView.lineWrapping
+                lineWrapping: EditorView.lineWrapping,
             },
 
             editorState: {
-                readOnly: EditorState.readOnly
+                readOnly: EditorState.readOnly,
             },
 
             tools: {
-                toPng: toPng,
-                toBlob: toBlob
-            }
-        }
+                toPng,
+                toBlob,
+            },
+        };
     },
 
-    Languages: Languages,
-    Themes: Themes,
-    ThemeParents: ThemeParents,
-    TabSizes: TabSizes,
+    Languages,
+    Themes,
+    ThemeParents,
+    TabSizes,
 
     async registerLanguage({ id, grammar, extends: inherits = {} }) {
         const scopeName = `source.${id}`;
@@ -401,28 +421,29 @@ window.CodeMirror = {
 
         if (inherits.highlight) {
             const base = LanguageHighlighters[inherits.highlight];
-            if (!base) {
-                console.warn(`registerLanguage(${id}): unknown highlight base "${inherits.highlight}"`);
-            } else {
+            if (base) {
                 extension.push(base);
+            } else {
+                console.warn(
+                    `registerLanguage(${id}): unknown highlight base "${inherits.highlight}"`,
+                );
             }
         }
 
-        extension.push(Prec.highest([
-            textMateHighlighter(tmGrammar),
-            textMateBaseTheme
-        ]));
+        extension.push(Prec.highest([textMateHighlighter(tmGrammar), textMateBaseTheme]));
 
         if (inherits.autocomplete) {
             const auto = LanguageAutocompletes[inherits.autocomplete];
-            if (!auto) {
-                console.warn(`registerLanguage(${id}): unknown autocomplete base "${inherits.autocomplete}"`);
-            } else {
+            if (auto) {
                 extension.push(...auto);
+            } else {
+                console.warn(
+                    `registerLanguage(${id}): unknown autocomplete base "${inherits.autocomplete}"`,
+                );
             }
         }
 
         Languages[id] = extension;
         return extension;
-    }
+    },
 };

@@ -10,10 +10,10 @@
 .popup-title {
     font-size: 14px;
     font-weight: 500;
-    opacity: .5;
+    opacity: 0.5;
     padding: 2px 7px;
     user-select: none;
-    transition: .2s;
+    transition: 0.2s;
 }
 
 .popup-title.inline {
@@ -42,7 +42,7 @@
     display: flex;
     flex-direction: column;
     z-index: 99;
-    transition: .2s;
+    transition: 0.2s;
     border-radius: 10px;
     border: 1px solid var(--block-divider-border-color);
     overflow: hidden;
@@ -56,12 +56,12 @@
 .popup-content__item {
     padding: 10px 15px;
     font-size: 14px;
-    transition: .2s;
+    transition: 0.2s;
     width: 100%;
     white-space: nowrap;
 }
 .popup-content__item.disabled {
-    opacity: .5;
+    opacity: 0.5;
     pointer-events: none;
     user-select: none;
 }

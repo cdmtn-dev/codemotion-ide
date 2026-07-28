@@ -7,6 +7,11 @@
     "scripts": {
         "build": "tsc && tsc -p tsconfig.esm.json",
         "cdbuild": "cd codemirror && npm i && npm run build",
+        "check": "biome check .",
+        "check:fix": "biome check --write .",
+        "format": "biome format --write .",
+        "format:check": "biome format .",
+        "lint": "biome lint .",
         "start": "npm run cdbuild && npm run build && electron .",
         "dist": "npm run cdbuild && npm run build && electron-builder",
         "dist-linux": "npm run cdbuild && npm run build && electron-builder --linux"
@@ -44,6 +49,7 @@
         }
     },
     "devDependencies": {
+        "@biomejs/biome": "2.5.6",
         "@types/electron": "^1.4.38",
         "@types/node": "^25.9.1",
         "electron": "^39.2.3",

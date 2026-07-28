@@ -9,7 +9,7 @@ export function identifierJavaScriptCompletionSource(context) {
     try {
         ast = parse(context.state.doc.toString(), {
             sourceType: "module",
-            plugins: ["jsx", "typescript"]
+            plugins: ["jsx", "typescript"],
         });
     } catch {
         return null;
@@ -21,14 +21,22 @@ export function identifierJavaScriptCompletionSource(context) {
             if (path.isReferencedIdentifier()) return;
             names.add(path.node.name);
         },
-        ImportSpecifier(path) { names.add(path.node.local.name); },
-        ImportDefaultSpecifier(path) { names.add(path.node.local.name); },
-        FunctionDeclaration(path) { if (path.node.id) names.add(path.node.id.name); },
-        VariableDeclarator(path) { if (path.node.id.name) names.add(path.node.id.name); }
+        ImportSpecifier(path) {
+            names.add(path.node.local.name);
+        },
+        ImportDefaultSpecifier(path) {
+            names.add(path.node.local.name);
+        },
+        FunctionDeclaration(path) {
+            if (path.node.id) names.add(path.node.id.name);
+        },
+        VariableDeclarator(path) {
+            if (path.node.id.name) names.add(path.node.id.name);
+        },
     });
 
     return {
         from: word.from,
-        options: [...names].map(label => ({ label, type: "variable" }))
+        options: [...names].map((label) => ({ label, type: "variable" })),
     };
 }

@@ -1,46 +1,46 @@
-const { ipcMain, app } = require('electron');
-const fs = require('fs');
-const path = require('path');
-const { LOCAL_FILE_PATH } = require("./main/helpers/paths.js")
+const { ipcMain, app } = require("electron");
+const fs = require("fs");
+const path = require("path");
+const { LOCAL_FILE_PATH } = require("./main/helpers/paths.js");
 
-const tokenFile = LOCAL_FILE_PATH
+const tokenFile = LOCAL_FILE_PATH;
 const { API } = require("./main/helpers/paths.js");
 
 async function register(username, email, password, passwordConfirm) {
     try {
         const response = await fetch(`${API}/auth/register`, {
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json",
             },
             body: JSON.stringify({
                 username,
                 password,
                 email,
-                passwordConfirm
-            })
+                passwordConfirm,
+            }),
         });
 
         const result = await response.json();
-        
-        console.log(`POST ${API}/auth/register.php:`)
-        console.log(`>`, result)
+
+        console.log(`POST ${API}/auth/register.php:`);
+        console.log(">", result);
 
         if (!response.ok) {
             return {
                 success: false,
-                result: result.result || 'Registration failed'
+                result: result.result || "Registration failed",
             };
         }
 
         return {
             success: true,
-            result: result.result
+            result: result.result,
         };
     } catch (error) {
         return {
             success: false,
-            result: error.message
+            result: error.message,
         };
     }
 }
@@ -48,14 +48,14 @@ async function register(username, email, password, passwordConfirm) {
 async function login(email, password) {
     try {
         const response = await fetch(`${API}/auth/checkLogin`, {
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json",
             },
             body: JSON.stringify({
                 email,
-                password
-            })
+                password,
+            }),
         });
 
         const result = await response.json();
@@ -63,18 +63,18 @@ async function login(email, password) {
         if (!response.ok) {
             return {
                 success: false,
-                result: result.result || 'Login failed'
+                result: result.result || "Login failed",
             };
         }
 
         return {
             success: true,
-            result: result.result
+            result: result.result,
         };
     } catch (error) {
         return {
             success: false,
-            result: error.message
+            result: error.message,
         };
     }
 }
@@ -82,14 +82,14 @@ async function login(email, password) {
 async function loginById(id, password) {
     try {
         const response = await fetch(`${API}/auth/checkLogin`, {
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json",
             },
             body: JSON.stringify({
                 id,
-                password
-            })
+                password,
+            }),
         });
 
         const result = await response.json();
@@ -97,18 +97,18 @@ async function loginById(id, password) {
         if (!response.ok) {
             return {
                 success: false,
-                result: result.result || 'Login failed'
+                result: result.result || "Login failed",
             };
         }
 
         return {
             success: true,
-            result: result.result
+            result: result.result,
         };
     } catch (error) {
         return {
             success: false,
-            result: error.message
+            result: error.message,
         };
     }
 }
@@ -116,23 +116,23 @@ async function loginById(id, password) {
 async function verifyToken(token) {
     try {
         const response = await fetch(`${API}/verifyToken`, {
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
         });
 
         const result = await response.json();
 
         return {
             success: response.ok,
-            result: result.result
+            result: result.result,
         };
     } catch (error) {
         return {
             success: false,
-            result: error.message
+            result: error.message,
         };
     }
 }
@@ -142,7 +142,7 @@ function saveToken(tokenData) {
         fs.writeFileSync(tokenFile, JSON.stringify(tokenData, null, 2));
         return true;
     } catch (error) {
-        console.error('Error saving token:', error);
+        console.error("Error saving token:", error);
         return false;
     }
 }
@@ -150,12 +150,12 @@ function saveToken(tokenData) {
 function loadToken() {
     try {
         if (fs.existsSync(tokenFile)) {
-            const data = fs.readFileSync(tokenFile, 'utf-8');
+            const data = fs.readFileSync(tokenFile, "utf-8");
             return JSON.parse(data);
         }
         return null;
     } catch (error) {
-        console.error('Error loading token:', error);
+        console.error("Error loading token:", error);
         return null;
     }
 }
@@ -167,19 +167,17 @@ function deleteToken() {
         }
         return true;
     } catch (error) {
-        console.error('Error deleting token:', error);
+        console.error("Error deleting token:", error);
         return false;
     }
 }
 
-function decodeJWT(token) {
+function decodeJwt(token) {
     try {
-        const parts = token.split('.');
+        const parts = token.split(".");
         if (parts.length !== 3) return null;
 
-        const payload = JSON.parse(
-            Buffer.from(parts[1], 'base64').toString('utf-8')
-        );
+        const payload = JSON.parse(Buffer.from(parts[1], "base64").toString("utf-8"));
 
         if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
             return null;
@@ -187,7 +185,7 @@ function decodeJWT(token) {
 
         return payload;
     } catch (error) {
-        console.error('Error decoding JWT:', error);
+        console.error("Error decoding JWT:", error);
         return null;
     }
 }
@@ -195,76 +193,75 @@ function decodeJWT(token) {
 async function recoveryCode(email) {
     try {
         const response = await fetch(`${API}/auth/requestRecovery`, {
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json",
             },
-            body: JSON.stringify({ email })
+            body: JSON.stringify({ email }),
         });
 
-        const data = await response.json()
+        const data = await response.json();
 
         if (data.success) {
-            return { success: true, result: data.result }
-        } else {
-            return { success: false, result: data.result }
+            return { success: true, result: data.result };
         }
+        return { success: false, result: data.result };
     } catch (error) {
-        return { success: false, result: error }
+        return { success: false, result: error };
     }
 }
 
 async function verifyRecoveryCode(email, code) {
     try {
         const response = await fetch(`${API}/auth/verifyRecoveryCode`, {
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json",
             },
-            body: JSON.stringify({ email, code })
+            body: JSON.stringify({ email, code }),
         });
 
-        const data = await response.json()
+        const data = await response.json();
 
-        console.log("VRC:", data)
+        console.log("VRC:", data);
 
         if (data.success) {
-            return { success: true, result: data.result }
-        } else {
-            return { success: false, result: data.result }
+            return { success: true, result: data.result };
         }
+        return { success: false, result: data.result };
     } catch (error) {
-        return { success: false, result: error }
+        return { success: false, result: error };
     }
 }
 
 async function resetPassword(recoveryToken, newPassword) {
     try {
         const response = await fetch(`${API}/auth/resetPassword`, {
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json",
             },
-            body: JSON.stringify({ recovery_token: recoveryToken, new_password: newPassword })
+            body: JSON.stringify({ recovery_token: recoveryToken, new_password: newPassword }),
         });
 
-        const data = await response.json()
+        const data = await response.json();
 
         if (data.success) {
-            return { success: true, result: data.result }
-        } else {
-            return { success: false, result: data.result }
+            return { success: true, result: data.result };
         }
+        return { success: false, result: data.result };
     } catch (error) {
-        return { success: false, result: error }
+        return { success: false, result: error };
     }
 }
 
-ipcMain.handle('register', async (_e, username, email, password, passwordConfirm) => {
-    return await register(username, email, password, passwordConfirm);
-});
+ipcMain.handle(
+    "register",
+    async (_e, username, email, password, passwordConfirm) =>
+        await register(username, email, password, passwordConfirm),
+);
 
-ipcMain.handle('login', async (_e, email, password) => {
+ipcMain.handle("login", async (_e, email, password) => {
     const result = await login(email, password);
 
     if (result.success && result.result.token) {
@@ -272,26 +269,26 @@ ipcMain.handle('login', async (_e, email, password) => {
             token: result.result.token,
             user: result.result.user,
             expiresIn: result.result.expiresIn,
-            savedAt: new Date().toISOString()
+            savedAt: new Date().toISOString(),
         });
     }
 
     return result;
 });
 
-ipcMain.handle('request-recovery-code', async (_, email) => {
-    return await recoveryCode(email)
-})
+ipcMain.handle("request-recovery-code", async (_, email) => await recoveryCode(email));
 
-ipcMain.handle('verify-recovery-code', async (_, email, code) => {
-    return await verifyRecoveryCode(email, code)
-})
+ipcMain.handle(
+    "verify-recovery-code",
+    async (_, email, code) => await verifyRecoveryCode(email, code),
+);
 
-ipcMain.handle('reset-password', async (_, recoveryToken, newPassword) => {
-    return await resetPassword(recoveryToken, newPassword)
-})
+ipcMain.handle(
+    "reset-password",
+    async (_, recoveryToken, newPassword) => await resetPassword(recoveryToken, newPassword),
+);
 
-ipcMain.handle('login-by-id', async (_e, id, password) => {
+ipcMain.handle("login-by-id", async (_e, id, password) => {
     const result = await loginById(id, password);
 
     if (result.success && result.result.token) {
@@ -299,55 +296,55 @@ ipcMain.handle('login-by-id', async (_e, id, password) => {
             token: result.result.token,
             user: result.result.user,
             expiresIn: result.result.expiresIn,
-            savedAt: new Date().toISOString()
+            savedAt: new Date().toISOString(),
         });
     }
 
     return result;
 });
 
-ipcMain.handle('logout', async () => {
+ipcMain.handle("logout", async () => {
     deleteToken();
     return {
         success: true,
-        result: 'Logged out successfully'
+        result: "Logged out successfully",
     };
 });
 
-ipcMain.handle('get-token', async () => {
+ipcMain.handle("get-token", async () => {
     const tokenData = loadToken();
 
     if (!tokenData) {
         return {
             success: false,
-            result: null
+            result: null,
         };
     }
 
-    const decoded = decodeJWT(tokenData.token);
+    const decoded = decodeJwt(tokenData.token);
 
     if (!decoded) {
         deleteToken();
         return {
             success: false,
-            result: null
+            result: null,
         };
     }
 
     return {
         success: true,
-        result: tokenData
+        result: tokenData,
     };
 });
 
-ipcMain.handle('is-logged-in', async () => {
+ipcMain.handle("is-logged-in", async () => {
     const tokenData = loadToken();
 
     if (!tokenData) {
         return false;
     }
 
-    const decoded = decodeJWT(tokenData.token);
+    const decoded = decodeJwt(tokenData.token);
 
     if (!decoded) {
         deleteToken();
@@ -358,25 +355,25 @@ ipcMain.handle('is-logged-in', async () => {
 });
 
 ipcMain.handle("set-non-account-mode", async (_, value = true) => {
-    let data = {}
+    let data = {};
 
     try {
         if (fs.existsSync(LOCAL_FILE_PATH)) {
-            const raw = fs.readFileSync(LOCAL_FILE_PATH, "utf-8")
-            data = JSON.parse(raw || "{}")
+            const raw = fs.readFileSync(LOCAL_FILE_PATH, "utf-8");
+            data = JSON.parse(raw || "{}");
         }
     } catch (e) {
-        data = {}
+        data = {};
     }
 
-    data.nonAccountMode = value
+    data.nonAccountMode = value;
 
     try {
-        fs.writeFileSync(LOCAL_FILE_PATH, JSON.stringify(data, null, 4), "utf-8")
-        return { ok: true }
+        fs.writeFileSync(LOCAL_FILE_PATH, JSON.stringify(data, null, 4), "utf-8");
+        return { ok: true };
     } catch (e) {
-        return { ok: false }
+        return { ok: false };
     }
-})
+});
 
-module.exports = { API, login, verifyToken }
+module.exports = { API, login, verifyToken };

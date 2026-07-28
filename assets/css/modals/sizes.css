@@ -4,19 +4,19 @@
     height: 80%;
 }
 .modal-wrapper .modal.md {
-    width: 70%!important;
-    min-height: 60%!important;
-    height: fit-content!important;
+    width: 70% !important;
+    min-height: 60% !important;
+    height: fit-content !important;
 }
 .modal-wrapper .modal.sm {
-    width: 50%!important;
-    min-height: 40%!important;
-    height: fit-content!important;
+    width: 50% !important;
+    min-height: 40% !important;
+    height: fit-content !important;
 }
 .modal-wrapper .modal.mini {
-    min-height: 0px!important;
-    width: 30%!important;
-    height: fit-content!important;
+    min-height: 0px !important;
+    width: 30% !important;
+    height: fit-content !important;
 }
 .modal-wrapper .modal.full {
     width: 80%;

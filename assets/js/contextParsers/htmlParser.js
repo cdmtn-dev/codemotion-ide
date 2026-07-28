@@ -19,14 +19,17 @@ export class HTMLParser {
 
                 const html = this.expandExpression(expr);
 
-                editor.session.replace({
-                    start: {
-                        row: cursor.row,
-                        column: cursor.column - expr.length
+                editor.session.replace(
+                    {
+                        start: {
+                            row: cursor.row,
+                            column: cursor.column - expr.length,
+                        },
+                        end: cursor,
                     },
-                    end: cursor
-                }, html);
-            }
+                    html,
+                );
+            },
         });
     }
 
@@ -37,7 +40,7 @@ export class HTMLParser {
     expandExpression(expr) {
         const parts = expr.split(">");
 
-        let result = "";
+        const result = "";
         let current = "";
 
         for (let i = parts.length - 1; i >= 0; i--) {
@@ -50,15 +53,15 @@ export class HTMLParser {
         return current;
     }
 
-    expandSingle(part, innerHTML = "") {
+    expandSingle(part, innerHtml = "") {
         const multiMatch = part.match(/(.*)\*(\d+)/);
         if (multiMatch) {
             const base = multiMatch[1];
-            const count = parseInt(multiMatch[2]);
+            const count = Number.parseInt(multiMatch[2]);
 
             let result = "";
             for (let i = 0; i < count; i++) {
-                result += this.expandSingle(base, innerHTML);
+                result += this.expandSingle(base, innerHtml);
             }
             return result;
         }
@@ -70,10 +73,10 @@ export class HTMLParser {
             return `<${tag} type="${type}">`;
         }
 
-        return this.buildTag(part, innerHTML);
+        return this.buildTag(part, innerHtml);
     }
 
-    buildTag(expr, innerHTML = "") {
+    buildTag(expr, innerHtml = "") {
         let tag = "div";
         let id = "";
         let classes = [];
@@ -85,13 +88,13 @@ export class HTMLParser {
         if (idMatch) id = idMatch[1];
 
         const classMatches = [...expr.matchAll(/\.([a-zA-Z0-9-_]+)/g)];
-        classes = classMatches.map(m => m[1]);
+        classes = classMatches.map((m) => m[1]);
 
         let attrs = "";
         if (id) attrs += ` id="${id}"`;
         if (classes.length) attrs += ` class="${classes.join(" ")}"`;
 
-        return `<${tag}${attrs}>${innerHTML}</${tag}>`;
+        return `<${tag}${attrs}>${innerHtml}</${tag}>`;
     }
 
     showHTMLContext(editor, contextPanel) {
@@ -114,7 +117,7 @@ export class HTMLParser {
             const node = {
                 tag: inlineTag,
                 id: attrs.id ? "#" + attrs.id : "",
-                cls: attrs.class ? "." + attrs.class.split(/\s+/).join(".") : ""
+                cls: attrs.class ? "." + attrs.class.split(/\s+/).join(".") : "",
             };
 
             const last = stack[stack.length - 1];
@@ -131,8 +134,20 @@ export class HTMLParser {
         const nameRe = /^<\s*\/?\s*([a-zA-Z0-9:-]+)/;
 
         const selfClosing = new Set([
-            "area","base","br","col","embed","hr","img","input","link","meta",
-            "param","source","track","wbr"
+            "area",
+            "base",
+            "br",
+            "col",
+            "embed",
+            "hr",
+            "img",
+            "input",
+            "link",
+            "meta",
+            "param",
+            "source",
+            "track",
+            "wbr",
         ]);
 
         const ignored = new Set(["script", "style"]);
@@ -166,11 +181,10 @@ export class HTMLParser {
             const node = {
                 tag,
                 id: attrs.id ? "#" + attrs.id : "",
-                cls: attrs.class ? "." + attrs.class.split(/\s+/).join(".") : ""
+                cls: attrs.class ? "." + attrs.class.split(/\s+/).join(".") : "",
             };
 
-            const isSelfClosing =
-                selfClosing.has(tag) || /\/\s*>$/.test(fullTag);
+            const isSelfClosing = selfClosing.has(tag) || /\/\s*>$/.test(fullTag);
 
             if (!isSelfClosing) {
                 stack.push(node);
@@ -220,7 +234,7 @@ export class HTMLParser {
             contextPanel.appendChild(el);
 
             if (i < stack.length - 1) {
-                const sep = renderSeparator()
+                const sep = renderSeparator();
                 contextPanel.appendChild(sep);
             }
         });
@@ -235,7 +249,7 @@ export class HTMLParser {
             li: "token",
             table: "table",
             input: "text_fields",
-            script: "code"
+            script: "code",
         };
 
         return icons[tag] || "deployed_code";

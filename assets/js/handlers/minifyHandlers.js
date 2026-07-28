@@ -12,152 +12,145 @@ export function minifyCSS(css) {
 }
 
 export function minifyJS(code) {
+    let out = "";
+    let i = 0;
+    const len = code.length;
 
-    let out = ""
-    let i = 0
-    const len = code.length
-
-    let state = "normal"
-    let quote = null
-    let prev = ""
+    let state = "normal";
+    let quote = null;
+    let prev = "";
 
     function isWord(c) {
-        return /[a-zA-Z0-9_$]/.test(c)
+        return /[a-zA-Z0-9_$]/.test(c);
     }
 
     function lastOut() {
-        return out[out.length - 1]
+        return out[out.length - 1];
     }
 
     while (i < len) {
-
-        let c = code[i]
-        let n = code[i + 1]
+        const c = code[i];
+        const n = code[i + 1];
 
         // ---------- STRING ----------
         if (state === "string") {
-
-            out += c
+            out += c;
 
             if (c === "\\") {
-                out += n
-                i += 2
-                continue
+                out += n;
+                i += 2;
+                continue;
             }
 
             if (c === quote) {
-                state = "normal"
+                state = "normal";
             }
 
-            i++
-            continue
+            i++;
+            continue;
         }
 
         // ---------- TEMPLATE ----------
         if (state === "template") {
-
-            out += c
+            out += c;
 
             if (c === "\\") {
-                out += n
-                i += 2
-                continue
+                out += n;
+                i += 2;
+                continue;
             }
 
             if (c === "`") {
-                state = "normal"
+                state = "normal";
             }
 
-            i++
-            continue
+            i++;
+            continue;
         }
 
         // ---------- REGEX ----------
         if (state === "regex") {
-
-            out += c
+            out += c;
 
             if (c === "\\") {
-                out += n
-                i += 2
-                continue
+                out += n;
+                i += 2;
+                continue;
             }
 
             if (c === "/") {
-                state = "normal"
+                state = "normal";
             }
 
-            i++
-            continue
+            i++;
+            continue;
         }
 
         // ---------- STRING START ----------
         if (c === '"' || c === "'") {
-            quote = c
-            state = "string"
-            out += c
-            i++
-            continue
+            quote = c;
+            state = "string";
+            out += c;
+            i++;
+            continue;
         }
 
         // ---------- TEMPLATE START ----------
         if (c === "`") {
-            state = "template"
-            out += c
-            i++
-            continue
+            state = "template";
+            out += c;
+            i++;
+            continue;
         }
 
         // ---------- COMMENTS ----------
         if (c === "/" && n === "/") {
-            while (i < len && code[i] !== "\n") i++
-            continue
+            while (i < len && code[i] !== "\n") i++;
+            continue;
         }
 
         if (c === "/" && n === "*") {
-            i += 2
-            while (i < len && !(code[i] === "*" && code[i+1] === "/")) i++
-            i += 2
-            continue
+            i += 2;
+            while (i < len && !(code[i] === "*" && code[i + 1] === "/")) i++;
+            i += 2;
+            continue;
         }
 
         // ---------- REGEX DETECTION ----------
         if (c === "/") {
-
-            let prev = lastOut()
+            const prev = lastOut();
 
             if (!prev || /[({[=,:!&|?;<>+-]/.test(prev)) {
-                state = "regex"
-                out += c
-                i++
-                continue
+                state = "regex";
+                out += c;
+                i++;
+                continue;
             }
         }
 
         // ---------- WHITESPACE ----------
         if (/\s/.test(c)) {
-
-            let prev = lastOut()
-            let next = code[i + 1]
+            const prev = lastOut();
+            const next = code[i + 1];
 
             if (isWord(prev) && isWord(next)) {
-                out += " "
+                out += " ";
             }
 
-            i++
-            continue
+            i++;
+            continue;
         }
 
         // ---------- REMOVE EXTRA ; ----------
         if (c === ";" && n === "}") {
-            i++
-            continue
+            i++;
+            continue;
         }
 
-        out += c
-        prev = c
-        i++
+        out += c;
+        prev = c;
+        i++;
     }
 
-    return out.trim()
+    return out.trim();
 }

@@ -27,7 +27,7 @@
     height: fit-content;
 }
 .modal-category__item.disabled {
-    opacity: .5;
+    opacity: 0.5;
     pointer-events: none;
     user-select: none;
 }
@@ -41,7 +41,7 @@
     gap: 5px;
 }
 .modal-category__item .modal-category__item-desc {
-    opacity: .5;
+    opacity: 0.5;
     font-size: 14px;
     font-weight: var(--default-font-weight);
 }
@@ -91,16 +91,16 @@
     align-items: center;
     flex-shrink: 0;
     gap: 5px;
-    transition: .2s;
+    transition: 0.2s;
 }
 .modal-category__item .modal-appicons div p {
     margin: 0;
     font-size: 12px;
 }
 .modal-category__item .modal-appicons div.active {
-    opacity: .5;
+    opacity: 0.5;
 }
 .modal-category__item .modal-appicons div:hover {
-    opacity: .5;
+    opacity: 0.5;
     cursor: pointer;
 }

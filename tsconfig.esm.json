@@ -4,7 +4,5 @@
         "module": "ES2022",
         "outDir": "app/dist-esm"
     },
-    "include": [
-        "app/main/textmate/compile.ts"
-    ]
+    "include": ["app/main/textmate/compile.ts"]
 }

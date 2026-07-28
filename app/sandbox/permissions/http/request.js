@@ -1,24 +1,20 @@
-function callback(data) {
-    const properties = data.selfArgs[0]
-    const url = properties.url
+async function callback(data) {
+    const properties = data.selfArgs[0];
+    const url = properties.url;
     const method = properties.method || "GET";
     const headers = properties.headers || {};
-    const body = properties.body
+    const body = properties.body;
 
     try {
         const options = {
             method,
-            headers
+            headers,
         };
 
-        const hasContentType = Object.keys(headers).some(
-            k => k.toLowerCase() === "content-type"
-        );
+        const hasContentType = Object.keys(headers).some((k) => k.toLowerCase() === "content-type");
 
         if (body && method !== "GET") {
-            options.body = typeof body === "string"
-                ? body
-                : JSON.stringify(body);
+            options.body = typeof body === "string" ? body : JSON.stringify(body);
 
             if (hasContentType) {
                 options.headers["Content-Type"] = "application/json";
@@ -36,23 +32,18 @@ function callback(data) {
             data = text;
         }
 
-        return async () => {
-            return {
-                status: res.status,
-                ok: res.ok,
-                headers: Object.fromEntries(res.headers.entries()),
-                data
-            }
-        };
-
+        return async () => ({
+            status: res.status,
+            ok: res.ok,
+            headers: Object.fromEntries(res.headers.entries()),
+            data,
+        });
     } catch (err) {
-        return async () => {
-            return {
-                ok: false,
-                error: err.message
-            }
-        };
+        return async () => ({
+            ok: false,
+            error: err.message,
+        });
     }
 }
 
-module.exports = { callback }
+module.exports = { callback };

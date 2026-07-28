@@ -1,363 +1,354 @@
-import { renderModalBase } from "./components/base.js"
+import { renderModalBase } from "./components/base.js";
 
-const backdrop = document.createElement("div")
-backdrop.classList.add("backdrop", "hidden")
+const backdrop = document.createElement("div");
+backdrop.classList.add("backdrop", "hidden");
 
-document.body.prepend(backdrop)
+document.body.prepend(backdrop);
 
 // function for object validation inside Modal class
 export function valid(obj) {
-    if (obj === undefined || obj === null || obj === false) return undefined
+    if (obj === undefined || obj === null || obj === false) return;
 
-    if (Array.isArray(obj) && obj.length === 0) return undefined
+    if (Array.isArray(obj) && obj.length === 0) return;
 
-    if (
-        typeof obj === "object" &&
-        !Array.isArray(obj) &&
-        Object.keys(obj).length === 0
-    ) return undefined
+    if (typeof obj === "object" && !Array.isArray(obj) && Object.keys(obj).length === 0) return;
 
-    return obj
+    return obj;
 }
 // for arrays
 export function validArray(obj) {
-    if(valid(obj) == undefined) return undefined
-    if(typeof obj == "object" && !Array.isArray(obj)) return Object.keys(obj)
-    if(typeof obj != "object") return undefined
+    if (valid(obj) == undefined) return;
+    if (typeof obj == "object" && !Array.isArray(obj)) return Object.keys(obj);
+    if (typeof obj != "object") return;
 
-    return obj
+    return obj;
 }
 // for urls
 export function validHTTPS(url) {
-    if(!url) return undefined
-    if(!url.startsWith("https://")) return undefined
+    if (!url) return;
+    if (!url.startsWith("https://")) return;
 
-    return url
+    return url;
 }
 // for booleans
 export function validBool(boolean) {
-    if(typeof boolean == "boolean") return boolean
-    else return undefined
+    if (typeof boolean == "boolean") return boolean;
 }
 // for objects
 export function validObject(object) {
-    if(object !== null && typeof object === 'object' && !Array.isArray(object)) {
-        return object
-    }
-    else {
-        return undefined
+    if (object !== null && typeof object === "object" && !Array.isArray(object)) {
+        return object;
     }
 }
 
 export function err(text) {
-    throw new Error(`[CodeMotion.Modals] ${text}`)
+    throw new Error(`[CodeMotion.Modals] ${text}`);
 }
 export function showBackdrop() {
-    backdrop.classList.remove("hidden")
+    backdrop.classList.remove("hidden");
 }
 export function hideBackdrop() {
-    backdrop.classList.add("hidden")
+    backdrop.classList.add("hidden");
 }
 
-const INPUT_EVENT_OPTS = { bubbles: true }
+const INPUT_EVENT_OPTS = { bubbles: true };
 
 export class Modal {
-    static list = {}
+    static list = {};
 
     static create(config = {}) {
-        if (!config) err("Modal config can't be empty")
+        if (!config) err("Modal config can't be empty");
 
-        const id = valid(config.id) ?? crypto.randomUUID().replaceAll("-", "")
+        const id = valid(config.id) ?? crypto.randomUUID().replaceAll("-", "");
 
         if (Modal.list[id]) {
-            const existingModal = Modal.list[id]
+            const existingModal = Modal.list[id];
 
             if (valid(config.content)) {
-                existingModal.setContent(config.content)
+                existingModal.setContent(config.content);
             }
 
             if (valid(config.title)) {
-                existingModal.setTitle(config.title)
+                existingModal.setTitle(config.title);
             }
 
-            return existingModal
+            return existingModal;
         }
 
-        const name = valid(config.name) ?? "Untitled"
-        const isHiddenOnSpawn = valid(config.show) ?? true
-        const modalClassList = validArray(config.modalClassList) ?? []
-        let title = valid(config.title) ?? false
-        const titleAvatar = valid(config.titleAvatar) ?? false
-        const pages = valid(config.pages) ?? {}
-        const content = valid(config.content) ?? {}
-        const size = valid(config.size) ?? "default"
+        const name = valid(config.name) ?? "Untitled";
+        const isHiddenOnSpawn = valid(config.show) ?? true;
+        const modalClassList = validArray(config.modalClassList) ?? [];
+        const title = valid(config.title) ?? false;
+        const titleAvatar = valid(config.titleAvatar) ?? false;
+        const pages = valid(config.pages) ?? {};
+        const content = valid(config.content) ?? {};
+        const size = valid(config.size) ?? "default";
 
-        let modalBase = null
-        let wrapper = null
-        let body = null
-        let contentEl = null
-        let titleEl = null
-        let sidebarPages = null
-        let sidebarIsBody = false
-        let pendingZIndex = null
-        let pendingContent = null
-        let pendingTitleText = null
-        let openListeners = []
+        let modalBase = null;
+        let wrapper = null;
+        let body = null;
+        let contentEl = null;
+        let titleEl = null;
+        let sidebarPages = null;
+        let sidebarIsBody = false;
+        let pendingZIndex = null;
+        let pendingContent = null;
+        let pendingTitleText = null;
+        let openListeners = [];
 
         function build() {
-            if (modalBase) return modalBase
+            if (modalBase) return modalBase;
 
             modalBase = renderModalBase({
-                id: id,
-                isHiddenOnSpawn: isHiddenOnSpawn,
-                modalClassList: modalClassList,
-                title: title,
-                titleAvatar: titleAvatar,
-                pages: pages,
-                content: content,
-                size: size
-            })
+                id,
+                isHiddenOnSpawn,
+                modalClassList,
+                title,
+                titleAvatar,
+                pages,
+                content,
+                size,
+            });
 
-            wrapper = modalBase.wrapper
-            body = modalBase.body
+            wrapper = modalBase.wrapper;
+            body = modalBase.body;
 
-            sidebarIsBody = body.classList.contains("modal-body-sidebar")
+            sidebarIsBody = body.classList.contains("modal-body-sidebar");
             if (sidebarIsBody) {
-                sidebarPages = body.querySelectorAll(".modal-body__sidebar-content")
+                sidebarPages = body.querySelectorAll(".modal-body__sidebar-content");
             }
 
-            contentEl = wrapper.querySelector(".modal-content")
-            titleEl = wrapper.querySelector(".modal-title")
+            contentEl = wrapper.querySelector(".modal-content");
+            titleEl = wrapper.querySelector(".modal-title");
 
             if (pendingZIndex !== null) {
-                wrapper.style.zIndex = pendingZIndex
+                wrapper.style.zIndex = pendingZIndex;
             }
 
             if (pendingContent !== null) {
-                applyContent(pendingContent)
-                pendingContent = null
+                applyContent(pendingContent);
+                pendingContent = null;
             }
             if (pendingTitleText !== null) {
-                applyTitle(pendingTitleText)
-                pendingTitleText = null
+                applyTitle(pendingTitleText);
+                pendingTitleText = null;
             }
 
-            return modalBase
+            return modalBase;
         }
 
         function applyContent(newContent) {
-            if (!contentEl) return
+            if (!contentEl) return;
 
             if (typeof newContent === "string") {
-                contentEl.innerHTML = newContent
-            }
-            else if (newContent instanceof HTMLElement) {
-                contentEl.innerHTML = ''
-                contentEl.appendChild(newContent)
+                contentEl.innerHTML = newContent;
+            } else if (newContent instanceof HTMLElement) {
+                contentEl.innerHTML = "";
+                contentEl.appendChild(newContent);
             }
         }
 
         function applyTitle(newTitle) {
-            if (!titleEl) return
+            if (!titleEl) return;
 
-            titleEl.textContent = newTitle
+            titleEl.textContent = newTitle;
         }
 
         function mount() {
-            build()
+            build();
 
             if (!wrapper.isConnected) {
-                document.body.prepend(wrapper)
+                document.body.prepend(wrapper);
             }
         }
 
         function activate() {
-            mount()
+            mount();
 
-            requestAnimationFrame(() => { 
-                wrapper.classList.remove("hidden")
-                showBackdrop()
-            })
+            requestAnimationFrame(() => {
+                wrapper.classList.remove("hidden");
+                showBackdrop();
+            });
 
             if (openListeners.length) {
-                const listeners = openListeners.slice()
-                listeners.forEach(l => l.callback(api))
-                openListeners = openListeners.filter(l => !l.once)
+                const listeners = openListeners.slice();
+                listeners.forEach((l) => l.callback(api));
+                openListeners = openListeners.filter((l) => !l.once);
             }
         }
 
         const api = {
-            id: id,
+            id,
 
             get el() {
-                build()
-                return wrapper
+                build();
+                return wrapper;
             },
 
             preRender: () => {
-                mount()
+                mount();
             },
 
             bind: (el) => {
                 function bindClick(el) {
                     el.addEventListener("click", () => {
-                        activate()
-                    })
+                        activate();
+                    });
                 }
 
                 if (el instanceof NodeList) {
-                    el.forEach(e => {
-                        bindClick(e)
-                    })
-                }
-                else if (el instanceof HTMLElement) {
-                    bindClick(el)
+                    el.forEach((e) => {
+                        bindClick(e);
+                    });
+                } else if (el instanceof HTMLElement) {
+                    bindClick(el);
                 }
             },
 
             zIndex(value) {
-                if(Number.isInteger(value)) {
+                if (Number.isInteger(value)) {
                     if (modalBase) {
-                        wrapper.style.zIndex = value
+                        wrapper.style.zIndex = value;
                     } else {
-                        pendingZIndex = value
+                        pendingZIndex = value;
                     }
                 }
             },
 
             open: () => {
-                activate()
+                activate();
             },
 
             onOpen: (callback, options = {}) => {
-                if (typeof callback !== "function") return () => {}
+                if (typeof callback !== "function") return () => {};
 
-                const once = validBool(options.once) ?? false
-                const listener = { callback, once }
+                const once = validBool(options.once) ?? false;
+                const listener = { callback, once };
 
-                openListeners.push(listener)
+                openListeners.push(listener);
 
                 return () => {
-                    openListeners = openListeners.filter(l => l !== listener)
-                }
+                    openListeners = openListeners.filter((l) => l !== listener);
+                };
             },
 
             close: () => {
-                if (!modalBase) return
+                if (!modalBase) return;
 
-                hideBackdrop()
-                wrapper.classList.add("hidden")
+                hideBackdrop();
+                wrapper.classList.add("hidden");
             },
 
             destroy: () => {
                 if (modalBase) {
-                    wrapper.remove()
+                    wrapper.remove();
                 }
 
-                modalBase = null
-                wrapper = null
-                body = null
-                contentEl = null
-                titleEl = null
-                sidebarPages = null
-                openListeners = []
+                modalBase = null;
+                wrapper = null;
+                body = null;
+                contentEl = null;
+                titleEl = null;
+                sidebarPages = null;
+                openListeners = [];
 
-                delete Modal.list[id]
+                delete Modal.list[id];
             },
 
             isSidebar: () => {
-                build()
-                return sidebarIsBody
+                build();
+                return sidebarIsBody;
             },
 
             disableCurrent() {
-                build()
+                build();
                 if (sidebarIsBody) {
-                    sidebarPages.forEach(p => {
-                        if(!p.classList.contains("hidden")) p.classList.add("disabled")
-                    })
+                    sidebarPages.forEach((p) => {
+                        if (!p.classList.contains("hidden")) p.classList.add("disabled");
+                    });
                 }
             },
             unDisableCurrent() {
-                build()
+                build();
                 if (sidebarIsBody) {
-                    sidebarPages.forEach(p => {
-                        if(!p.classList.contains("hidden")) p.classList.remove("disabled")
-                    })
+                    sidebarPages.forEach((p) => {
+                        if (!p.classList.contains("hidden")) p.classList.remove("disabled");
+                    });
                 }
             },
 
             pageShow: (pageIndex) => {
-                build()
+                build();
                 if (sidebarIsBody) {
                     sidebarPages.forEach((page, index) => {
-                        const pageid = page.id.split("_content")[0]
+                        const pageid = page.id.split("_content")[0];
 
                         if (index == pageIndex) {
-                            sidebarPages.forEach(p => p.classList.add("hidden"))
-                            page.classList.remove("hidden")
+                            sidebarPages.forEach((p) => p.classList.add("hidden"));
+                            page.classList.remove("hidden");
 
-                            const pageSidebarBtn = wrapper.querySelector(`[id="${pageid}"]`)
+                            const pageSidebarBtn = wrapper.querySelector(`[id="${pageid}"]`);
 
                             if (pageSidebarBtn) {
-                                wrapper.querySelectorAll(".modal-sidebar__item")
-                                    .forEach(i => i.classList.remove("active"))
+                                wrapper
+                                    .querySelectorAll(".modal-sidebar__item")
+                                    .forEach((i) => i.classList.remove("active"));
 
-                                pageSidebarBtn.classList.add("active")
+                                pageSidebarBtn.classList.add("active");
                             }
                         }
-                    })
+                    });
                 }
             },
 
             clear: () => {
-                if (!modalBase) return
+                if (!modalBase) return;
 
-                body.querySelectorAll("input").forEach(i => {
-                    i.value = ''
-                    i.dispatchEvent(new Event("input", INPUT_EVENT_OPTS))
-                })
+                body.querySelectorAll("input").forEach((i) => {
+                    i.value = "";
+                    i.dispatchEvent(new Event("input", INPUT_EVENT_OPTS));
+                });
             },
 
             setContent: (newContent) => {
                 if (!modalBase) {
-                    pendingContent = newContent
-                    return
+                    pendingContent = newContent;
+                    return;
                 }
 
-                applyContent(newContent)
+                applyContent(newContent);
             },
 
             setTitle: (newTitle) => {
                 if (!modalBase) {
-                    pendingTitleText = newTitle
-                    return
+                    pendingTitleText = newTitle;
+                    return;
                 }
 
-                applyTitle(newTitle)
-            }
-        }
+                applyTitle(newTitle);
+            },
+        };
 
-        Modal.list[id] = api
+        Modal.list[id] = api;
 
-        return api
+        return api;
     }
 
     static get(id) {
-        return Modal.list[id] ?? null
+        return Modal.list[id] ?? null;
     }
 
     static destroy(id) {
-        const modal = Modal.list[id]
+        const modal = Modal.list[id];
 
-        if (!modal) return
+        if (!modal) return;
 
-        modal.destroy()
+        modal.destroy();
     }
 
     static closeAll() {
-        Object.values(Modal.list).forEach(modal => {
-            modal.close()
-        })
+        Object.values(Modal.list).forEach((modal) => {
+            modal.close();
+        });
     }
 }

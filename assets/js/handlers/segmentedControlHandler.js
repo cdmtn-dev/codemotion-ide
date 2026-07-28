@@ -1,32 +1,27 @@
 export function setupSegmentedControl() {
-    const SEGMENTED_CONTROL_BASE_SELECTOR = ".segmented-control";
-    const SEGMENTED_CONTROL_INDIVIDUAL_SEGMENT_SELECTOR = ".segmented-control .option input";
-    const SEGMENTED_CONTROL_BACKGROUND_PILL_SELECTOR = ".segmented-control .selection";
+    const SegmentedControlBaseSelector = ".segmented-control";
+    const SegmentedControlIndividualSegmentSelector = ".segmented-control .option input";
+    const SegmentedControlBackgroundPillSelector = ".segmented-control .selection";
 
-    setup()
+    setup();
 
     function setup() {
-        forEachElement(SEGMENTED_CONTROL_BASE_SELECTOR, (elem) => {
+        forEachElement(SegmentedControlBaseSelector, (elem) => {
             elem.addEventListener("change", updatePillPosition);
         });
         window.addEventListener("resize", updatePillPosition);
-
     }
 
     function updatePillPosition() {
-        forEachElement(
-            SEGMENTED_CONTROL_INDIVIDUAL_SEGMENT_SELECTOR,
-            (elem, index) => {
-                if (elem.checked) moveBackgroundPillToElement(elem, index);
-            }
-        );
+        forEachElement(SegmentedControlIndividualSegmentSelector, (elem, index) => {
+            if (elem.checked) moveBackgroundPillToElement(elem, index);
+        });
     }
 
     function moveBackgroundPillToElement(elem, index) {
         console.log(elem.offsetWidth * index);
-        document.querySelector(
-            SEGMENTED_CONTROL_BACKGROUND_PILL_SELECTOR
-        ).style.transform = "translateX(" + elem.offsetWidth * index + "px)";
+        document.querySelector(SegmentedControlBackgroundPillSelector).style.transform =
+            "translateX(" + elem.offsetWidth * index + "px)";
     }
 
     function forEachElement(className, fn) {

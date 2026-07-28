@@ -1,11 +1,11 @@
-import { Modal } from "../modalsHandler/engine.js"
-import { GLS } from "../lib.js"
+import { GLS } from "../lib.js";
+import { Modal } from "../modalsHandler/engine.js";
 
 export async function getLogoutModal() {
-    const gls = await GLS.initLocal()
+    const gls = await GLS.initLocal();
 
     function lgls(string) {
-        return gls.get(`modals.logout.${string}`)
+        return gls.get(`modals.logout.${string}`);
     }
 
     const logoutModal = Modal.create({
@@ -19,46 +19,46 @@ export async function getLogoutModal() {
             {
                 type: "row",
                 gap: 15,
-                classList: ['background'],
+                classList: ["background"],
                 items: [
                     {
                         type: "placeholder",
                         title: lgls("header.title"),
-                        description: lgls("header.description")
+                        description: lgls("header.description"),
                     },
                     {
                         type: "container",
-                        id: "buttonsContainer"
+                        id: "buttonsContainer",
                     },
                     {
                         type: "button",
                         id: "logoutConfirm",
                         title: lgls("buttonConfirm"),
-                        container: "#buttonsContainer"
+                        container: "#buttonsContainer",
                     },
                     {
                         type: "button",
                         id: "logoutCancel",
                         title: gls.get("cancel"),
                         container: "#buttonsContainer",
-                        class: "danger"
-                    }
-                ]
+                        class: "danger",
+                    },
+                ],
             },
-        ]
-    })
+        ],
+    });
 
-    const cancelBtn = logoutModal.el.querySelector("#logoutCancel")
-    const confirmBtn = logoutModal.el.querySelector("#logoutConfirm")
-    
+    const cancelBtn = logoutModal.el.querySelector("#logoutCancel");
+    const confirmBtn = logoutModal.el.querySelector("#logoutConfirm");
+
     cancelBtn.addEventListener("click", () => {
-        logoutModal.close()
-    })
+        logoutModal.close();
+    });
 
     confirmBtn.addEventListener("click", async () => {
-        await window.electron.logout()
-        await window.electron.reload()
-    })
+        await window.electron.logout();
+        await window.electron.reload();
+    });
 
-    return logoutModal
+    return logoutModal;
 }

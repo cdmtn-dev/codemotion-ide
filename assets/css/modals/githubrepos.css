@@ -15,10 +15,10 @@
     color: var(--text-color);
     text-decoration: none;
     font-size: 15px;
-    transition: .4s;
+    transition: 0.4s;
 }
 .modal-githubrepos__item:hover {
-    opacity: .5;
+    opacity: 0.5;
     cursor: pointer;
 }
 .modal-githubrepos__icon {

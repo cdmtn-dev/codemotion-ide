@@ -6,12 +6,12 @@ export class _CodeTemplates {
                 content: `
                 document.addEventListener("DOMContentLoaded", () => {
                     
-                });`
+                });`,
             },
             {
                 name: "Utility template",
-                content: `"use strict";`
-            }
+                content: `"use strict";`,
+            },
         ],
         html: [
             {
@@ -27,7 +27,7 @@ export class _CodeTemplates {
                 <body>
                 \t
                 </body>
-                </html>`
+                </html>`,
             },
             {
                 name: "Basic HTML Template with CSS & JS",
@@ -46,8 +46,8 @@ export class _CodeTemplates {
                 \t
                 </body>
                 </html>
-                `
-            }
+                `,
+            },
         ],
         php: [
             {
@@ -56,23 +56,23 @@ export class _CodeTemplates {
                 <?php
 
                 declare(strict_types=1);
-                `
-            }
-        ]
-    }
+                `,
+            },
+        ],
+    };
 
     static add(name, object) {
-        this.templates[name] = object
+        _CodeTemplates.templates[name] = object;
     }
 
     static get jsx() {
-        return this.templates.js
+        return _CodeTemplates.templates.js;
     }
 
     static list() {
         return {
-            ...this.templates,
-            jsx: this.jsx
-        }
+            ..._CodeTemplates.templates,
+            jsx: _CodeTemplates.jsx,
+        };
     }
 }

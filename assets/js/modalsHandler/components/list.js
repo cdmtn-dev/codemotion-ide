@@ -1,109 +1,111 @@
-import { createDIV, createSpan } from "../handlers/helpers.js"
-import { renderButton } from "./button.js"
-import { renderInput } from "./input.js"
+import { createDIV, createSpan } from "../handlers/helpers.js";
+import { renderButton } from "./button.js";
+import { renderInput } from "./input.js";
 
-function renderInputHelper({
-    i,
-    placeholders,
-    placeholderAll,
-    placeholderPrefix,
-    valuesReadOnly
-}) {
-    let placeholder = placeholders[i] ?? `List item #${i}`
+function renderInputHelper({ i, placeholders, placeholderAll, placeholderPrefix, valuesReadOnly }) {
+    let placeholder = placeholders[i] ?? `List item #${i}`;
 
     if (placeholderAll) {
-        placeholder = placeholderAll
+        placeholder = placeholderAll;
     }
     const input = renderInput({
         id: `modal-list__item-${i + 1}`,
-        placeholder: placeholder,
-        prefix: placeholderPrefix
-    })
+        placeholder,
+        prefix: placeholderPrefix,
+    });
 
-    if(valuesReadOnly) {
-        input.querySelector("input").setAttribute("readonly", true)
-    }
-    else {
-        input.querySelector("input").removeAttribute("readonly")
+    if (valuesReadOnly) {
+        input.querySelector("input").setAttribute("readonly", true);
+    } else {
+        input.querySelector("input").removeAttribute("readonly");
     }
 
-    return input
+    return input;
 }
 
 export function renderList(properties = {}) {
-    const id = properties.id
-    const maxElements = properties.maxElements
-    const renderType = properties.renderType
-    const placeholders = properties.placeholders
-    const placeholderAll = properties.placeholderAll
-    const placeholderPrefix = properties.placeholderPrefix
-    const values = properties.values
-    const valuesReadOnly = properties.valuesReadOnly
-    const onAdd = properties.onAdd
+    const id = properties.id;
+    const maxElements = properties.maxElements;
+    const renderType = properties.renderType;
+    const placeholders = properties.placeholders;
+    const placeholderAll = properties.placeholderAll;
+    const placeholderPrefix = properties.placeholderPrefix;
+    const values = properties.values;
+    const valuesReadOnly = properties.valuesReadOnly;
+    const onAdd = properties.onAdd;
 
-    const addedElements = []
+    const addedElements = [];
 
-    const wrapper = createDIV()
-    wrapper.classList.add("modal-list")
-    wrapper.id = id
+    const wrapper = createDIV();
+    wrapper.classList.add("modal-list");
+    wrapper.id = id;
 
-    if(renderType == "immediately") {
-        for(let i = 0; i < maxElements; i++) {
+    if (renderType == "immediately") {
+        for (let i = 0; i < maxElements; i++) {
             const input = renderInputHelper({
-                i, placeholders, placeholderAll, placeholderPrefix, valuesReadOnly
-            })
+                i,
+                placeholders,
+                placeholderAll,
+                placeholderPrefix,
+                valuesReadOnly,
+            });
 
-            wrapper.appendChild(input)
+            wrapper.appendChild(input);
         }
-    }
-    else if(renderType == "byAdding") {
+    } else if (renderType == "byAdding") {
         // render first
-        const minRender = values.length > 1 ? values.length : 1
+        const minRender = values.length > 1 ? values.length : 1;
 
-        for(let i = 0; i < minRender; i++) {
+        for (let i = 0; i < minRender; i++) {
             const input = renderInputHelper({
-                i, placeholders, placeholderAll, placeholderPrefix, valuesReadOnly
-            })
+                i,
+                placeholders,
+                placeholderAll,
+                placeholderPrefix,
+                valuesReadOnly,
+            });
 
-            if(i in values) {
-                input.querySelector("input").value += values[i]
+            if (i in values) {
+                input.querySelector("input").value += values[i];
             }
 
-            addedElements.push(input)
+            addedElements.push(input);
 
-            wrapper.appendChild(input)
+            wrapper.appendChild(input);
         }
 
-        const addMoreBtn = renderButton(
-            {
-                title: "Add",
-                id: "modal-list__add-btn"
-            }
-        )
+        const addMoreBtn = renderButton({
+            title: "Add",
+            id: "modal-list__add-btn",
+        });
 
-        if(!valuesReadOnly) {
-            wrapper.appendChild(addMoreBtn)
+        if (!valuesReadOnly) {
+            wrapper.appendChild(addMoreBtn);
 
             addMoreBtn.addEventListener("click", () => {
-                const currentID = addedElements.length + 1
+                const currentId = addedElements.length + 1;
 
-                if(onAdd && typeof onAdd == "function") {
-                    onAdd(currentID)
+                if (onAdd && typeof onAdd == "function") {
+                    onAdd(currentId);
                 }
 
                 const input = renderInputHelper({
-                    currentID, placeholders, placeholderAll, placeholderPrefix, valuesReadOnly
-                })
+                    currentID: currentId,
+                    placeholders,
+                    placeholderAll,
+                    placeholderPrefix,
+                    valuesReadOnly,
+                });
 
-                addedElements.push(input)
-                addMoreBtn.before(input)
+                addedElements.push(input);
+                addMoreBtn.before(input);
 
-                if (currentID >= maxElements) {
-                    addMoreBtn.classList.add("hidden")
+                if (currentId >= maxElements) {
+                    addMoreBtn.classList.add("hidden");
                 }
-            })
+            });
         }
     }
 
-    return wrapper
+    return wrapper;
 }

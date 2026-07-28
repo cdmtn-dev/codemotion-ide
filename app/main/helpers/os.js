@@ -1,6 +1,6 @@
-const { dialog } = require("electron")
-const fsPromise = require('fs/promises');
-const path = require("path")
+const { dialog } = require("electron");
+const fsPromise = require("fs/promises");
+const path = require("path");
 
 function selectFile(win) {
     const result = dialog.showOpenDialogSync(win, {
@@ -8,7 +8,7 @@ function selectFile(win) {
         properties: ["openFile"],
     });
 
-    if (!result || !result.length) return null;
+    if (!(result && result.length)) return null;
 
     return result[0];
 }
@@ -16,16 +16,16 @@ function selectFile(win) {
 function selectFolder(win) {
     const result = dialog.showOpenDialogSync(win, {
         title: "Choose directory",
-        properties: ["openDirectory"] 
+        properties: ["openDirectory"],
     });
 
-    if (!result || !result.length) return null;
+    if (!(result && result.length)) return null;
     return result[0];
 }
 
 async function saveFile(fullPath, content) {
     try {
-        await fsPromise.writeFile(fullPath, content, 'utf8');
+        await fsPromise.writeFile(fullPath, content, "utf8");
         return { success: true };
     } catch (err) {
         return { success: false, error: err.message };
@@ -34,31 +34,37 @@ async function saveFile(fullPath, content) {
 
 async function readDirTree(rootPath, options = {}) {
     const absRoot = path.resolve(rootPath);
-    const maxDepth = Number.isInteger(options.maxDepth) ? options.maxDepth : Infinity;
+    const maxDepth = Number.isInteger(options.maxDepth)
+        ? options.maxDepth
+        : Number.POSITIVE_INFINITY;
     const ignoreRoot = path.resolve(options.ignoreRoot || absRoot);
     const ignoreRules = await readIgnoreRules(ignoreRoot);
 
     async function walk(dir, depth = 0) {
-        let entries = [];
+        const entries = [];
 
         try {
             const dirents = await fsPromise.readdir(dir, { withFileTypes: true });
 
             for (const d of dirents) {
                 const full = path.join(dir, d.name);
-                const item = { name: d.name, path: full, ignored: isIgnored(full, d.isDirectory(), ignoreRoot, ignoreRules) };
+                const item = {
+                    name: d.name,
+                    path: full,
+                    ignored: isIgnored(full, d.isDirectory(), ignoreRoot, ignoreRules),
+                };
 
                 if (d.isDirectory()) {
                     if (depth < maxDepth) {
                         const children = await walk(full, depth + 1);
-                        entries.push({ ...item, type: 'dir', children, loaded: true });
+                        entries.push({ ...item, type: "dir", children, loaded: true });
                     } else {
-                        entries.push({ ...item, type: 'dir', loaded: false });
+                        entries.push({ ...item, type: "dir", loaded: false });
                     }
                 } else if (d.isSymbolicLink()) {
-                    entries.push({ ...item, type: 'symlink' });
+                    entries.push({ ...item, type: "symlink" });
                 } else {
-                    entries.push({ ...item, type: 'file' });
+                    entries.push({ ...item, type: "file" });
                 }
             }
 
@@ -66,16 +72,15 @@ async function readDirTree(rootPath, options = {}) {
                 if (a.type === b.type) {
                     return a.name.localeCompare(b.name);
                 }
-                if (a.type === 'dir') return -1;
-                if (b.type === 'dir') return 1;
+                if (a.type === "dir") return -1;
+                if (b.type === "dir") return 1;
                 return 0;
             });
-
         } catch (err) {
             entries.push({
                 name: path.basename(dir),
                 path: dir,
-                type: 'dir',
+                type: "dir",
                 error: String(err),
             });
         }
@@ -87,12 +92,12 @@ async function readDirTree(rootPath, options = {}) {
         const st = await fsPromise.lstat(absRoot);
 
         if (st.isFile()) {
-            return [{ name: path.basename(absRoot), path: absRoot, type: 'file' }];
+            return [{ name: path.basename(absRoot), path: absRoot, type: "file" }];
         }
     } catch (e) {
         throw new Error(`Path not found: ${absRoot}`);
     }
-    
+
     return walk(absRoot);
 }
 
@@ -100,17 +105,17 @@ module.exports = {
     selectFile,
     selectFolder,
     saveFile,
-    readDirTree
-}
+    readDirTree,
+};
 
 async function readIgnoreRules(rootPath) {
     try {
         const content = await fsPromise.readFile(path.join(rootPath, ".gitignore"), "utf8");
         return content
             .split(/\r?\n/)
-            .map(line => line.trim())
-            .filter(line => line && !line.startsWith("#"))
-            .map(line => line.replace(/\\/g, "/"));
+            .map((line) => line.trim())
+            .filter((line) => line && !line.startsWith("#"))
+            .map((line) => line.replace(/\\/g, "/"));
     } catch (_) {
         return [];
     }
@@ -122,9 +127,9 @@ function isIgnored(targetPath, isDir, rootPath, rules) {
 
     const name = path.basename(targetPath);
 
-    return rules.some(rule => {
+    return rules.some((rule) => {
         let pattern = rule;
-        let dirOnly = pattern.endsWith("/");
+        const dirOnly = pattern.endsWith("/");
 
         if (pattern.startsWith("!")) return false;
         pattern = pattern.replace(/^\/+/, "").replace(/\/+$/, "");
@@ -133,7 +138,8 @@ function isIgnored(targetPath, isDir, rootPath, rules) {
         const target = pattern.includes("/") ? relative : name;
 
         if (dirOnly && !isDir) return false;
-        if (target === pattern || relative === pattern || relative.startsWith(`${pattern}/`)) return true;
+        if (target === pattern || relative === pattern || relative.startsWith(`${pattern}/`))
+            return true;
 
         if (pattern.includes("*")) {
             const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*");

@@ -12,5 +12,5 @@ export const textMateBaseTheme = EditorView.theme({
     ".cm-tm-tag": { color: "#569cd6" },
     ".cm-tm-attribute": { color: "#9cdcfe" },
     ".cm-tm-variable": { color: "#9cdcfe" },
-    ".cm-tm-punctuation": { color: "#d4d4d4" }
+    ".cm-tm-punctuation": { color: "#d4d4d4" },
 });

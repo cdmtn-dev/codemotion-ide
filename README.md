@@ -44,7 +44,13 @@ git clone https://github.com/cdmtn-dev/codemotion-ide.git
 cd codemotion-ide
 
 # Install dependencies
-npm install
+npm ci
+
+# Check formatting and linting
+npm run check
+
+# Apply safe automatic fixes
+npm run check:fix
 
 # Start the development server
 npm start
@@ -77,6 +83,8 @@ We love contributions! Whether it's bug reports, feature requests, or pull reque
 #### Contributing Guidelines
 - Fork the repository
 - Create your feature branch ```git checkout -b feature/AmazingFeature```
+- Install exact dependencies with ```npm ci```
+- Run ```npm run check:fix``` before committing; ```npm run check``` is required in pull requests and reports legacy lint findings without blocking formatting checks
 - Commit your changes ```git commit -m 'Add some AmazingFeature'```
 - Push to the branch ```git push origin feature/AmazingFeature```
 - Open a Pull Request

@@ -24,6 +24,6 @@ export function identifierJSONCompletionSource(context) {
 
     return {
         from: word.from,
-        options: [...keys].map(label => ({ label, type: "property" }))
+        options: [...keys].map((label) => ({ label, type: "property" })),
     };
 }

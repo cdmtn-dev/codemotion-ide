@@ -1,22 +1,28 @@
-import { createNotify, getAllCSSVariables, normalizePath } from "../lib.js"
-import { sendDebugMsg, sendDebugError, sendDebugWarn, sendDebugModuleInfo, sendDebugMarking } from "../handlers/debuggerSignalHandlers.js"
-import { handleExtensionEvents } from "./extensionEventsHandler.js"
-import { Modal } from "../modalsHandler/engine.js"
-import { bus } from "../bus.js"
+import { bus } from "../bus.js";
+import {
+    sendDebugError,
+    sendDebugMarking,
+    sendDebugModuleInfo,
+    sendDebugMsg,
+    sendDebugWarn,
+} from "../handlers/debuggerSignalHandlers.js";
+import { createNotify, getAllCSSVariables, normalizePath } from "../lib.js";
+import { Modal } from "../modalsHandler/engine.js";
+import { handleExtensionEvents } from "./extensionEventsHandler.js";
 
-const installedExtensionModalData = []
-const extensionErrors = {}
+const installedExtensionModalData = [];
+const extensionErrors = {};
 
 const RISKY_PERMISSIONS = [
     "shell.run",
     "shell.exec",
     "shell.kill",
     "window.create",
-    "window.close"
-]
+    "window.close",
+];
 
 function hasRiskyPermissions(permissions) {
-    return permissions.filter(p => RISKY_PERMISSIONS.includes(p))
+    return permissions.filter((p) => RISKY_PERMISSIONS.includes(p));
 }
 
 function showRiskyPermissionWarning({ displayName, name, riskyPerms }) {
@@ -43,95 +49,118 @@ function showRiskyPermissionWarning({ displayName, name, riskyPerms }) {
                                     <button class="modal-button default" id="perm-warning-no">No, disable it</button>
                                     <button class="modal-button default" id="perm-warning-yes">Yes, enable it</button>
                                 </div>
-                            `
-                        }
-                    ]
-                }
-            ]
-        })
+                            `,
+                        },
+                    ],
+                },
+            ],
+        });
 
-        modal.open()
+        modal.open();
 
-        const noBtn = modal.el.querySelector("#perm-warning-no")
-        const yesBtn = modal.el.querySelector("#perm-warning-yes")
+        const noBtn = modal.el.querySelector("#perm-warning-no");
+        const yesBtn = modal.el.querySelector("#perm-warning-yes");
 
-        if (noBtn) noBtn.addEventListener("click", () => {
-            modal.close()
-            modal.destroy()
-            resolve(false)
-        })
-        if (yesBtn) yesBtn.addEventListener("click", () => {
-            modal.close()
-            modal.destroy()
-            resolve(true)
-        })
-    })
+        if (noBtn)
+            noBtn.addEventListener("click", () => {
+                modal.close();
+                modal.destroy();
+                resolve(false);
+            });
+        if (yesBtn)
+            yesBtn.addEventListener("click", () => {
+                modal.close();
+                modal.destroy();
+                resolve(true);
+            });
+    });
 }
 
-const VALID_PLATFORMS = ["windows", "win", "macos", "mac", "linux", "lin", "all"]
-const PLATFORM_ALIASES = { win: "windows", mac: "macos", lin: "linux", win32: "windows", darwin: "macos" }
+const VALID_PLATFORMS = ["windows", "win", "macos", "mac", "linux", "lin", "all"];
+const PLATFORM_ALIASES = {
+    win: "windows",
+    mac: "macos",
+    lin: "linux",
+    win32: "windows",
+    darwin: "macos",
+};
 
 function normalizePlatform(p) {
-    return PLATFORM_ALIASES[p] || p
+    return PLATFORM_ALIASES[p] || p;
 }
 
 function isPlatformCompatible(platformArray, currentPlatform) {
-    const normalized = platformArray.map(normalizePlatform)
-    const normalizedCurrent = normalizePlatform(currentPlatform)
-    if (normalized.includes("all")) return true
-    return normalized.includes(normalizedCurrent)
+    const normalized = platformArray.map(normalizePlatform);
+    const normalizedCurrent = normalizePlatform(currentPlatform);
+    if (normalized.includes("all")) return true;
+    return normalized.includes(normalizedCurrent);
 }
 
 function checkPackage(object) {
     if (!object || Object.keys(object).length === 0) {
-        return { success: false, msg: "File missing or empty" }
+        return { success: false, msg: "File missing or empty" };
     }
 
-    const requireFields = ["version", "name", "displayName", "main", "permissions", "description", "activeOn", "platform"]
+    const requireFields = [
+        "version",
+        "name",
+        "displayName",
+        "main",
+        "permissions",
+        "description",
+        "activeOn",
+        "platform",
+    ];
 
     for (const f of requireFields) {
         if (!(f in object)) {
-            return { success: false, msg: `Missing field: ${f}` }
+            return { success: false, msg: `Missing field: ${f}` };
         }
     }
 
-    const platform = object.platform
+    const platform = object.platform;
 
     if (typeof platform === "string") {
         if (!VALID_PLATFORMS.includes(platform)) {
-            return { success: false, msg: `Invalid platform "${platform}". Valid: ${VALID_PLATFORMS.join(", ")}` }
+            return {
+                success: false,
+                msg: `Invalid platform "${platform}". Valid: ${VALID_PLATFORMS.join(", ")}`,
+            };
         }
-        object.platform = [platform]
+        object.platform = [platform];
     } else if (Array.isArray(platform)) {
         if (platform.length === 0) {
-            return { success: false, msg: "Field 'platform' must be a non-empty array" }
+            return { success: false, msg: "Field 'platform' must be a non-empty array" };
         }
         for (const p of platform) {
             if (!VALID_PLATFORMS.includes(p)) {
-                return { success: false, msg: `Invalid platform "${p}". Valid: ${VALID_PLATFORMS.join(", ")}` }
+                return {
+                    success: false,
+                    msg: `Invalid platform "${p}". Valid: ${VALID_PLATFORMS.join(", ")}`,
+                };
             }
         }
     } else {
-        return { success: false, msg: "Field 'platform' must be a string or array" }
+        return { success: false, msg: "Field 'platform' must be a string or array" };
     }
 
-    return { success: true, msg: "All fine" }
+    return { success: true, msg: "All fine" };
 }
 
 function checkModulePackage(object) {
     if (!object || Object.keys(object).length === 0) {
-        return { success: false, msg: "File missing or empty" }
+        return { success: false, msg: "File missing or empty" };
     }
 
-    const requireFields = ["version", "name", "displayName", "description", "main", "permissions"]
+    const requireFields = ["version", "name", "displayName", "description", "main", "permissions"];
 
     for (const f of requireFields) {
         if (!(f in object)) {
-            return { success: false, msg: `Missing field: ${f}` }
+            return { success: false, msg: `Missing field: ${f}` };
         }
     }
 
-    return { success: true, msg: "All fine" }
+    return { success: true, msg: "All fine" };
 }
 
 function notifyError({ name, content }) {
@@ -139,14 +168,14 @@ function notifyError({ name, content }) {
         type: "danger",
         icon: "error",
         title: `Extension "${name}" have errors. Check Debugger for more info`,
-        content: content
-    })
+        content,
+    });
 }
 
 function renderExtensionsModal(properties) {
-    Modal.destroy("installedExtensions")
+    Modal.destroy("installedExtensions");
 
-    const items = properties == undefined ? [{ type: "centered", icon: "extension" }] : properties
+    const items = properties == undefined ? [{ type: "centered", icon: "extension" }] : properties;
 
     Modal.create({
         id: "installedExtensions",
@@ -158,39 +187,39 @@ function renderExtensionsModal(properties) {
             {
                 type: "row",
                 classList: ["background"],
-                items: items
+                items,
             },
-        ]
-    })
+        ],
+    });
 }
 
 export async function initExtensions() {
-    handleExtensionEvents()
-    renderExtensionsModal()
+    handleExtensionEvents();
+    renderExtensionsModal();
 
     document.querySelector("#extensionsAll")?.addEventListener("click", () => {
-        Modal.get("installedExtensions")?.open()
-    })
+        Modal.get("installedExtensions")?.open();
+    });
 
-    const extensionsRequest = await window.electron.requestExtensions()
-    const extensionsDir = await window.electron.getExtensionsDir()
+    const extensionsRequest = await window.electron.requestExtensions();
+    const extensionsDir = await window.electron.getExtensionsDir();
 
-    if (!extensionsRequest.success) return
+    if (!extensionsRequest.success) return;
 
-    const names = extensionsRequest.result
-    const settings = await window.electron.readSettings()
-    const currentPlatform = await window.electron.getPlatform()
-    const disabledExtensions = settings?.extensions?.disabledExtensions || []
+    const names = extensionsRequest.result;
+    const settings = await window.electron.readSettings();
+    const currentPlatform = await window.electron.getPlatform();
+    const disabledExtensions = settings?.extensions?.disabledExtensions || [];
 
     // PROCEED EACH EXT
     for (const name of names) {
-        const extensionRequest = await window.electron.requestExtension(name)
+        const extensionRequest = await window.electron.requestExtension(name);
 
         if (!extensionRequest.success) {
-            notifyError({ name: name, content: extensionRequest.result })
-            sendDebugError(`(Extension) ${name}: load error. ${extensionRequest.result}`)
-            if (!extensionErrors[name]) extensionErrors[name] = []
-            extensionErrors[name].push(extensionRequest.result)
+            notifyError({ name, content: extensionRequest.result });
+            sendDebugError(`(Extension) ${name}: load error. ${extensionRequest.result}`);
+            if (!extensionErrors[name]) extensionErrors[name] = [];
+            extensionErrors[name].push(extensionRequest.result);
 
             installedExtensionModalData.push(
                 createInstalledExtensionsModalTemplate({
@@ -201,24 +230,24 @@ export async function initExtensions() {
                     permissions: new Set(),
                     path: "",
                     extensionName: name,
-                    enabled: true
-                })
-            )
-            continue
+                    enabled: true,
+                }),
+            );
+            continue;
         }
 
-        let extensionFinalContent = ""
-        let allPermissions = new Set()
+        const extensionFinalContent = "";
+        const allPermissions = new Set();
 
-        let extensionPackage = extensionRequest.result.package
-        let extensionPath = extensionRequest.result.path
-        let extensionPackageCheck = checkPackage(extensionPackage)
+        const extensionPackage = extensionRequest.result.package;
+        const extensionPath = extensionRequest.result.path;
+        const extensionPackageCheck = checkPackage(extensionPackage);
 
         if (!extensionPackageCheck.success) {
-            notifyError({ name: name, content: extensionPackageCheck.msg })
-            sendDebugError(`(Extension) ${name}: package.json error. ${extensionPackageCheck.msg}`)
-            if (!extensionErrors[name]) extensionErrors[name] = []
-            extensionErrors[name].push(extensionPackageCheck.msg)
+            notifyError({ name, content: extensionPackageCheck.msg });
+            sendDebugError(`(Extension) ${name}: package.json error. ${extensionPackageCheck.msg}`);
+            if (!extensionErrors[name]) extensionErrors[name] = [];
+            extensionErrors[name].push(extensionPackageCheck.msg);
 
             installedExtensionModalData.push(
                 createInstalledExtensionsModalTemplate({
@@ -229,31 +258,31 @@ export async function initExtensions() {
                     permissions: new Set(),
                     path: extensionPath,
                     extensionName: name,
-                    enabled: true
-                })
-            )
-            continue
+                    enabled: true,
+                }),
+            );
+            continue;
         }
 
-        let version = extensionPackage.version
-        let icon = extensionPackage.icon != undefined ? extensionPackage.icon : false
-        let description = extensionPackage.description
-        let displayName = extensionPackage.displayName
-        let main = extensionPackage.main
-        let permissions = extensionPackage.permissions || []
-        let activeOn = extensionPackage.activeOn
+        const version = extensionPackage.version;
+        const icon = extensionPackage.icon == undefined ? false : extensionPackage.icon;
+        const description = extensionPackage.description;
+        const displayName = extensionPackage.displayName;
+        const main = extensionPackage.main;
+        const permissions = extensionPackage.permissions || [];
+        const activeOn = extensionPackage.activeOn;
 
-        permissions.forEach(p => allPermissions.add(p))
+        permissions.forEach((p) => allPermissions.add(p));
 
-        const permissionsArray = [...allPermissions]
-        
-        let isDev = false
+        const permissionsArray = [...allPermissions];
+
+        let isDev = false;
 
         if ("app" in settings && "devMode" in settings.app) {
-            isDev = settings.app.devMode
+            isDev = settings.app.devMode;
         }
 
-        const isEnabled = !disabledExtensions.includes(name)
+        const isEnabled = !disabledExtensions.includes(name);
 
         // add extension to the list
 
@@ -261,115 +290,114 @@ export async function initExtensions() {
             createInstalledExtensionsModalTemplate({
                 title: displayName,
                 subtitle: `${name} (${version})`,
-                description: description,
+                description,
                 image: icon ? `${normalizePath(extensionPath)}/${icon}` : name,
                 permissions: allPermissions,
                 path: extensionPath,
                 extensionName: name,
                 settings: extensionPackage.settings,
-                enabled: isEnabled
-            })
-        )
+                enabled: isEnabled,
+            }),
+        );
 
         if (!isEnabled) {
-            sendDebugWarn(`${name}: extension disabled by user`)
-            continue
+            sendDebugWarn(`${name}: extension disabled by user`);
+            continue;
         }
 
-        if(!Array.isArray(activeOn)) {
-            sendDebugError(`${name}: activeOn key in package.json must be array`)
+        if (!Array.isArray(activeOn)) {
+            sendDebugError(`${name}: activeOn key in package.json must be array`);
         }
 
-        let extensionMainFileContentRes = await window.electron.readFile(`/${name}/${main}.js`, extensionsDir)
+        const extensionMainFileContentRes = await window.electron.readFile(
+            `/${name}/${main}.js`,
+            extensionsDir,
+        );
 
         if (!extensionMainFileContentRes.success) {
-            notifyError({ name: displayName, content: extensionMainFileContentRes.result })
+            notifyError({ name: displayName, content: extensionMainFileContentRes.result });
         }
 
-        sendDebugMarking()
-        sendDebugMsg(`${name}: package.json loaded successfully\nPermissions: ${permissions.length > 0 ? permissions.join(", ") : "none"}`)
-        sendDebugMsg(`${name}: ${main}.js loaded`)
+        sendDebugMarking();
+        sendDebugMsg(
+            `${name}: package.json loaded successfully\nPermissions: ${permissions.length > 0 ? permissions.join(", ") : "none"}`,
+        );
+        sendDebugMsg(`${name}: ${main}.js loaded`);
 
         createNotify({
             type: "success",
             icon: "check",
             title: `Extension "${displayName}" successfully added`,
-            content: `Version: ${version}`
-        })
+            content: `Version: ${version}`,
+        });
 
         // register providers in package.json
 
-        if("language.register" in extensionPackage) {
-            const languageRegisterConfig = extensionPackage["language.register"]
+        if ("language.register" in extensionPackage) {
+            const languageRegisterConfig = extensionPackage["language.register"];
 
-            if(languageRegisterConfig.length > 0) {
-                window.electron.ext.editor.language.register(
-                    {
-                        configPath: languageRegisterConfig,
-                        extensionPath: normalizePath(extensionPath),
-                        extensionName: name
-                    }
-                )
+            if (languageRegisterConfig.length > 0) {
+                window.electron.ext.editor.language.register({
+                    configPath: languageRegisterConfig,
+                    extensionPath: normalizePath(extensionPath),
+                    extensionName: name,
+                });
             }
         }
-        if("docs.register" in extensionPackage) {
-            const docsRegisterConfig = extensionPackage["docs.register"]
+        if ("docs.register" in extensionPackage) {
+            const docsRegisterConfig = extensionPackage["docs.register"];
 
-            if(docsRegisterConfig.length > 0) {
-                window.electron.ext.editor.docs.register(
-                    {
-                        configPath: docsRegisterConfig,
-                        extensionPath: normalizePath(extensionPath),
-                        extensionName: name
-                    }
-                )
+            if (docsRegisterConfig.length > 0) {
+                window.electron.ext.editor.docs.register({
+                    configPath: docsRegisterConfig,
+                    extensionPath: normalizePath(extensionPath),
+                    extensionName: name,
+                });
             }
         }
-        if("filenames.register" in extensionPackage) {
-            const filenamesConfig = extensionPackage["filenames.register"]
+        if ("filenames.register" in extensionPackage) {
+            const filenamesConfig = extensionPackage["filenames.register"];
 
-            if(filenamesConfig.length > 0) {
-                window.electron.ext.editor.filenames.register(
-                    {
-                        configPath: filenamesConfig,
-                        extensionPath: normalizePath(extensionPath),
-                        extensionName: name
-                    }
-                )
+            if (filenamesConfig.length > 0) {
+                window.electron.ext.editor.filenames.register({
+                    configPath: filenamesConfig,
+                    extensionPath: normalizePath(extensionPath),
+                    extensionName: name,
+                });
             }
         }
-        if("fileExtensions.register" in extensionPackage) {
-            const fileExtensionsConfig = extensionPackage["fileExtensions.register"]
+        if ("fileExtensions.register" in extensionPackage) {
+            const fileExtensionsConfig = extensionPackage["fileExtensions.register"];
 
-            if(fileExtensionsConfig.length > 0) {
-                window.electron.ext.editor.fileExtensions.register(
-                    {
-                        configPath: fileExtensionsConfig,
-                        extensionPath: normalizePath(extensionPath),
-                        extensionName: name
-                    }
-                )
+            if (fileExtensionsConfig.length > 0) {
+                window.electron.ext.editor.fileExtensions.register({
+                    configPath: fileExtensionsConfig,
+                    extensionPath: normalizePath(extensionPath),
+                    extensionName: name,
+                });
             }
         }
-        if("templates.register" in extensionPackage) {
-            const templatesConfig = extensionPackage["templates.register"]
+        if ("templates.register" in extensionPackage) {
+            const templatesConfig = extensionPackage["templates.register"];
 
-            if(templatesConfig.length > 0) {
-                window.electron.ext.editor.templates.register(
-                    {
-                        configPath: templatesConfig,
-                        extensionPath: normalizePath(extensionPath),
-                        extensionName: name
-                    }
-                )
+            if (templatesConfig.length > 0) {
+                window.electron.ext.editor.templates.register({
+                    configPath: templatesConfig,
+                    extensionPath: normalizePath(extensionPath),
+                    extensionName: name,
+                });
             }
         }
-        
+
         // platform check
-        const extPlatforms = Array.isArray(extensionPackage.platform) ? extensionPackage.platform : [extensionPackage.platform]
+        const extPlatforms = Array.isArray(extensionPackage.platform)
+            ? extensionPackage.platform
+            : [extensionPackage.platform];
         if (!isPlatformCompatible(extPlatforms, currentPlatform)) {
-            sendDebugWarn(`${name}: skipped — not compatible with ${currentPlatform} (supports: ${extPlatforms.join(", ")})`)
-            continue
+            sendDebugWarn(
+                `${name}: skipped — not compatible with ${currentPlatform} (supports: ${extPlatforms.join(", ")})`,
+            );
+            continue;
         }
 
         // activation events
@@ -378,57 +406,59 @@ export async function initExtensions() {
 
             language: (name, onActivate) => {
                 const handler = (data) => {
-                    const mode = data.detail.editor.getCurrentLanguage()
+                    const mode = data.detail.editor.getCurrentLanguage();
 
                     if (mode === name) {
-                        onActivate()
+                        onActivate();
                     }
-                }
+                };
 
-                bus.addEventListener("file-opened-event", handler)
+                bus.addEventListener("file-opened-event", handler);
 
                 return () => {
-                    bus.removeEventListener("file-opened-event", handler)
-                }
-            }
-        }
+                    bus.removeEventListener("file-opened-event", handler);
+                };
+            },
+        };
 
-        activeOn.forEach(event => {
-            const [eventName, ...args] = event.split(":").map(s => s.trim())
+        activeOn.forEach((event) => {
+            const [eventName, ...args] = event.split(":").map((s) => s.trim());
 
             if (eventName === "load") {
-                runExtension()
+                runExtension();
             }
 
             if (eventName === "language") {
                 activeOnEvents.language(args[0], () => {
-                    runExtension()
-                })
+                    runExtension();
+                });
             }
-        })
-        // 
-        
+        });
+        //
+
         async function runExtension() {
-            const riskyPerms = hasRiskyPermissions(permissionsArray)
+            const riskyPerms = hasRiskyPermissions(permissionsArray);
 
             if (riskyPerms.length > 0) {
-                const disableWarning = settings?.extensions?.disableRiskyPermissionWarning === true
+                const disableWarning = settings?.extensions?.disableRiskyPermissionWarning === true;
 
                 if (!disableWarning) {
                     const approved = await showRiskyPermissionWarning({
-                        displayName: displayName,
-                        name: name,
-                        riskyPerms: riskyPerms
-                    })
+                        displayName,
+                        name,
+                        riskyPerms,
+                    });
 
                     if (!approved) {
-                        sendDebugWarn(`${name}: extension disabled by user (risky permissions declined)`)
-                        return
+                        sendDebugWarn(
+                            `${name}: extension disabled by user (risky permissions declined)`,
+                        );
+                        return;
                     }
                 }
             }
 
-            const extSettingsValues = settings?.extensions?.[name] || {}
+            const extSettingsValues = settings?.extensions?.[name] || {};
 
             const runResult = await window.electron.runExtension(
                 extensionMainFileContentRes.result,
@@ -436,115 +466,129 @@ export async function initExtensions() {
                 {
                     extensionName: name,
                     extensionVersion: version,
-                    extensionPath: extensionPath,
-                    isDev: isDev,
+                    extensionPath,
+                    isDev,
                     allCSSVariables: getAllCSSVariables(),
-                    activeOn: activeOn,
-                    extensionSettings: extSettingsValues
-                }
-            )
+                    activeOn,
+                    extensionSettings: extSettingsValues,
+                },
+            );
 
-            sendDebugMarking()
-            sendDebugWarn(`Currently, the "${name}" extension and all modules connected to it use special permissions: <b>${permissionsArray.join(", ")}</b>`)
+            sendDebugMarking();
+            sendDebugWarn(
+                `Currently, the "${name}" extension and all modules connected to it use special permissions: <b>${permissionsArray.join(", ")}</b>`,
+            );
 
             if (!runResult.success) {
-                sendDebugError(`${name} runtime error: ${runResult.error}`)
+                sendDebugError(`${name} runtime error: ${runResult.error}`);
             }
         }
     }
 
-    renderExtensionsModal(installedExtensionModalData)
+    renderExtensionsModal(installedExtensionModalData);
 }
 
 function showExtensionErrors(extensionName) {
-    const errors = extensionErrors[extensionName] || []
-    if (errors.length === 0) return
+    const errors = extensionErrors[extensionName] || [];
+    if (errors.length === 0) return;
 
-    const existing = document.getElementById("extensionErrorsPopup")
-    if (existing) existing.remove()
+    const existing = document.getElementById("extensionErrorsPopup");
+    if (existing) existing.remove();
 
-    const wrapper = document.createElement("div")
-    wrapper.id = "extensionErrorsPopup"
-    wrapper.style.cssText = "position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);animation:fadeIn .15s ease"
+    const wrapper = document.createElement("div");
+    wrapper.id = "extensionErrorsPopup";
+    wrapper.style.cssText =
+        "position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);animation:fadeIn .15s ease";
 
-    const modal = document.createElement("div")
-    modal.className = "modal confirm"
-    modal.style.cssText = "background:var(--body-color);color:var(--text-color);position:relative;border-radius:15px;overflow:hidden;border:1px solid var(--block-divider-border-color);width:400px;height:auto;min-height:160px;max-height:350px;display:flex;flex-direction:column"
+    const modal = document.createElement("div");
+    modal.className = "modal confirm";
+    modal.style.cssText =
+        "background:var(--body-color);color:var(--text-color);position:relative;border-radius:15px;overflow:hidden;border:1px solid var(--block-divider-border-color);width:400px;height:auto;min-height:160px;max-height:350px;display:flex;flex-direction:column";
 
-    const body = document.createElement("div")
-    body.style.cssText = "flex:1;overflow-y:auto;padding:20px;padding-bottom:0"
+    const body = document.createElement("div");
+    body.style.cssText = "flex:1;overflow-y:auto;padding:20px;padding-bottom:0";
 
-    const title = document.createElement("div")
-    title.className = "confirm-title"
-    title.textContent = `Errors — ${extensionName}`
+    const title = document.createElement("div");
+    title.className = "confirm-title";
+    title.textContent = `Errors — ${extensionName}`;
 
-    const desc = document.createElement("div")
-    desc.className = "confirm-desc"
+    const desc = document.createElement("div");
+    desc.className = "confirm-desc";
 
-    const errorList = document.createElement("div")
-    errorList.style.cssText = "margin-top:8px;display:flex;flex-direction:column;gap:6px"
+    const errorList = document.createElement("div");
+    errorList.style.cssText = "margin-top:8px;display:flex;flex-direction:column;gap:6px";
 
     errors.forEach((err, i) => {
-        const item = document.createElement("div")
-        item.className = "extension-error-item"
-        item.textContent = `${i + 1}. ${err}`
-        errorList.appendChild(item)
-    })
+        const item = document.createElement("div");
+        item.className = "extension-error-item";
+        item.textContent = `${i + 1}. ${err}`;
+        errorList.appendChild(item);
+    });
 
-    desc.appendChild(errorList)
-    body.appendChild(title)
-    body.appendChild(desc)
+    desc.appendChild(errorList);
+    body.appendChild(title);
+    body.appendChild(desc);
 
-    const btnWrapper = document.createElement("div")
-    btnWrapper.style.cssText = "display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid var(--block-divider-border-color)"
+    const btnWrapper = document.createElement("div");
+    btnWrapper.style.cssText =
+        "display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid var(--block-divider-border-color)";
 
-    const btnStyle = "background:var(--block-divider-border-color);border:none;color:var(--text-color);padding:8px 12px;border-radius:5px;transition:.2s;cursor:pointer;font-family:inherit;font-size:13px"
+    const btnStyle =
+        "background:var(--block-divider-border-color);border:none;color:var(--text-color);padding:8px 12px;border-radius:5px;transition:.2s;cursor:pointer;font-family:inherit;font-size:13px";
 
-    const copyBtn = document.createElement("button")
-    copyBtn.textContent = "Copy"
-    copyBtn.style.cssText = btnStyle
+    const copyBtn = document.createElement("button");
+    copyBtn.textContent = "Copy";
+    copyBtn.style.cssText = btnStyle;
     copyBtn.addEventListener("click", () => {
-        navigator.clipboard.writeText(errors.join("\n"))
-        createNotify({ type: "success", icon: "check", title: "Errors copied to clipboard" })
-    })
-    copyBtn.addEventListener("mouseenter", () => { copyBtn.style.opacity = ".5" })
-    copyBtn.addEventListener("mouseleave", () => { copyBtn.style.opacity = "1" })
+        navigator.clipboard.writeText(errors.join("\n"));
+        createNotify({ type: "success", icon: "check", title: "Errors copied to clipboard" });
+    });
+    copyBtn.addEventListener("mouseenter", () => {
+        copyBtn.style.opacity = ".5";
+    });
+    copyBtn.addEventListener("mouseleave", () => {
+        copyBtn.style.opacity = "1";
+    });
 
-    const closeBtn = document.createElement("button")
-    closeBtn.textContent = "Close"
-    closeBtn.style.cssText = btnStyle
-    closeBtn.addEventListener("click", () => wrapper.remove())
-    closeBtn.addEventListener("mouseenter", () => { closeBtn.style.opacity = ".5" })
-    closeBtn.addEventListener("mouseleave", () => { closeBtn.style.opacity = "1" })
+    const closeBtn = document.createElement("button");
+    closeBtn.textContent = "Close";
+    closeBtn.style.cssText = btnStyle;
+    closeBtn.addEventListener("click", () => wrapper.remove());
+    closeBtn.addEventListener("mouseenter", () => {
+        closeBtn.style.opacity = ".5";
+    });
+    closeBtn.addEventListener("mouseleave", () => {
+        closeBtn.style.opacity = "1";
+    });
 
-    btnWrapper.appendChild(copyBtn)
-    btnWrapper.appendChild(closeBtn)
+    btnWrapper.appendChild(copyBtn);
+    btnWrapper.appendChild(closeBtn);
 
-    modal.appendChild(body)
-    modal.appendChild(btnWrapper)
-    wrapper.appendChild(modal)
+    modal.appendChild(body);
+    modal.appendChild(btnWrapper);
+    wrapper.appendChild(modal);
 
     wrapper.addEventListener("click", (e) => {
-        if (e.target === wrapper) wrapper.remove()
-    })
+        if (e.target === wrapper) wrapper.remove();
+    });
 
-    document.body.appendChild(wrapper)
+    document.body.appendChild(wrapper);
 }
 
 async function showExtensionSettings(extensionName, settingsDef, extensionPath) {
-    const configPath = `${normalizePath(extensionPath)}/config.json`
-    let currentValues = {}
+    const configPath = `${normalizePath(extensionPath)}/config.json`;
+    let currentValues = {};
     try {
-        const configRes = await window.electron.readFileContent(configPath)
-        if (configRes) currentValues = JSON.parse(configRes)
+        const configRes = await window.electron.readFileContent(configPath);
+        if (configRes) currentValues = JSON.parse(configRes);
     } catch (e) {
-        settingsDef.forEach(s => {
-            if (s.default !== undefined) currentValues[s.id] = s.default
-        })
-        await window.electron.saveFile(configPath, JSON.stringify(currentValues, null, 4))
+        settingsDef.forEach((s) => {
+            if (s.default !== undefined) currentValues[s.id] = s.default;
+        });
+        await window.electron.saveFile(configPath, JSON.stringify(currentValues, null, 4));
     }
 
-    Modal.destroy(`extSettings_${extensionName}`)
+    Modal.destroy(`extSettings_${extensionName}`);
 
     const modal = Modal.create({
         id: `extSettings_${extensionName}`,
@@ -556,16 +600,16 @@ async function showExtensionSettings(extensionName, settingsDef, extensionPath) 
             {
                 type: "row",
                 classList: ["background"],
-                items: settingsDef.map(s => {
-                    const val = currentValues[s.id] ?? s.default
+                items: settingsDef.map((s) => {
+                    const val = currentValues[s.id] ?? s.default;
                     if (s.type === "switch") {
                         return {
                             type: "switch",
                             id: `ext_setting_${extensionName}_${s.id}`,
                             title: s.title,
                             description: s.description || "",
-                            checked: !!val
-                        }
+                            checked: !!val,
+                        };
                     }
                     if (s.type === "range") {
                         return {
@@ -577,8 +621,8 @@ async function showExtensionSettings(extensionName, settingsDef, extensionPath) 
                             max: s.max ?? 100,
                             value: val ?? s.default ?? 0,
                             step: s.step ?? 1,
-                            prefix: s.prefix || ""
-                        }
+                            prefix: s.prefix || "",
+                        };
                     }
                     if (s.type === "input") {
                         return {
@@ -586,8 +630,8 @@ async function showExtensionSettings(extensionName, settingsDef, extensionPath) 
                             id: `ext_setting_${extensionName}_${s.id}`,
                             title: s.title,
                             description: s.description || "",
-                            placeholder: s.placeholder || ""
-                        }
+                            placeholder: s.placeholder || "",
+                        };
                     }
                     if (s.type === "dropdown") {
                         return {
@@ -596,133 +640,153 @@ async function showExtensionSettings(extensionName, settingsDef, extensionPath) 
                             title: s.title,
                             description: s.description || "",
                             options: s.options || [],
-                            selected: val ?? s.default ?? ""
-                        }
+                            selected: val ?? s.default ?? "",
+                        };
                     }
-                    return { type: "placeholder", title: s.title || "Unknown" }
-                })
-            }
-        ]
-    })
+                    return { type: "placeholder", title: s.title || "Unknown" };
+                }),
+            },
+        ],
+    });
 
-    document.body.prepend(modal.el)
-    modal.zIndex(200000)
+    document.body.prepend(modal.el);
+    modal.zIndex(200_000);
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-            modal.open()
-        })
-    })
+            modal.open();
+        });
+    });
 
-    settingsDef.forEach(s => {
-        const input = document.querySelector(`#ext_setting_${extensionName}_${s.id}`)
-        if (!input) return
+    settingsDef.forEach((s) => {
+        const input = document.querySelector(`#ext_setting_${extensionName}_${s.id}`);
+        if (!input) return;
 
         if (s.type === "dropdown") {
-            const wrapper = input.closest(".options-selector__wrapper") || input
+            const wrapper = input.closest(".options-selector__wrapper") || input;
             wrapper.addEventListener("click", async () => {
                 requestAnimationFrame(() => {
-                    const selected = wrapper.querySelector(".options-selector__item[default]")
+                    const selected = wrapper.querySelector(".options-selector__item[default]");
                     if (selected) {
-                        currentValues[s.id] = selected.id
-                        window.electron.saveFile(configPath, JSON.stringify(currentValues, null, 4))
+                        currentValues[s.id] = selected.id;
+                        window.electron.saveFile(
+                            configPath,
+                            JSON.stringify(currentValues, null, 4),
+                        );
                     }
-                })
-            })
+                });
+            });
         } else {
-            const eventType = s.type === "range" ? "change" : "input"
+            const eventType = s.type === "range" ? "change" : "input";
             input.addEventListener(eventType, async () => {
-                const val = s.type === "switch" ? input.checked : input.value
-                currentValues[s.id] = val
-                await window.electron.saveFile(configPath, JSON.stringify(currentValues, null, 4))
-            })
+                const val = s.type === "switch" ? input.checked : input.value;
+                currentValues[s.id] = val;
+                await window.electron.saveFile(configPath, JSON.stringify(currentValues, null, 4));
+            });
         }
 
         if (s.type === "switch") {
-            input.checked = !!currentValues[s.id]
+            input.checked = !!currentValues[s.id];
         } else if (s.type === "range") {
-            input.value = currentValues[s.id] ?? s.default ?? 0
+            input.value = currentValues[s.id] ?? s.default ?? 0;
         } else if (s.type === "input") {
-            input.value = currentValues[s.id] ?? ""
-            if (input.value) input.classList.add("focused")
+            input.value = currentValues[s.id] ?? "";
+            if (input.value) input.classList.add("focused");
         } else if (s.type === "dropdown") {
-            const saved = currentValues[s.id] ?? s.default ?? ""
+            const saved = currentValues[s.id] ?? s.default ?? "";
             if (saved) {
-                const item = input.querySelector(`.options-selector__item[id="${saved}"]`)
+                const item = input.querySelector(`.options-selector__item[id="${saved}"]`);
                 if (item) {
-                    input.querySelectorAll(".options-selector__item").forEach(el => el.removeAttribute("default"))
-                    item.setAttribute("default", true)
-                    input.querySelector("#current").textContent = item.querySelector("#option_name").textContent
+                    input
+                        .querySelectorAll(".options-selector__item")
+                        .forEach((el) => el.removeAttribute("default"));
+                    item.setAttribute("default", true);
+                    input.querySelector("#current").textContent =
+                        item.querySelector("#option_name").textContent;
                 }
             }
         }
-    })
+    });
 }
 
-function createInstalledExtensionsModalTemplate({ title, subtitle, description, image, permissions, path, extensionName, settings: extSettings, enabled }) {
-    const tags = []
+function createInstalledExtensionsModalTemplate({
+    title,
+    subtitle,
+    description,
+    image,
+    permissions,
+    path,
+    extensionName,
+    settings: extSettings,
+    enabled,
+}) {
+    const tags = [];
 
     for (const p of permissions) {
         tags.push({
             type: "permission",
-            name: p
-        })
+            name: p,
+        });
     }
 
-    const buttons = []
+    const buttons = [];
 
     if (extensionName && extensionErrors[extensionName]) {
         buttons.push({
             icon: "error",
             classList: ["text-danger"],
             onclick: () => {
-                showExtensionErrors(extensionName)
-            }
-        })
+                showExtensionErrors(extensionName);
+            },
+        });
     }
 
     if (extSettings && Array.isArray(extSettings) && extSettings.length > 0) {
         buttons.push({
             icon: "settings",
             onclick: () => {
-                Modal.closeAll()
+                Modal.closeAll();
                 requestAnimationFrame(() => {
-                    showExtensionSettings(extensionName, extSettings, path)
-                })
-            }
-        })
+                    showExtensionSettings(extensionName, extSettings, path);
+                });
+            },
+        });
     }
 
     buttons.push({
         icon: "delete",
         onclick: (data) => {
-            data.element.remove()
-            window.electron.removeByPath(path)
-        }
-    })
+            data.element.remove();
+            window.electron.removeByPath(path);
+        },
+    });
 
     const template = {
         type: "extensionItem",
-        title: title,
-        subtitle: subtitle,
-        description: description,
-        image: image,
-        tags: tags,
-        buttons: buttons,
-        toggle: extensionName ? {
-            checked: enabled,
-            onChange: async (isChecked) => {
-                const settings = await window.electron.readSettings()
-                const disabled = settings?.extensions?.disabledExtensions || []
-                let updated
-                if (isChecked) {
-                    updated = disabled.filter(n => n !== extensionName)
-                } else {
-                    updated = [...disabled, extensionName]
-                }
-                await window.electron.setSettings({ extensions: { disabledExtensions: updated } })
-            }
-        } : null
-    }
+        title,
+        subtitle,
+        description,
+        image,
+        tags,
+        buttons,
+        toggle: extensionName
+            ? {
+                  checked: enabled,
+                  onChange: async (isChecked) => {
+                      const settings = await window.electron.readSettings();
+                      const disabled = settings?.extensions?.disabledExtensions || [];
+                      let updated;
+                      if (isChecked) {
+                          updated = disabled.filter((n) => n !== extensionName);
+                      } else {
+                          updated = [...disabled, extensionName];
+                      }
+                      await window.electron.setSettings({
+                          extensions: { disabledExtensions: updated },
+                      });
+                  },
+              }
+            : null,
+    };
 
-    return template
+    return template;
 }

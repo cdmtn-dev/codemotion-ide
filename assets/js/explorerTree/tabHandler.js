@@ -1,197 +1,186 @@
+import { disableSave, enableSave } from "../../../app/renderer.js";
+import { bus, sendEvent } from "../bus.js";
+import { destroyCodeContextMenu, initCodeContextMenu } from "../codeContextMenu.js";
+import { electronAPI } from "../global.js";
+import { BottomWindow, closeAllWindows } from "../handlers/BottomWindowHandler.js";
 import {
-    toBase64,
-    getCodeByName,
+    disableErrors,
+    enableErrors,
+    setColumn,
+    setCurrentLanguage,
+    setErrors,
+    setLine,
+    setSymbols,
+    setTabSize,
+    toggleCodeFooter,
+} from "../handlers/bottomTabHandler.js";
+import { bindImageZoomHandlers } from "../handlers/imageZoomHandler.js";
+import { minifyCSS, minifyJS } from "../handlers/minifyHandlers.js";
+import { Console } from "../handlers/terminalHandler.js";
+import { getFileIconUrl } from "../iconRegistry.js";
+import {
+    CodeTemplates,
     capitilize,
-    escapeHtml,
-    runCode,
-    runSandbox,
     clearRuntimeErrors,
+    createNotify,
+    dedent,
+    EditorAdapter,
+    escapeHtml,
+    Filenames,
+    GLS,
+    getCodeByName,
+    getTheme,
+    idify,
     isFloat,
     isStringifiedObject,
-    createNotify,
-    getTheme,
-    SideBarIconManager,
     Languages,
-    showCodeWindowVisuals,
-    Filenames,
-    idify,
-    CodeTemplates,
-    dedent,
-    GLS,
+    runCode,
+    runSandbox,
+    SideBarIconManager,
     setAppTitle,
     setTabName,
-    EditorAdapter
-} from "../lib.js"
-import { BottomWindow, closeAllWindows } from "../handlers/BottomWindowHandler.js"
-import { bindImageZoomHandlers } from "../handlers/imageZoomHandler.js"
-import { Setting } from "../settings.js"
-import { getFileIconUrl } from "../iconRegistry.js"
-import {
-    setCurrentLanguage,
-    setColumn,
-    setTabSize,
-    setSymbols,
-    setErrors,
-    toggleCodeFooter,
-    setLine,
-    enableErrors,
-    disableErrors
-} from "../handlers/bottomTabHandler.js"
-import { Console } from "../handlers/terminalHandler.js"
-import { minifyJS, minifyCSS } from "../handlers/minifyHandlers.js"
-import { initCodeContextMenu, destroyCodeContextMenu } from "../codeContextMenu.js"
-import { enableSave, disableSave } from "../../../app/renderer.js"
-import { bus, sendEvent } from "../bus.js"
-
-import { renderPyMsgSuccess, renderPyMsgErr } from "../terminalRenderer/PyRuntimeHandler.js"
-
-import { triggerEditorChanged, triggerEditorClicked } from "./triggers.js"
-import { TopWindowList, destroyAllTopWindowLists } from "../topWindowHandler/topWindowList.js"
-import { setEditorContext } from "./helpers/setEditorContext.js"
-import { Modal } from "../modalsHandler/engine.js"
-import { electronAPI } from "../global.js"
-import { closeConfirmModal } from "../modals/closeConfirm.js"
+    showCodeWindowVisuals,
+    toBase64,
+} from "../lib.js";
+import { closeConfirmModal } from "../modals/closeConfirm.js";
+import { Modal } from "../modalsHandler/engine.js";
+import { Setting } from "../settings.js";
+import { renderPyMsgErr, renderPyMsgSuccess } from "../terminalRenderer/PyRuntimeHandler.js";
+import { destroyAllTopWindowLists, TopWindowList } from "../topWindowHandler/topWindowList.js";
+import { setEditorContext } from "./helpers/setEditorContext.js";
+import { triggerEditorChanged, triggerEditorClicked } from "./triggers.js";
 
 export const recentlyClosed = new Map();
 export const tabsByPath = new Map();
 
-export let currentContent = ""
+export let currentContent = "";
 export let currentPath = null;
 
 export const tabsBar = document.querySelector(".code-tabs");
 export const editorWrapper = document.querySelector(".code-inner__wrapper");
 export const startScreen = document.querySelector("#main-code");
 
-const codeToolsWrapper = document.querySelector("#code-tools")
-const templateChooseCodeTool = document.querySelector("#code-tools_template-choose")
+const codeToolsWrapper = document.querySelector("#code-tools");
+const templateChooseCodeTool = document.querySelector("#code-tools_template-choose");
 
 async function bindCodeTools({ editor, extension }) {
-    const gls = GLS.initLocal()
+    const gls = GLS.initLocal();
     const placeholderRegex = /%\{\{\s*([a-zA-Z0-9_-]+)\s*\}\}/gm;
-    const oldInstance = TopWindowList.get("chooseTemplate")
+    const oldInstance = TopWindowList.get("chooseTemplate");
 
     function extractPlaceholders(str) {
-        return [...str.matchAll(placeholderRegex)].map(match => match[1].trim());
+        return [...str.matchAll(placeholderRegex)].map((match) => match[1].trim());
     }
     function clearPlaceholders(str) {
-        return str.replaceAll(placeholderRegex, "")
+        return str.replaceAll(placeholderRegex, "");
     }
     function lgls(key, props = {}) {
-        return gls.get(`modals.templates.${key}`, props)
+        return gls.get(`modals.templates.${key}`, props);
     }
 
     if (oldInstance != undefined) {
-        oldInstance.destroy()
+        oldInstance.destroy();
     }
 
-    Modal.destroy("templatePlaceholders")
+    Modal.destroy("templatePlaceholders");
 
-    const list = CodeTemplates.list()
+    const list = CodeTemplates.list();
 
     if (extension in list) {
-        templateChooseCodeTool.classList.remove("disabled")
+        templateChooseCodeTool.classList.remove("disabled");
 
-        const item = list[extension]
-        const currentTemplates = Object.keys(item).map(id => ({
+        const item = list[extension];
+        const currentTemplates = Object.keys(item).map((id) => ({
             name: item[id].name,
-            id: id
-        }))
+            id,
+        }));
 
-        const chooseTemplateList = new TopWindowList("chooseTemplate", currentTemplates)
-        chooseTemplateList.bind(templateChooseCodeTool)
+        const chooseTemplateList = new TopWindowList("chooseTemplate", currentTemplates);
+        chooseTemplateList.bind(templateChooseCodeTool);
 
         chooseTemplateList.on("click", (data) => {
-            const id = parseInt(data.id)
-            let templateContent = dedent(item[id].content)
-            const placeholders = extractPlaceholders(templateContent)
+            const id = Number.parseInt(data.id);
+            let templateContent = dedent(item[id].content);
+            const placeholders = extractPlaceholders(templateContent);
 
-            if(placeholders.length > 0) {
-                const modalInputs = []
+            if (placeholders.length > 0) {
+                const modalInputs = [];
 
-                placeholders.forEach(p => {
-                    modalInputs.push(
+                placeholders.forEach((p) => {
+                    modalInputs.push({
+                        type: "input",
+                        placeholder: capitilize(p).replaceAll(/[-_]/g, " "),
+                        id: p,
+                    });
+                });
+
+                const modal = Modal.create({
+                    id: "templatePlaceholders",
+                    name: "templatePlaceholders",
+                    modalClassList: ["window"],
+                    size: "mini",
+                    title: lgls("placeholders.title"),
+
+                    content: [
                         {
-                            type: "input",
-                            placeholder: capitilize(p).replaceAll(/[-_]/g, " "),
-                            id: p
-                        }
-                    )
-                })
+                            type: "row",
+                            gap: 15,
+                            classList: ["background"],
+                            items: [
+                                {
+                                    type: "placeholder",
+                                    title: lgls("placeholders.inner.title"),
+                                    description: lgls("placeholders.inner.description"),
+                                },
+                                ...modalInputs,
+                                {
+                                    type: "container",
+                                    id: "buttonsContainer",
+                                },
+                                {
+                                    type: "button",
+                                    id: "templateOk",
+                                    title: lgls("placeholders.inner.confirmBtn"),
+                                    container: "#buttonsContainer",
+                                },
+                                {
+                                    type: "button",
+                                    id: "templateSkip",
+                                    title: lgls("placeholders.inner.skipBtn"),
+                                    container: "#buttonsContainer",
+                                    class: "secondary",
+                                },
+                            ],
+                        },
+                    ],
+                });
 
-                const modal = Modal.create(
-                    {
-                        id: "templatePlaceholders",
-                        name: "templatePlaceholders",
-                        modalClassList: ["window"],
-                        size: "mini",
-                        title: lgls("placeholders.title"),
+                modal.open();
 
-                        content: [
-                            {
-                                type: "row",
-                                gap: 15,
-                                classList: ['background'],
-                                items: [
-                                    {
-                                        type: "placeholder",
-                                        title: lgls("placeholders.inner.title"),
-                                        description: lgls("placeholders.inner.description")
-                                    },
-                                    ...modalInputs,
-                                    {
-                                        type: "container",
-                                        id: "buttonsContainer"
-                                    },
-                                    {
-                                        type: "button",
-                                        id: "templateOk",
-                                        title: lgls("placeholders.inner.confirmBtn"),
-                                        container: "#buttonsContainer"
-                                    },
-                                    {
-                                        type: "button",
-                                        id: "templateSkip",
-                                        title: lgls("placeholders.inner.skipBtn"),
-                                        container: "#buttonsContainer",
-                                        class: "secondary"
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                )
-
-                modal.open()
-
-                const modalEl = modal.el
-                const skipBtn = modalEl.querySelector("#templateSkip")
-                const okBtn = modalEl.querySelector("#templateOk")
+                const modalEl = modal.el;
+                const skipBtn = modalEl.querySelector("#templateSkip");
+                const okBtn = modalEl.querySelector("#templateOk");
 
                 skipBtn.onclick = () => {
-                    editor.setValue(clearPlaceholders(templateContent))
-                    modal.close()
-                }
+                    editor.setValue(clearPlaceholders(templateContent));
+                    modal.close();
+                };
 
                 okBtn.onclick = () => {
-                    templateContent = templateContent.replace(
-                        placeholderRegex,
-                        (_, key) => {
-                            const input = modalEl.querySelector(`#${key.trim()}`);
-                            return input ? input.value : "";
-                        }
-                    );
+                    templateContent = templateContent.replace(placeholderRegex, (_, key) => {
+                        const input = modalEl.querySelector(`#${key.trim()}`);
+                        return input ? input.value : "";
+                    });
 
-                    editor.setValue(templateContent)
-                    modal.close()
-                }
+                    editor.setValue(templateContent);
+                    modal.close();
+                };
+            } else {
+                editor.setValue(clearPlaceholders(templateContent));
             }
-            else {
-                editor.setValue(clearPlaceholders(templateContent))
-            }
-        })
-    }
-    else {
-        templateChooseCodeTool.classList.add("disabled")
+        });
+    } else {
+        templateChooseCodeTool.classList.add("disabled");
     }
 }
 
@@ -200,10 +189,10 @@ let isLiveServerActive = false;
 const codeContextMenuPerTab = new Map();
 
 function setTabColor(tab, color) {
-    tab.style.borderBottomColor = color
+    tab.style.borderBottomColor = color;
 }
 
-let settingsObject = {}
+let settingsObject = {};
 
 export function updateTabPath(oldPath, newPath, newName) {
     const rec = tabsByPath.get(oldPath);
@@ -224,55 +213,55 @@ export function updateTabPath(oldPath, newPath, newName) {
 }
 
 export class themeEditors {
-    static current = {}
-    static themes = window.CodeMirror.ThemeParents
+    static current = {};
+    static themes = window.CodeMirror.ThemeParents;
 
     constructor(editor) {
-        this.editor = editor
+        this.editor = editor;
     }
 
     static add(id, value) {
-        this.themes[id] = value
+        themeEditors.themes[id] = value;
     }
     static getThemes() {
-        return this.themes
+        return themeEditors.themes;
     }
     static has(id) {
-        return id in this.themes;
+        return id in themeEditors.themes;
     }
 
     apply(id) {
-        this.current = id
-        this.editor.setTheme(themeEditors.themes[id])
+        this.current = id;
+        this.editor.setTheme(themeEditors.themes[id]);
     }
 }
 
 function addThemeModificator(editor) {
     function proccess(theme) {
         if (themeEditors.has(theme)) {
-            editor.setTheme(themeEditors.themes[theme])
+            editor.setTheme(themeEditors.themes[theme]);
 
             themeEditors.current = {
                 name: theme,
-                codemirror: themeEditors.themes[theme]
-            }
+                codemirror: themeEditors.themes[theme],
+            };
         }
     }
-    proccess(getTheme())
+    proccess(getTheme());
 
     const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
             if (mutation.type === "attributes" && mutation.attributeName === "theme") {
-                const theme = document.body.getAttribute("theme")
-                proccess(theme)
+                const theme = document.body.getAttribute("theme");
+                proccess(theme);
             }
         }
-    })
+    });
 
     observer.observe(document.body, {
         attributes: true,
-        attributeFilter: ["theme"]
-    })
+        attributeFilter: ["theme"],
+    });
 }
 
 function initializeGlobalButtons(settings = {}) {
@@ -281,270 +270,272 @@ function initializeGlobalButtons(settings = {}) {
     const SideBarLiveServerIcon = new SideBarIconManager("startLiveServer");
 
     const handleRuntimeErrorsClick = (e) => {
-        e.preventDefault()
+        e.preventDefault();
         if (!currentPath) return;
         const rec = tabsByPath.get(currentPath);
         if (rec && rec.ErrorsHistoryWindow) {
-            rec.ErrorsHistoryWindow.toggle()
+            rec.ErrorsHistoryWindow.toggle();
         }
-    }
+    };
     const runtimeErrorsBtn = document.querySelector("#runtimeErrors");
     if (runtimeErrorsBtn) {
         runtimeErrorsBtn.addEventListener("click", handleRuntimeErrorsClick);
     }
 
-    const handleMDPreviewClick = (e) => {
-        e.preventDefault()
+    const handleMdPreviewClick = (e) => {
+        e.preventDefault();
         if (!currentPath) return;
         const rec = tabsByPath.get(currentPath);
         if (!rec) return;
 
-        const MDPreviewWindow = new BottomWindow("MDPreview", { title: `Preview · ${rec.tabEl.querySelector(".file-name").textContent}` })
-        MDPreviewWindow.fullscreen()
-        MDPreviewWindow.show()
-        MDPreviewWindow.clear()
+        const MdPreviewWindow = new BottomWindow("MDPreview", {
+            title: `Preview · ${rec.tabEl.querySelector(".file-name").textContent}`,
+        });
+        MdPreviewWindow.fullscreen();
+        MdPreviewWindow.show();
+        MdPreviewWindow.clear();
 
         const editor = rec.editor;
-        MDPreviewWindow.set(marked.parse(editor.getValue()))
-    }
+        MdPreviewWindow.set(marked.parse(editor.getValue()));
+    };
     const mdPreviewBtn = document.querySelector("#MDPreview");
     if (mdPreviewBtn) {
-        mdPreviewBtn.addEventListener("click", handleMDPreviewClick);
+        mdPreviewBtn.addEventListener("click", handleMdPreviewClick);
     }
 
-    const handleJSMinifyClick = (e) => {
-        e.preventDefault()
+    const handleJsMinifyClick = (e) => {
+        e.preventDefault();
         if (!currentPath) return;
         const rec = tabsByPath.get(currentPath);
         if (!rec) return;
 
-        let value = rec.editor.getValue()
-        rec.editor.setValue(minifyJS(value))
-    }
+        const value = rec.editor.getValue();
+        rec.editor.setValue(minifyJS(value));
+    };
     const jsMinifyBtn = document.querySelector("#js-minify");
     if (jsMinifyBtn) {
-        jsMinifyBtn.addEventListener("click", handleJSMinifyClick);
+        jsMinifyBtn.addEventListener("click", handleJsMinifyClick);
     }
 
-    const handleCSSMinifyClick = (e) => {
-        e.preventDefault()
+    const handleCssMinifyClick = (e) => {
+        e.preventDefault();
         if (!currentPath) return;
         const rec = tabsByPath.get(currentPath);
         if (!rec) return;
 
-        let value = rec.editor.getValue()
-        rec.editor.setValue(minifyCSS(value))
-    }
+        const value = rec.editor.getValue();
+        rec.editor.setValue(minifyCSS(value));
+    };
     const cssMinifyBtn = document.querySelector("#css-minify");
     if (cssMinifyBtn) {
-        cssMinifyBtn.addEventListener("click", handleCSSMinifyClick);
+        cssMinifyBtn.addEventListener("click", handleCssMinifyClick);
     }
 
     const handleCodeConsoleClick = async (e) => {
-        e.preventDefault()
+        e.preventDefault();
 
-        const globalTerminalWindow = new BottomWindow("globalTerminal", { title: "Terminal" })
-        globalTerminalWindow.show()
-        globalTerminalWindow.clear()
-        globalTerminalWindow.autoScrollBottom()
-        globalTerminalWindow.win.classList.add("console")
+        const globalTerminalWindow = new BottomWindow("globalTerminal", { title: "Terminal" });
+        globalTerminalWindow.show();
+        globalTerminalWindow.clear();
+        globalTerminalWindow.autoScrollBottom();
+        globalTerminalWindow.win.classList.add("console");
 
-        const rootPath = window.__pathContext?.rootPath
+        const rootPath = window.__pathContext?.rootPath;
         if (rootPath) {
-            new Console(globalTerminalWindow, rootPath)
+            new Console(globalTerminalWindow, rootPath);
         } else if (currentPath) {
-            new Console(globalTerminalWindow, currentPath)
+            new Console(globalTerminalWindow, currentPath);
         } else {
-            const pcInfo = await window.electron.getUserPcInfo()
-            new Console(globalTerminalWindow, pcInfo.homedir)
+            const pcInfo = await window.electron.getUserPcInfo();
+            new Console(globalTerminalWindow, pcInfo.homedir);
         }
-    }
+    };
     const codeConsoleBtn = document.querySelector("#code-console");
     if (codeConsoleBtn) {
         codeConsoleBtn.addEventListener("click", handleCodeConsoleClick);
     }
 
     const handleStartLiveServerClick = async (e) => {
-        e.preventDefault()
+        e.preventDefault();
         if (!currentPath) return;
 
         if (isLiveServerActive == false) {
-            let server = await window.electron.startLiveServer(currentPath)
+            const server = await window.electron.startLiveServer(currentPath);
 
             if (server.success) {
-                isLiveServerActive = true
-                SideBarLiveServerIcon.set("active")
-                SideBarLiveServerIcon.blink()
+                isLiveServerActive = true;
+                SideBarLiveServerIcon.set("active");
+                SideBarLiveServerIcon.blink();
 
-                createNotify(
-                    {
-                        type: "success",
-                        icon: "sensors",
-                        title: "Live server enabled",
-                        content: server.url
-                    }
-                )
+                createNotify({
+                    type: "success",
+                    icon: "sensors",
+                    title: "Live server enabled",
+                    content: server.url,
+                });
+            } else {
+                createNotify({
+                    type: "danger",
+                    icon: "sensors",
+                    title: "Live server error",
+                    content: server.error,
+                });
             }
-            else {
-                createNotify(
-                    {
-                        type: "danger",
-                        icon: "sensors",
-                        title: "Live server error",
-                        content: server.error
-                    }
-                )
-            }
-        }
-        else {
-            let server = await window.electron.stopLiveServer()
+        } else {
+            const server = await window.electron.stopLiveServer();
 
             if (server.success) {
-                isLiveServerActive = false
-                SideBarLiveServerIcon.set("unactive")
-                SideBarLiveServerIcon.blink(false)
+                isLiveServerActive = false;
+                SideBarLiveServerIcon.set("unactive");
+                SideBarLiveServerIcon.blink(false);
 
-                createNotify(
-                    {
-                        type: "warn",
-                        icon: "sensors",
-                        title: "Live server disabled",
-                        content: "Live server is not working now"
-                    }
-                )
-            }
-            else {
-                isLiveServerActive = false
+                createNotify({
+                    type: "warn",
+                    icon: "sensors",
+                    title: "Live server disabled",
+                    content: "Live server is not working now",
+                });
+            } else {
+                isLiveServerActive = false;
 
-                createNotify(
-                    {
-                        type: "danger",
-                        icon: "sensors",
-                        title: "Live server error",
-                        content: server.error
-                    }
-                )
+                createNotify({
+                    type: "danger",
+                    icon: "sensors",
+                    title: "Live server error",
+                    content: server.error,
+                });
             }
         }
-    }
+    };
     const startLiveServerBtn = document.querySelector("#startLiveServer");
     if (startLiveServerBtn) {
         startLiveServerBtn.addEventListener("click", handleStartLiveServerClick);
     }
 
     const handleRuntimeOutputPythonClick = async (e) => {
-        const pyInfo = await window.electron.getPython()
+        const pyInfo = await window.electron.getPython();
 
-        e.preventDefault()
+        e.preventDefault();
         if (!currentPath) return;
         const rec = tabsByPath.get(currentPath);
         if (!rec) return;
 
-        const RuntimeHistoryWindow = new BottomWindow("runtimeHistoryPython", { title: "Python" })
-        RuntimeHistoryWindow.show()
-        RuntimeHistoryWindow.clear()
+        const RuntimeHistoryWindow = new BottomWindow("runtimeHistoryPython", { title: "Python" });
+        RuntimeHistoryWindow.show();
+        RuntimeHistoryWindow.clear();
 
-        let pythonRunMethod = "installed"
+        let pythonRunMethod = "installed";
 
         if ("editor" in settings && "pythonRunnerMethod" in settings.editor) {
-            pythonRunMethod = settings.editor.pythonRunnerMethod
+            pythonRunMethod = settings.editor.pythonRunnerMethod;
         }
 
-        const pythonResult = await window.electron.runPython({ filePath: currentPath, useEmbed: pythonRunMethod == "builtin" })
+        const pythonResult = await window.electron.runPython({
+            filePath: currentPath,
+            useEmbed: pythonRunMethod == "builtin",
+        });
 
         if (pythonResult.type == "success") {
-            renderPyMsgSuccess({ RuntimeHistoryWindow: RuntimeHistoryWindow, pythonResult: pythonResult, method: pythonRunMethod })
+            renderPyMsgSuccess({
+                RuntimeHistoryWindow,
+                pythonResult,
+                method: pythonRunMethod,
+            });
         }
         if (pythonResult.type == "error") {
-            renderPyMsgErr({ RuntimeHistoryWindow: RuntimeHistoryWindow, pythonResult: pythonResult, method: pythonRunMethod })
+            renderPyMsgErr({
+                RuntimeHistoryWindow,
+                pythonResult,
+                method: pythonRunMethod,
+            });
         }
-    }
+    };
     const runtimeOutputPythonBtn = document.querySelector("#runtimeOutputPython");
     if (runtimeOutputPythonBtn) {
         runtimeOutputPythonBtn.addEventListener("click", handleRuntimeOutputPythonClick);
     }
 
     const handleRuntimeOutputClick = async (e) => {
-        e.preventDefault()
+        e.preventDefault();
         if (!currentPath) return;
         const rec = tabsByPath.get(currentPath);
         if (!rec) return;
 
-        const RuntimeHistoryWindow = new BottomWindow("runtimeHistory", { title: "Runtime" })
-        RuntimeHistoryWindow.show()
-        RuntimeHistoryWindow.clear()
+        const RuntimeHistoryWindow = new BottomWindow("runtimeHistory", { title: "Runtime" });
+        RuntimeHistoryWindow.show();
+        RuntimeHistoryWindow.clear();
 
-        const evaluatedCode = runSandbox(rec.editor.getValue())
+        const evaluatedCode = runSandbox(rec.editor.getValue());
 
         if (typeof evaluatedCode == "object") {
-            evaluatedCode.forEach(e => {
-                const type = e.type
-                let args = e.args
-                const line = e.line - 2 > 0 ? e.line - 2 : 0
-                const col = e.col
+            evaluatedCode.forEach((e) => {
+                const type = e.type;
+                const args = e.args;
+                const line = e.line - 2 > 0 ? e.line - 2 : 0;
+                const col = e.col;
 
                 const icons = {
                     log: "subdirectory_arrow_right",
                     error: "error",
-                    warn: "warning"
-                }
+                    warn: "warning",
+                };
                 const types = {
                     log: "default",
                     error: "error",
-                    warn: "warning"
-                }
+                    warn: "warning",
+                };
 
-                let argType = null
+                let argType = null;
                 if (args.length == 1) {
-                    argType = typeof args[0]
+                    argType = typeof args[0];
 
                     if (isStringifiedObject(args[0]) == "object") {
-                        argType = "object:dict"
+                        argType = "object:dict";
                     }
                     if (isStringifiedObject(args[0]) == "array") {
-                        argType = "object:array"
+                        argType = "object:array";
                     }
 
                     if (argType == "number") {
-                        argType = isFloat(args[0]) ? argType += ":float" : argType += ":int"
+                        argType = isFloat(args[0]) ? (argType += ":float") : (argType += ":int");
                     }
                 }
 
-                const runtimeOutputEl = document.createElement("div")
-                runtimeOutputEl.classList.add(`log-${types[type]} bottom-window__item`)
+                const runtimeOutputEl = document.createElement("div");
+                runtimeOutputEl.classList.add(`log-${types[type]} bottom-window__item`);
 
-                const transluentSpan = document.createElement("span")
-                transluentSpan.className = "translucent bottom-window__item"
-                transluentSpan.textContent = `${line}:${col}`
-                runtimeOutputEl.appendChild(transluentSpan)
+                const transluentSpan = document.createElement("span");
+                transluentSpan.className = "translucent bottom-window__item";
+                transluentSpan.textContent = `${line}:${col}`;
+                runtimeOutputEl.appendChild(transluentSpan);
 
                 if (argType != null) {
-                    const typeSpan = document.createElement("span")
-                    typeSpan.className = `runtime-typeof ${argType.split(":")[0]}`
-                    typeSpan.textContent = argType.toUpperCase()
-                    runtimeOutputEl.appendChild(typeSpan)
+                    const typeSpan = document.createElement("span");
+                    typeSpan.className = `runtime-typeof ${argType.split(":")[0]}`;
+                    typeSpan.textContent = argType.toUpperCase();
+                    runtimeOutputEl.appendChild(typeSpan);
                 }
 
-                const iconSpan = document.createElement("span")
-                iconSpan.className = "material-symbols-rounded"
-                iconSpan.textContent = icons[type]
-                runtimeOutputEl.appendChild(iconSpan)
+                const iconSpan = document.createElement("span");
+                iconSpan.className = "material-symbols-rounded";
+                iconSpan.textContent = icons[type];
+                runtimeOutputEl.appendChild(iconSpan);
 
                 if (args.join(", ").length == 0) {
-                    const emptySpan = document.createElement("span")
-                    emptySpan.className = "translucent"
-                    emptySpan.textContent = "Empty"
-                    runtimeOutputEl.appendChild(emptySpan)
+                    const emptySpan = document.createElement("span");
+                    emptySpan.className = "translucent";
+                    emptySpan.textContent = "Empty";
+                    runtimeOutputEl.appendChild(emptySpan);
                 } else {
-                    const argsSpan = document.createElement("span")
-                    argsSpan.textContent = args.join(", ")
-                    runtimeOutputEl.appendChild(argsSpan)
+                    const argsSpan = document.createElement("span");
+                    argsSpan.textContent = args.join(", ");
+                    runtimeOutputEl.appendChild(argsSpan);
                 }
 
-                RuntimeHistoryWindow.add(runtimeOutputEl)
-            })
+                RuntimeHistoryWindow.add(runtimeOutputEl);
+            });
         }
-    }
+    };
     const runtimeOutputBtn = document.querySelector("#runtimeOutput");
     if (runtimeOutputBtn) {
         runtimeOutputBtn.addEventListener("click", handleRuntimeOutputClick);
@@ -556,102 +547,109 @@ function initializeGlobalButtons(settings = {}) {
 function initializeChangeTabSizeButton(settings) {
     let currentTabSize = 2;
 
-    if("editor" in settings && "tabSize" in settings.editor) {
-        if(settings.editor.tabSize != undefined && settings.editor.tabSize.length != 0) {
-            currentTabSize = settings.editor.tabSize
-        }
+    if (
+        "editor" in settings &&
+        "tabSize" in settings.editor &&
+        settings.editor.tabSize != undefined &&
+        settings.editor.tabSize.length != 0
+    ) {
+        currentTabSize = settings.editor.tabSize;
     }
 
-    const el = document.querySelector("#changeTabSize")
+    const el = document.querySelector("#changeTabSize");
 
     function set(size) {
         if (!currentPath) return;
         const rec = tabsByPath.get(currentPath);
         if (!rec) return;
 
-        rec.editor.setTabSize(size)
-        setTabSize(size)
+        rec.editor.setTabSize(size);
+        setTabSize(size);
     }
 
     setTimeout(() => {
-        set(currentTabSize)
-    }, 100)
+        set(currentTabSize);
+    }, 100);
 
-    const changeTabSizeList = new TopWindowList("changeTabSizeWindow",
-        [
-            {
-                name: "2 Tabs",
-                id: 2
-            },
-            {
-                name: "4 Tabs",
-                id: 4
-            },
-            {
-                name: "8 Tabs",
-                id: 8
-            }
-        ]
-    )
+    const changeTabSizeList = new TopWindowList("changeTabSizeWindow", [
+        {
+            name: "2 Tabs",
+            id: 2,
+        },
+        {
+            name: "4 Tabs",
+            id: 4,
+        },
+        {
+            name: "8 Tabs",
+            id: 8,
+        },
+    ]);
 
     changeTabSizeList.on("click", (d) => {
-        set(d.id)
-    })
+        set(d.id);
+    });
 
-    changeTabSizeList.bind(el)
+    changeTabSizeList.bind(el);
 }
 
 function updateVisibleOnElements(extension, language) {
-    document.querySelectorAll("[visibleOn]").forEach(element => {
-        let val = element.getAttribute("visibleOn")
+    document.querySelectorAll("[visibleOn]").forEach((element) => {
+        const val = element.getAttribute("visibleOn");
 
         if (val.includes("language:")) {
-            let lang = val.split("language:")[1].trim()
+            const lang = val.split("language:")[1].trim();
 
             if (extension == lang) {
-                element.classList.remove("hidden")
-            }
-            else {
-                element.classList.add("hidden")
+                element.classList.remove("hidden");
+            } else {
+                element.classList.add("hidden");
             }
         }
         if (val.includes("mode:")) {
-            let mode = val.split("mode:")[1].trim()
+            const mode = val.split("mode:")[1].trim();
 
             if (language.mode == mode) {
-                element.classList.remove("hidden")
-            }
-            else {
-                element.classList.add("hidden")
+                element.classList.remove("hidden");
+            } else {
+                element.classList.add("hidden");
             }
         }
-    })
+    });
 }
 
-function initExtensionEditorAPIEvents({ editor }) {
+function initExtensionEditorApiEvents({ editor }) {
     window.electron.ext.editor.api.onReplace((data) => {
-        const findString = data.findString
-        const replaceString = data.replaceString
+        const findString = data.findString;
+        const replaceString = data.replaceString;
 
         editor.find(findString, {
             caseSensitive: true,
             wholeWord: false,
-            regExp: false
+            regExp: false,
         });
 
         editor.replace(replaceString);
-    })
+    });
 }
 
-export async function openTab(path, content, extension, name, pathContext, isNew = false, settings = {}) {
-    let language = Languages.get(extension)
-    const isImage = language.name == "Image" || extension == "svg"
+export async function openTab(
+    path,
+    content,
+    extension,
+    name,
+    pathContext,
+    isNew = false,
+    settings = {},
+) {
+    const language = Languages.get(extension);
+    const isImage = language.name == "Image" || extension == "svg";
 
-    closeAllWindows(isImage ? "imagePreview" : null)
-    setAppTitle(name)
+    closeAllWindows(isImage ? "imagePreview" : null);
+    setAppTitle(name);
 
-    currentContent = content
-    settingsObject = settings
+    currentContent = content;
+    settingsObject = settings;
 
     const cached = recentlyClosed.get(path) || null;
     const id = toBase64(path);
@@ -661,52 +659,48 @@ export async function openTab(path, content, extension, name, pathContext, isNew
     pane.id = id;
     editorWrapper.appendChild(pane);
 
-    let fileNameInfo = Filenames.get(name)
+    const fileNameInfo = Filenames.get(name);
 
-    const codeMirrorView = window.CodeMirror.create(
-        document.getElementById(id),
-        {
-            value: isImage ? "" : content
-        }
-    )
+    const codeMirrorView = window.CodeMirror.create(document.getElementById(id), {
+        value: isImage ? "" : content,
+    });
 
     const editor = new EditorAdapter(codeMirrorView);
 
-    const ErrorsHistoryWindow = new BottomWindow("errorsHistory", { title: "Errors history" })
-    clearRuntimeErrors()
+    const ErrorsHistoryWindow = new BottomWindow("errorsHistory", { title: "Errors history" });
+    clearRuntimeErrors();
 
-    const imagePreviewWindow = new BottomWindow("imagePreview", { title: "Preview" })
-    imagePreviewWindow.removeClose()
+    const imagePreviewWindow = new BottomWindow("imagePreview", { title: "Preview" });
+    imagePreviewWindow.removeClose();
 
     if (isImage) {
-        renderImagePreview(imagePreviewWindow, path)
-    }
-    else {
-        enableSave()
-        imagePreviewWindow.fullscreen(false)
-        imagePreviewWindow.hide()
+        renderImagePreview(imagePreviewWindow, path);
+    } else {
+        enableSave();
+        imagePreviewWindow.fullscreen(false);
+        imagePreviewWindow.hide();
     }
 
-    initCodeContextMenu(path, pathContext, editor)
-    codeContextMenuPerTab.set(path, true)
+    initCodeContextMenu(path, pathContext, editor);
+    codeContextMenuPerTab.set(path, true);
 
-    initializeGlobalButtons(settings)
-    initializeChangeTabSizeButton(settings)
-    updateVisibleOnElements(extension, language)
+    initializeGlobalButtons(settings);
+    initializeChangeTabSizeButton(settings);
+    updateVisibleOnElements(extension, language);
 
     // chached value set
     if (cached) {
         if (!isImage) editor.setValue(cached.content ?? "", -1);
         editor.resetUndoManager();
 
-        setErrors(editor.getAnnotations())
+        setErrors(editor.getAnnotations());
         if (cached.cursor) editor.moveCursorTo(cached.cursor.row, cached.cursor.column);
         if (typeof cached.scrollTop === "number") editor.setScrollTop(cached.scrollTop);
     } else {
         if (!isImage) editor.setValue(content ?? "", -1);
         editor.resetUndoManager();
-        
-        setErrors(editor.getAnnotations())
+
+        setErrors(editor.getAnnotations());
     }
 
     editor.setLanguage(fileNameInfo == false ? extension : fileNameInfo.mode);
@@ -716,58 +710,65 @@ export async function openTab(path, content, extension, name, pathContext, isNew
         enableLiveAutocompletion: true,
         animatedScroll: true,
         cursorStyle: "smooth",
-        fixedWidthGutter: true
+        fixedWidthGutter: true,
     });
 
-    addThemeModificator(editor)
+    addThemeModificator(editor);
 
-    window.electron.triggers.sendFileOpened(
-        {
-            path: path,
-            extension: extension,
-            name: name,
-            context: pathContext ?? undefined
-        }
-    )
-    sendEvent("file-opened-event",
-        {
-            editor: editor,
-            path: path,
-            extension: extension,
-            name: name,
-            context: pathContext ?? undefined
-        }
-    )
+    window.electron.triggers.sendFileOpened({
+        path,
+        extension,
+        name,
+        context: pathContext ?? undefined,
+    });
+    sendEvent("file-opened-event", {
+        editor,
+        path,
+        extension,
+        name,
+        context: pathContext ?? undefined,
+    });
 
     // trigger first ace mode changed
 
-    triggerEditorChanged({ editor: editor, extension: extension, language: language })
-    initExtensionEditorAPIEvents({ editor: editor })
+    triggerEditorChanged({ editor, extension, language });
+    initExtensionEditorApiEvents({ editor });
 
-    let cursorChangeTimer = null
+    let cursorChangeTimer = null;
 
     function triggerCursorChanged() {
-        updateEditorData()
+        updateEditorData();
 
-        clearTimeout(cursorChangeTimer)
+        clearTimeout(cursorChangeTimer);
         cursorChangeTimer = setTimeout(() => {
-            triggerEditorClicked({ editor: editor, extension: extension, language: language })
-        }, 100)
+            triggerEditorClicked({ editor, extension, language });
+        }, 100);
     }
 
     //
 
-    editor.onWheel((e) => {
-        if (!e.ctrlKey && !e.metaKey) return
-        e.preventDefault()
-        e.stopPropagation()
-        const px = parseFloat(getComputedStyle(document.body).getPropertyValue('--editor-font-size'))
-        const next = Math.min(200, Math.max(50, Math.round(px / 15 * 100) + (e.deltaY < 0 ? 5 : -5)))
-        Setting.editorTextSize(next)
-    }, { passive: false, capture: true })
+    editor.onWheel(
+        (e) => {
+            if (!(e.ctrlKey || e.metaKey)) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const px = Number.parseFloat(
+                getComputedStyle(document.body).getPropertyValue("--editor-font-size"),
+            );
+            const next = Math.min(
+                200,
+                Math.max(50, Math.round((px / 15) * 100) + (e.deltaY < 0 ? 5 : -5)),
+            );
+            Setting.editorTextSize(next);
+        },
+        { passive: false, capture: true },
+    );
 
-    const languageContextName = fileNameInfo != false ? `${fileNameInfo.name} (${fileNameInfo.mode.toUpperCase()})` : language.name
-    setCurrentLanguage(languageContextName, { editor: editor })
+    const languageContextName =
+        fileNameInfo == false
+            ? language.name
+            : `${fileNameInfo.name} (${fileNameInfo.mode.toUpperCase()})`;
+    setCurrentLanguage(languageContextName, { editor });
 
     if (tabsByPath.has(path)) {
         activateTab(tabsByPath.get(path).tabEl);
@@ -784,36 +785,36 @@ export async function openTab(path, content, extension, name, pathContext, isNew
         setSymbols(editorValue.length);
         setErrors(editor.getAnnotations());
 
-        codeToolsWrapper.classList.toggle(
-            "hidden",
-            editorValue.trim().length > 0
-        );
+        codeToolsWrapper.classList.toggle("hidden", editorValue.trim().length > 0);
     }
 
     editor.onAfterRender(() => {
-        bindCodeTools({ editor: editor, extension: extension })
-    })
-
-    editor.onChangeCursor(triggerCursorChanged)
-
-    editor.onMouseDown(function () {
-        updateEditorData()
+        bindCodeTools({ editor, extension });
     });
 
-    editor.onFocus(function () {
-        updateEditorData()
+    editor.onChangeCursor(triggerCursorChanged);
+
+    editor.onMouseDown(() => {
+        updateEditorData();
+    });
+
+    editor.onFocus(() => {
+        updateEditorData();
     });
 
     editor.onClick(async () => {
-        await setEditorContext({ errorsUpdate: false }, {
-            editor: editor,
-            language: language,
-            updateEditorData: updateEditorData,
-            path: path,
-            settings: settings
-        })
+        await setEditorContext(
+            { errorsUpdate: false },
+            {
+                editor,
+                language,
+                updateEditorData,
+                path,
+                settings,
+            },
+        );
     });
-    
+
     const tab = document.createElement("div");
 
     tab.className = "code-tab";
@@ -822,11 +823,11 @@ export async function openTab(path, content, extension, name, pathContext, isNew
 
     // colored tabs
     if ("editor" in settings && "coloredTabs" in settings.editor && settings.editor.coloredTabs) {
-        setTabColor(tab, language.color)
+        setTabColor(tab, language.color);
     }
 
     const iconPath = getFileIconUrl(name);
-    let tabIcon = `<img class="file-icon" src="${iconPath}" alt="icon">`;
+    const tabIcon = `<img class="file-icon" src="${iconPath}" alt="icon">`;
     tab.innerHTML = `
             ${tabIcon}
             <span class="file-name">${escapeHtml(name)}</span>
@@ -834,82 +835,82 @@ export async function openTab(path, content, extension, name, pathContext, isNew
         `;
     tabsBar.appendChild(tab);
 
-    tab.draggable = true
+    tab.draggable = true;
 
-    tab.addEventListener('dragstart', () => {
-        tab.classList.add('dragging')
-        console.log('dragstart')
-    })
+    tab.addEventListener("dragstart", () => {
+        tab.classList.add("dragging");
+        console.log("dragstart");
+    });
 
-    tab.addEventListener('dragend', () => {
-        tab.classList.remove('dragging')
-        tabsBar.querySelectorAll('.drag-over-left, .drag-over-right')
-            .forEach(t => t.classList.remove('drag-over-left', 'drag-over-right'))
+    tab.addEventListener("dragend", () => {
+        tab.classList.remove("dragging");
+        tabsBar
+            .querySelectorAll(".drag-over-left, .drag-over-right")
+            .forEach((t) => t.classList.remove("drag-over-left", "drag-over-right"));
 
-        console.log('dragend')
-    })
+        console.log("dragend");
+    });
 
-    tab.addEventListener('dragover', (e) => {
-        e.preventDefault()
-        const dragging = tabsBar.querySelector('.dragging')
-        if (!dragging || dragging === tab) return
-        tabsBar.querySelectorAll('.drag-over-left, .drag-over-right')
-            .forEach(t => t.classList.remove('drag-over-left', 'drag-over-right'))
-        const { left, width } = tab.getBoundingClientRect()
-        tab.classList.add(e.clientX < left + width / 2 ? 'drag-over-left' : 'drag-over-right')
+    tab.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        const dragging = tabsBar.querySelector(".dragging");
+        if (!dragging || dragging === tab) return;
+        tabsBar
+            .querySelectorAll(".drag-over-left, .drag-over-right")
+            .forEach((t) => t.classList.remove("drag-over-left", "drag-over-right"));
+        const { left, width } = tab.getBoundingClientRect();
+        tab.classList.add(e.clientX < left + width / 2 ? "drag-over-left" : "drag-over-right");
 
-        console.log('dragover')
-    })
+        console.log("dragover");
+    });
 
-    tab.addEventListener('dragleave', () => {
-        tab.classList.remove('drag-over-left', 'drag-over-right')
+    tab.addEventListener("dragleave", () => {
+        tab.classList.remove("drag-over-left", "drag-over-right");
 
-        console.log('dragleave')
-    })
+        console.log("dragleave");
+    });
 
-    tab.addEventListener('drop', (e) => {
-        e.preventDefault()
-        const dragging = tabsBar.querySelector('.dragging')
-        if (!dragging || dragging === tab) return
-        const { left, width } = tab.getBoundingClientRect()
-        tabsBar.insertBefore(dragging, e.clientX < left + width / 2 ? tab : tab.nextSibling)
-        tab.classList.remove('drag-over-left', 'drag-over-right')
+    tab.addEventListener("drop", (e) => {
+        e.preventDefault();
+        const dragging = tabsBar.querySelector(".dragging");
+        if (!dragging || dragging === tab) return;
+        const { left, width } = tab.getBoundingClientRect();
+        tabsBar.insertBefore(dragging, e.clientX < left + width / 2 ? tab : tab.nextSibling);
+        tab.classList.remove("drag-over-left", "drag-over-right");
 
-        console.log('drop')
-    })
+        console.log("drop");
+    });
 
     // if tab is a new file (from dragNdrop or smth)
 
     if (isNew) {
-        showCodeWindowVisuals()
-        tab.classList.add("not-saved")
+        showCodeWindowVisuals();
+        tab.classList.add("not-saved");
     }
 
-    // 
+    //
 
     tabsByPath.set(path, {
-        id: id,
+        id,
         tabEl: tab,
-        editor: editor,
+        editor,
         paneEl: pane,
-        ErrorsHistoryWindow: ErrorsHistoryWindow,
-        language: language,
-        isImage: isImage,
+        ErrorsHistoryWindow,
+        language,
+        isImage,
         new: isNew,
         fileName: name,
         color: language.color,
-        extension: extension
+        extension,
     });
 
     recentlyClosed.delete(path);
 
-    addToHistory(
-        {
-            actionType: "file-open",
-            value: `${name} opened`,
-            desc: path
-        }
-    )
+    addToHistory({
+        actionType: "file-open",
+        value: `${name} opened`,
+        desc: path,
+    });
 
     tab.addEventListener("click", (ev) => {
         ev.preventDefault();
@@ -942,49 +943,49 @@ export async function openTab(path, content, extension, name, pathContext, isNew
     editor.onChange(async () => {
         tab.classList.add("not-saved");
 
-        await setEditorContext({}, {
-            editor: editor,
-            language: language,
-            updateEditorData: updateEditorData,
-            path: path,
-            settings: settings
-        })
+        await setEditorContext(
+            {},
+            {
+                editor,
+                language,
+                updateEditorData,
+                path,
+                settings,
+            },
+        );
 
-        triggerEditorChanged({ editor: editor, extension: extension, language: language })
+        triggerEditorChanged({ editor, extension, language });
     });
 
     activateTab(tab);
 }
 
 bus.addEventListener("on-setting-colored-tabs", (data) => {
-    const value = data.detail
+    const value = data.detail;
 
     // update settings editor.coloredTabs
-    if("editor" in settingsObject && "coloredTabs" in settingsObject.editor) {
-        settingsObject.editor.coloredTabs = value
+    if ("editor" in settingsObject && "coloredTabs" in settingsObject.editor) {
+        settingsObject.editor.coloredTabs = value;
     }
 
-    tabsByPath.forEach(item => {
-        const tabEl = item.tabEl
+    tabsByPath.forEach((item) => {
+        const tabEl = item.tabEl;
 
-        if(value) {
-            tabEl.classList.remove("no-color")
-            setTabColor(tabEl, item.color)
+        if (value) {
+            tabEl.classList.remove("no-color");
+            setTabColor(tabEl, item.color);
+        } else {
+            tabEl.classList.add("no-color");
         }
-        else {
-            tabEl.classList.add("no-color")
-        }
-    })
-})
+    });
+});
 
 async function showCloseConfirmModal(path, editor) {
     const fileName = path.split(/[\\/]/).pop();
 
-    const modal = await closeConfirmModal(
-        {
-            fileName: fileName
-        }
-    )
+    const modal = await closeConfirmModal({
+        fileName,
+    });
 
     const modalEl = modal.el;
     const saveBtn = modalEl.querySelector("#closeConfirmSave");
@@ -1009,7 +1010,7 @@ async function showCloseConfirmModal(path, editor) {
             if (isNew) {
                 const saveNewFileRes = await electronAPI.askToSaveNewFile({
                     filename: path,
-                    content: rec.editor.getValue()
+                    content: rec.editor.getValue(),
                 });
                 if (saveNewFileRes.success) {
                     const newPath = saveNewFileRes.path;
@@ -1043,18 +1044,24 @@ export function closeTab(path) {
         content: editor.getValue(),
         cursor: editor.getCursorPosition(),
         scrollTop: editor.getScrollTop(),
-        when: Date.now()
+        when: Date.now(),
     };
     recentlyClosed.set(path, state);
 
     destroyCodeContextMenu();
 
-    try { editor.destroy(); } catch (_) { }
-    
+    try {
+        editor.destroy();
+    } catch (_) {}
+
     if (paneEl && paneEl.parentNode) paneEl.parentNode.removeChild(paneEl);
 
-    const next = tabEl.nextElementSibling?.classList.contains("code-tab") ? tabEl.nextElementSibling : null;
-    const prev = tabEl.previousElementSibling?.classList.contains("code-tab") ? tabEl.previousElementSibling : null;
+    const next = tabEl.nextElementSibling?.classList.contains("code-tab")
+        ? tabEl.nextElementSibling
+        : null;
+    const prev = tabEl.previousElementSibling?.classList.contains("code-tab")
+        ? tabEl.previousElementSibling
+        : null;
     const toActivate = next || prev;
 
     tabEl.remove();
@@ -1069,11 +1076,11 @@ export function closeTab(path) {
             imagePreviewWindow.hide();
         }
         startScreen?.classList.remove("hidden");
-        toggleCodeFooter(false)
+        toggleCodeFooter(false);
         tabsBar.classList.add("hidden");
         currentPath = null;
 
-        setAppTitle()
+        setAppTitle();
     } else if (toActivate) {
         activateTab(toActivate);
     }
@@ -1086,7 +1093,9 @@ export function closeTab(path) {
 
 export async function reopenLastClosed() {
     if (!recentlyClosed.size) return;
-    const [path, state, settings] = [...recentlyClosed.entries()].sort((a, b) => b[1].when - a[1].when)[0];
+    const [path, state, settings] = [...recentlyClosed.entries()].sort(
+        (a, b) => b[1].when - a[1].when,
+    )[0];
     const extension = (path.split(".").pop() || "").toLowerCase();
     const name = path.split(/[\\/]/).pop();
 
@@ -1112,12 +1121,12 @@ export function activateTab(tabEl) {
     if (!tabEl) return;
     const id = tabEl.getAttribute("data-id");
     const realPath = tabEl.getAttribute("data-path");
-    if (!id || !realPath) return;
+    if (!(id && realPath)) return;
 
     destroyCodeContextMenu();
 
-    tabsBar.querySelectorAll(".code-tab").forEach(t => t.classList.remove("active"));
-    editorWrapper.querySelectorAll(".code").forEach(c => c.classList.remove("active-pane"));
+    tabsBar.querySelectorAll(".code-tab").forEach((t) => t.classList.remove("active"));
+    editorWrapper.querySelectorAll(".code").forEach((c) => c.classList.remove("active-pane"));
 
     tabEl.classList.add("active");
     const pane = document.getElementById(id);
@@ -1132,16 +1141,16 @@ export function activateTab(tabEl) {
     const editor = rec.editor;
     if (!editor) return;
 
-    bindEditorBtns(editor, { fileName: rec.fileName })
-    bindCodeTools({ editor: editor, extension: rec.extension })
-    initCodeContextMenu(realPath, rec.pathContext, editor)
+    bindEditorBtns(editor, { fileName: rec.fileName });
+    bindCodeTools({ editor, extension: rec.extension });
+    initCodeContextMenu(realPath, rec.pathContext, editor);
 
-    document.querySelectorAll(".explorer-elements .file").forEach(file => {
+    document.querySelectorAll(".explorer-elements .file").forEach((file) => {
         file.classList.toggle("active", file.getAttribute("data-path") === realPath);
     });
 
     startScreen?.classList.add("hidden");
-    toggleCodeFooter(true)
+    toggleCodeFooter(true);
     tabsBar.classList.remove("hidden");
 
     const ext = (realPath.split(".").pop() || "").toLowerCase();
@@ -1150,7 +1159,8 @@ export function activateTab(tabEl) {
         updateVisibleOnElements(ext, rec.language);
     }
 
-    const imagePreviewWindow = BottomWindow.get("imagePreview") || new BottomWindow("imagePreview", { title: "Preview" });
+    const imagePreviewWindow =
+        BottomWindow.get("imagePreview") || new BottomWindow("imagePreview", { title: "Preview" });
     if (rec.isImage) {
         renderImagePreview(imagePreviewWindow, realPath);
     } else {
@@ -1161,39 +1171,37 @@ export function activateTab(tabEl) {
 }
 
 function bindEditorBtns(editor, properties = {}) {
-    let buttonWrapper = document.querySelector(".code-footer:not(.structure)")
+    const buttonWrapper = document.querySelector(".code-footer:not(.structure)");
     if (!buttonWrapper) return;
 
-    let copyBtn = buttonWrapper.querySelector("#code-copy")
-    let codeSnippet = buttonWrapper.querySelector("#code-snippet")
+    let copyBtn = buttonWrapper.querySelector("#code-copy");
+    let codeSnippet = buttonWrapper.querySelector("#code-snippet");
 
-    if (copyBtn) copyBtn.replaceWith(copyBtn.cloneNode(true))
-    if (codeSnippet) codeSnippet.replaceWith(codeSnippet.cloneNode(true))
+    if (copyBtn) copyBtn.replaceWith(copyBtn.cloneNode(true));
+    if (codeSnippet) codeSnippet.replaceWith(codeSnippet.cloneNode(true));
 
-    copyBtn = buttonWrapper.querySelector("#code-copy")
-    codeSnippet = buttonWrapper.querySelector("#code-snippet")
+    copyBtn = buttonWrapper.querySelector("#code-copy");
+    codeSnippet = buttonWrapper.querySelector("#code-snippet");
 
     if (copyBtn) {
         copyBtn.addEventListener("click", () => {
-            navigator.clipboard.writeText(editor.getValue())
+            navigator.clipboard.writeText(editor.getValue());
 
-            createNotify(
-                {
-                    icon: "content_copy",
-                    title: "Text copied",
-                    content: "Text copied to clipboard!"
-                }
-            )
-        })
+            createNotify({
+                icon: "content_copy",
+                title: "Text copied",
+                content: "Text copied to clipboard!",
+            });
+        });
     }
 
     if (codeSnippet) {
         codeSnippet.addEventListener("click", () => {
-            const currentMode = editor.currentLanguageId()
-            const currentTheme = editor.getTheme()
+            const currentMode = editor.currentLanguageId();
+            const currentTheme = editor.getTheme();
 
-            const captureWrapper = document.createElement("div")
-            captureWrapper.classList.add("code-snippet__wrapper")
+            const captureWrapper = document.createElement("div");
+            captureWrapper.classList.add("code-snippet__wrapper");
             captureWrapper.innerHTML = `
                 <div id="title-wrapper">
                     <div id="fake-controls">
@@ -1202,82 +1210,84 @@ function bindEditorBtns(editor, properties = {}) {
                         <div></div>
                     </div>
                     <div id="title">${properties.fileName}</div>
-                    <div id="language">${capitilize(currentMode.substr(currentMode.lastIndexOf('/') + 1))}</div>
+                    <div id="language">${capitilize(currentMode.substr(currentMode.lastIndexOf("/") + 1))}</div>
                 </div>
                 <div id="code-snippet-area"></div>
-            `
+            `;
 
             let value = null;
             const selectedText = editor.getSelectedText();
 
-            if(selectedText.length > 0) {
-                value = selectedText
+            if (selectedText.length > 0) {
+                value = selectedText;
+            } else {
+                value = editor.getValue();
             }
-            else {
-                value = editor.getValue()
-            }
-            
-            const captureArea = captureWrapper.querySelector("#code-snippet-area")
-            captureArea.id = "code-snippet-area"
 
-            document.body.appendChild(captureWrapper)
+            const captureArea = captureWrapper.querySelector("#code-snippet-area");
+            captureArea.id = "code-snippet-area";
 
-            const captureCodeMirrorView = window.CodeMirror.create(
-                captureArea,
-                {
-                    value: value
-                }
-            )
+            document.body.appendChild(captureWrapper);
 
-            const captureEditor = new EditorAdapter(captureCodeMirrorView)
+            const captureCodeMirrorView = window.CodeMirror.create(captureArea, {
+                value,
+            });
+
+            const captureEditor = new EditorAdapter(captureCodeMirrorView);
             captureEditor.setLanguage(currentMode);
             captureEditor.setTheme(currentTheme);
 
             captureEditor.scrollPastEnd(0);
-            captureEditor.setMaxLines(Infinity);
+            captureEditor.setMaxLines(Number.POSITIVE_INFINITY);
             captureEditor.wordWrap(true);
-            captureEditor.readOnly(true)
+            captureEditor.readOnly(true);
 
-            const flashEl = document.createElement("div")
-            flashEl.classList.add("ace-flash", "hidden")
+            const flashEl = document.createElement("div");
+            flashEl.classList.add("ace-flash", "hidden");
 
-            captureWrapper.style.zIndex = -1
-            captureWrapper.style.display = "block"
+            captureWrapper.style.zIndex = -1;
+            captureWrapper.style.display = "block";
 
             setTimeout(() => {
-                captureEditor.tools.toBlob(captureWrapper, {
-                    pixelRatio: 5
-                }).then(async blob => {
-                    // flash animation
-                    editor.dom.appendChild(flashEl);
+                captureEditor.tools
+                    .toBlob(captureWrapper, {
+                        pixelRatio: 5,
+                    })
+                    .then(async (blob) => {
+                        // flash animation
+                        editor.dom.appendChild(flashEl);
 
-                    flashEl.classList.remove("hidden");
+                        flashEl.classList.remove("hidden");
 
-                    setTimeout(() => {
-                        flashEl.classList.add("hidden");
-                        flashEl.addEventListener("transitionend", () => {
-                            flashEl.remove();
-                        }, { once: true });
-                    }, 100);
-                    //
+                        setTimeout(() => {
+                            flashEl.classList.add("hidden");
+                            flashEl.addEventListener(
+                                "transitionend",
+                                () => {
+                                    flashEl.remove();
+                                },
+                                { once: true },
+                            );
+                        }, 100);
+                        //
 
-                    await navigator.clipboard.write([
-                        new ClipboardItem({
-                            "image/png": blob
-                        })
-                    ]);
+                        await navigator.clipboard.write([
+                            new ClipboardItem({
+                                "image/png": blob,
+                            }),
+                        ]);
 
-                    createNotify({
-                        icon: "image",
-                        title: "Screenshot taken!",
-                        content: "Screenshot taken and copied to your clipboard"
+                        createNotify({
+                            icon: "image",
+                            title: "Screenshot taken!",
+                            content: "Screenshot taken and copied to your clipboard",
+                        });
+
+                        captureWrapper.style.zIndex = 0;
+                        captureWrapper.style.display = "none";
                     });
-
-                    captureWrapper.style.zIndex = 0
-                    captureWrapper.style.display = "none"
-                });
             }, 100);
-        })
+        });
     }
 }
 
@@ -1292,22 +1302,22 @@ export function closeAllTabs() {
 const codeConsoleBtn = document.querySelector("#code-console");
 if (codeConsoleBtn) {
     codeConsoleBtn.addEventListener("click", async (e) => {
-        e.preventDefault()
+        e.preventDefault();
 
-        const globalTerminalWindow = new BottomWindow("globalTerminal", { title: "Terminal" })
-        globalTerminalWindow.show()
-        globalTerminalWindow.clear()
-        globalTerminalWindow.autoScrollBottom()
-        globalTerminalWindow.win.classList.add("console")
+        const globalTerminalWindow = new BottomWindow("globalTerminal", { title: "Terminal" });
+        globalTerminalWindow.show();
+        globalTerminalWindow.clear();
+        globalTerminalWindow.autoScrollBottom();
+        globalTerminalWindow.win.classList.add("console");
 
-        const rootPath = window.__pathContext?.rootPath
+        const rootPath = window.__pathContext?.rootPath;
         if (rootPath) {
-            new Console(globalTerminalWindow, rootPath)
+            new Console(globalTerminalWindow, rootPath);
         } else if (currentPath) {
-            new Console(globalTerminalWindow, currentPath)
+            new Console(globalTerminalWindow, currentPath);
         } else {
-            const pcInfo = await window.electron.getUserPcInfo()
-            new Console(globalTerminalWindow, pcInfo.homedir)
+            const pcInfo = await window.electron.getUserPcInfo();
+            new Console(globalTerminalWindow, pcInfo.homedir);
         }
     });
 }
@@ -1327,7 +1337,7 @@ export function closeFolder() {
     }
 
     if (window.__pathContext) {
-        Object.keys(window.__pathContext).forEach(k => delete window.__pathContext[k]);
+        Object.keys(window.__pathContext).forEach((k) => delete window.__pathContext[k]);
     }
 
     setTabName("Explorer");

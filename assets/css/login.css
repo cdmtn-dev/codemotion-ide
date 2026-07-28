@@ -62,7 +62,7 @@
     justify-content: center;
     position: relative;
     cursor: pointer;
-    transition: .2s;
+    transition: 0.2s;
 }
 .form-submit:hover {
     background: #4183ff;
@@ -70,7 +70,7 @@
 .form-submit[disabled] {
     pointer-events: none;
     user-select: none;
-    opacity: .5;
+    opacity: 0.5;
 }
 .form-element.disappearance {
     transform: translateY(-50px);
@@ -88,10 +88,10 @@
     color: var(--text-color-muted);
     position: relative;
     cursor: pointer;
-    transition: .2s;
+    transition: 0.2s;
 }
 .user-form__links a::after {
-    content: '';
+    content: "";
     background: var(--switch-bg-default);
     width: 1px;
     height: 50%;
@@ -127,7 +127,7 @@ l-line-spinner.animate-appearance {
 .user-form__error.hidden {
     opacity: 0;
     pointer-events: none;
-    transition: .4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    transition: 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
 }
 .user-form__error {
     border-radius: 10px;
@@ -138,5 +138,5 @@ l-line-spinner.animate-appearance {
     font-weight: 500;
     position: absolute;
     bottom: 15%;
-    transition: .4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    transition: 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
 }

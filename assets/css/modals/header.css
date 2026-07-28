@@ -29,8 +29,8 @@
     text-align: left;
 }
 .modal-wrapper .modal-header .modal-header__close {
-    opacity: .2;
-    transition: .4s;
+    opacity: 0.2;
+    transition: 0.4s;
     display: flex;
     align-items: center;
     margin-right: -8px;

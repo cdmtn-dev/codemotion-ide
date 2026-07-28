@@ -202,7 +202,7 @@ export const ICON_MAP = {
     diff: "patch.svg",
     lock: "lock.svg",
     license: "license.svg",
-    copying: "license.svg"
+    copying: "license.svg",
 };
 
 /**
@@ -349,10 +349,10 @@ export function getFolderIcon(name, open = false) {
  */
 export function getFileIconUrl(filename) {
     const icon = getFileIcon(filename);
-    const isAbs = isAbsolutePath(icon)
+    const isAbs = isAbsolutePath(icon);
 
-    if(isAbs) return icon;
-    else return `../assets/media/icons/symbols/files/${icon}`;
+    if (isAbs) return icon;
+    return `../assets/media/icons/symbols/files/${icon}`;
 }
 
 /**

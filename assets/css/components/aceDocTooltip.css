@@ -4,7 +4,7 @@
     background: var(--body-color);
     backdrop-filter: blur(5px);
     color: var(--text-color);
-    display: flex!important;
+    display: flex !important;
     flex-direction: column;
     gap: 5px;
     font-size: 14px;
@@ -13,10 +13,10 @@
     max-width: 300px;
     border: 1px solid var(--topbar-menu-item-hover-bg);
     box-shadow: #00000014 0px 2px 5px 0px;
-    transition: .2s;
+    transition: 0.2s;
 }
 .ace-documentation__tooltip.hidden {
-    display: flex!important;
+    display: flex !important;
     opacity: 0;
     pointer-events: none;
 }
@@ -51,7 +51,7 @@
     font-size: 12px;
     border-bottom: 1px solid var(--topbar-menu-item-hover-bg);
     color: var(--text-color-muted);
-} 
+}
 .ace-documentation__tooltip .ace-documentation__tooltip-description {
     padding: 10px 15px;
     padding-bottom: 5px;
@@ -66,13 +66,13 @@
     font-size: 12px;
 }
 .ace-documentation__tooltip .ace-documentation__tooltip-example .ace_editor {
-    background: transparent!important;
+    background: transparent !important;
     height: 50px;
     font-size: 15px;
     padding: 0px;
 }
 .ace-documentation__tooltip .ace-documentation__tooltip-example .ace_editor .ace_cursor {
-    display: none!important;
+    display: none !important;
 }
 .ace-documentation__tooltip .ace-documentation__tooltip-example .content {
     font-family: var(--code-font);

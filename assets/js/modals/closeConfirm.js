@@ -2,7 +2,7 @@ import { GLS } from "../lib.js";
 import { Modal } from "../modalsHandler/engine.js";
 
 export async function closeConfirmModal({ fileName }) {
-    const gls = await GLS.initLocal()
+    const gls = await GLS.initLocal();
 
     const modal = Modal.create({
         id: "closeConfirmModal",
@@ -15,41 +15,41 @@ export async function closeConfirmModal({ fileName }) {
             {
                 type: "row",
                 gap: 15,
-                classList: ['background'],
+                classList: ["background"],
                 items: [
                     {
                         type: "placeholder",
                         title: gls.get("modals.closeConfirm.message", { file: fileName }),
-                        description: gls.get("modals.closeConfirm.description")
+                        description: gls.get("modals.closeConfirm.description"),
                     },
                     {
                         type: "container",
-                        id: "closeConfirmButtons"
+                        id: "closeConfirmButtons",
                     },
                     {
                         type: "button",
                         id: "closeConfirmYes",
                         title: gls.get("modals.closeConfirm.yes"),
                         container: "#closeConfirmButtons",
-                        class: "danger"
+                        class: "danger",
                     },
                     {
                         type: "button",
                         id: "closeConfirmSave",
                         title: gls.get("modals.closeConfirm.save"),
-                        container: "#closeConfirmButtons"
+                        container: "#closeConfirmButtons",
                     },
                     {
                         type: "button",
                         id: "closeConfirmNo",
                         title: gls.get("cancel"),
                         container: "#closeConfirmButtons",
-                        class: "secondary"
+                        class: "secondary",
                     },
-                ]
-            }
-        ]
+                ],
+            },
+        ],
     });
 
-    return modal
+    return modal;
 }

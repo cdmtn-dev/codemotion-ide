@@ -12,7 +12,9 @@ export function bindImageZoomHandlers(container) {
     }
 
     const handleKeyDown = (e) => {
-        const isPreviewActive = document.querySelector(".bottom-window__container.full")?.contains(previewEl) && !previewEl.closest(".bottom-window.hidden");
+        const isPreviewActive =
+            document.querySelector(".bottom-window__container.full")?.contains(previewEl) &&
+            !previewEl.closest(".bottom-window.hidden");
         if (isPreviewActive) {
             if (e.key === "+" || e.key === "=") {
                 e.preventDefault();

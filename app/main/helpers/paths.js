@@ -1,36 +1,36 @@
-const { app } = require("electron")
-const path = require("path")
+const { app } = require("electron");
+const path = require("path");
 
-const appPath = app.getAppPath()
+const appPath = app.getAppPath();
 
-const USER_DATA_PATH = app.getPath("userData")
+const USER_DATA_PATH = app.getPath("userData");
 
-const HTML_PATH = path.join(appPath, "html")
-const ASSETS_PATH = path.join(appPath, "assets")
-const APP_PATH = path.join(appPath, "app")
-const LANGUAGES_PATH = path.join(appPath, "languages")
+const HTML_PATH = path.join(appPath, "html");
+const ASSETS_PATH = path.join(appPath, "assets");
+const APP_PATH = path.join(appPath, "app");
+const LANGUAGES_PATH = path.join(appPath, "languages");
 
-const JSON_PATH = USER_DATA_PATH
+const JSON_PATH = USER_DATA_PATH;
 
 const SETTINGS_PATH = path.join(JSON_PATH, "settings.json");
 const LOCAL_BUGS_PATH = path.join(JSON_PATH, "bugs.json");
 const LOCAL_FILE_PATH = path.join(JSON_PATH, "local.json");
 const PACKAGE_FILE_PATH = path.join(appPath, "package.json");
 
-const SPLASH_HTML_PATH = path.join(HTML_PATH, "splash.html")
-const INDEX_HTML_PATH = path.join(HTML_PATH, "index.html")
-const LOGIN_HTML_PATH = path.join(HTML_PATH, "login.html")
-const REGISTER_HTML_PATH = path.join(HTML_PATH, "register.html")
+const SPLASH_HTML_PATH = path.join(HTML_PATH, "splash.html");
+const INDEX_HTML_PATH = path.join(HTML_PATH, "index.html");
+const LOGIN_HTML_PATH = path.join(HTML_PATH, "login.html");
+const REGISTER_HTML_PATH = path.join(HTML_PATH, "register.html");
 
-const PRELOAD_PATH = path.join(APP_PATH, "dist", "preload.js")
-const RENDERER_PATH = path.join(APP_PATH, "renderer.js")
+const PRELOAD_PATH = path.join(APP_PATH, "dist", "preload.js");
+const RENDERER_PATH = path.join(APP_PATH, "renderer.js");
 
-const DEFAULT_ICON = path.join(ASSETS_PATH, "media", "codemotion_icon.png")
+const DEFAULT_ICON = path.join(ASSETS_PATH, "media", "codemotion_icon.png");
 
 // const API = "https://dev.yurba.one/api/pcode"
-const API = "https://codemotion.yurba.one/api"
+const API = "https://codemotion.yurba.one/api";
 
-module.exports = { 
+module.exports = {
     APP_PATH,
     SETTINGS_PATH,
     LOCAL_BUGS_PATH,
@@ -48,5 +48,5 @@ module.exports = {
     RENDERER_PATH,
     LANGUAGES_PATH,
     API,
-    USER_DATA_PATH
-}
+    USER_DATA_PATH,
+};

@@ -1,12 +1,9 @@
-import { generateAvatar, truncateString, GLOBAL, GLS } from "./lib.js";
-import { Modal } from "./modalsHandler/engine.js";
-
-import { spawnSideBarOrganizationsButton } from "./userHandlers/spawn.js"
-import { createUserOrgsModalStructure } from "./userHandlers/orgModal.js";
-import { appendBugs } from "./userHandlers/appendBugs.js"
-import { createUserOrgModal } from "./userHandlers/orgModal.js";
-
 import { bus } from "./bus.js";
+import { GLOBAL, GLS, generateAvatar, truncateString } from "./lib.js";
+import { Modal } from "./modalsHandler/engine.js";
+import { appendBugs } from "./userHandlers/appendBugs.js";
+import { createUserOrgModal, createUserOrgsModalStructure } from "./userHandlers/orgModal.js";
+import { spawnSideBarOrganizationsButton } from "./userHandlers/spawn.js";
 import { setUserPcInfo } from "./userHandlers/userPC.js";
 
 export async function requestUser() {
@@ -19,79 +16,77 @@ export async function requestUser() {
             user: user.result.result.user,
             organizations: user.result.result.organizations,
             bugsCreated: user.result.result.bugs.created,
-            bugsAssigned: user.result.result.bugs.assigned
-        }
+            bugsAssigned: user.result.result.bugs.assigned,
+        };
     }
-    else {
-        return {
-            success: false,
-            result: user.result.result
-        }
-    }
+    return {
+        success: false,
+        result: user.result.result,
+    };
 }
 
 export async function getCurrentUserDataFromAPI(properties = {}) {
-    const gls = GLS.initLocal()
-    const user = await requestUser()
-    const greeting = document.querySelector("#greeting")
+    const gls = GLS.initLocal();
+    const user = await requestUser();
+    const greeting = document.querySelector("#greeting");
 
     bus.addEventListener("org-created", async () => {
-        await getCurrentUserDataFromAPI({ orgsModalOpen: true })
-    })
+        await getCurrentUserDataFromAPI({ orgsModalOpen: true });
+    });
     bus.addEventListener("org-removed", async () => {
-        await getCurrentUserDataFromAPI({ orgsModalOpen: true })
-    })
+        await getCurrentUserDataFromAPI({ orgsModalOpen: true });
+    });
     bus.addEventListener("org-joined", async () => {
-        await getCurrentUserDataFromAPI({ orgsModalOpen: true })
-    })
+        await getCurrentUserDataFromAPI({ orgsModalOpen: true });
+    });
     bus.addEventListener("org-update", async () => {
-        await getCurrentUserDataFromAPI({ orgsModalOpen: true })
-    })
+        await getCurrentUserDataFromAPI({ orgsModalOpen: true });
+    });
 
-    setUserPcInfo()
+    setUserPcInfo();
 
     if (!user.success) return user;
 
-    const userJSON = user.user;
+    const userJson = user.user;
     const userOrgs = user.organizations;
-    const bugsCreated = user.bugsCreated
-    const bugsAssigned = user.bugsAssigned
+    const bugsCreated = user.bugsCreated;
+    const bugsAssigned = user.bugsAssigned;
 
-    GLOBAL["user"] = userJSON
+    GLOBAL["user"] = userJson;
 
     // organizations
 
-    spawnSideBarOrganizationsButton({ userOrgs: userOrgs })
+    spawnSideBarOrganizationsButton({ userOrgs });
 
-    Modal.destroy("organizations")
-    const organizationsModal = await createUserOrgModal(
-        {
-            userOrgs: userOrgs,
-            userJSON: userJSON
-        }
-    )
-    organizationsModal.bind(document.querySelectorAll("#yourOrganizations"))
+    Modal.destroy("organizations");
+    const organizationsModal = await createUserOrgModal({
+        userOrgs,
+        userJSON: userJson,
+    });
+    organizationsModal.bind(document.querySelectorAll("#yourOrganizations"));
 
     if ("orgsModalOpen" in properties && properties.orgsModalOpen) {
-        organizationsModal.open()
+        organizationsModal.open();
     }
 
-    // 
+    //
 
-    document.querySelectorAll("#username").forEach(e => e.textContent = userJSON.name);
-    document.querySelectorAll("#greeting").forEach(e => e.textContent = gls.get("greeting.default", { name: userJSON.name }));
-    document.querySelectorAll("#bug_counter").forEach(e => {
+    document.querySelectorAll("#username").forEach((e) => (e.textContent = userJson.name));
+    document
+        .querySelectorAll("#greeting")
+        .forEach((e) => (e.textContent = gls.get("greeting.default", { name: userJson.name })));
+    document.querySelectorAll("#bug_counter").forEach((e) => {
         e.innerHTML = `
             <div class="bugs-assigned">${Object.keys(bugsAssigned).length}</div>
             <div class="bugs-created">${Object.keys(bugsCreated).length}</div>
             <div class="divider"></div>
-            <div class="bugs-all">${Object.keys({...bugsAssigned, ...bugsCreated}).length}</div>
-        `
+            <div class="bugs-all">${Object.keys({ ...bugsAssigned, ...bugsCreated }).length}</div>
+        `;
     });
-    document.querySelector("#userAvatar").innerHTML = generateAvatar(userJSON.name)
+    document.querySelector("#userAvatar").innerHTML = generateAvatar(userJson.name);
 
-    appendBugs(bugsCreated, "created")
-    appendBugs(bugsAssigned, "assigned")
+    appendBugs(bugsCreated, "created");
+    appendBugs(bugsAssigned, "assigned");
 
     return user.data;
 }

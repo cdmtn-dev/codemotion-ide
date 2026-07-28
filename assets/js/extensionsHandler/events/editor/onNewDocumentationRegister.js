@@ -1,18 +1,18 @@
-import { bus } from "../../../bus.js"
-import { enableAceHover } from "../../helpers/aceHover.js"
+import { bus } from "../../../bus.js";
+import { enableAceHover } from "../../helpers/aceHover.js";
 
 export function onNewDocumentationRegisterCallback({ data }) {
-    const docs = data.config
-    const onMode = data.props.onMode
-    
+    const docs = data.config;
+    const onMode = data.props.onMode;
+
     bus.addEventListener("ace-mode-changed", (e) => {
-        let detail = e.detail
-        let mode = detail.mode.trim()
-        let extension = detail.extension
-        let editor = detail.editor
+        const detail = e.detail;
+        const mode = detail.mode.trim();
+        const extension = detail.extension;
+        const editor = detail.editor;
 
         if (mode == onMode) {
-            enableAceHover(editor, docs, data.props)
+            enableAceHover(editor, docs, data.props);
         }
-    })
+    });
 }

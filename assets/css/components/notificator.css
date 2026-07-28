@@ -6,7 +6,7 @@
     bottom: 0;
     z-index: 99;
     width: 100%;
-    transition: .4s ease-in-out;
+    transition: 0.4s ease-in-out;
 }
 
 .notificator-wrapper.hidden {
@@ -47,7 +47,7 @@
 .notificator-wrapper .notificator span[class^="material-symbols"] {
     color: var(--text-color);
     font-size: 20px;
-    opacity: .5;
+    opacity: 0.5;
 }
 
 .notificator-wrapper .notificator .notificator-body .notificator-body__value {

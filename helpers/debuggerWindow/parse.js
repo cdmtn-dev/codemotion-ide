@@ -1,47 +1,45 @@
-import { parseTwemojiString } from "../../assets/js/lib.js"
+import { parseTwemojiString } from "../../assets/js/lib.js";
 
-const BOOLEAN_RE = /\b(true|false)\b/g
-const NUMBER_RE = /(?<!v)(?<!\d\.)(?<!^)\b\d+(?:\.\d+)?\b(?!(?:\.\d|[a-zA-Z]))/g
-const NULL_RE = /\bnull\b/g
-const UNDEFINED_RE = /\bundefined\b/g
+const BOOLEAN_RE = /\b(true|false)\b/g;
+const NUMBER_RE = /(?<!v)(?<!\d\.)(?<!^)\b\d+(?:\.\d+)?\b(?!(?:\.\d|[a-zA-Z]))/g;
+const NULL_RE = /\bnull\b/g;
+const UNDEFINED_RE = /\bundefined\b/g;
 
 export function parse(content) {
-    if(typeof content == "object") {
-        if(Array.isArray(content)) {
-            content = content.join(", ")
-        }
+    if (typeof content == "object" && Array.isArray(content)) {
+        content = content.join(", ");
     }
-    if(content == undefined) {
-        content = "undefined"
+    if (content == undefined) {
+        content = "undefined";
     }
-    if(content == null) {
-        content = "null"
+    if (content == null) {
+        content = "null";
     }
 
-    content = content.toString()
+    content = content.toString();
 
     content = content
         .replace(BOOLEAN_RE, `<span class="parse-boolean">$1</span>`)
         .replace(NULL_RE, `<span class="parse-null">null</span>`)
         .replace(UNDEFINED_RE, `<span class="parse-undefined">undefined</span>`)
-        .replace(NUMBER_RE, `<span class="parse-number">$&</span>`)
+        .replace(NUMBER_RE, `<span class="parse-number">$&</span>`);
 
-    content = parseTwemojiString(content)
+    content = parseTwemojiString(content);
 
-    return pretifyJSON(content)
+    return pretifyJson(content);
 }
 
 export function trimSpaces(value) {
-    return value.replaceAll("%%", " ")
+    return value.replaceAll("%%", " ");
 }
 
-function pretifyJSON(input) {
+function pretifyJson(input) {
     if (typeof input !== "string") input = String(input);
 
     const match = input.match(/\{[\s\S]*\}/);
     if (!match) return input;
 
-    let jsonStr = match[0];
+    const jsonStr = match[0];
 
     try {
         const obj = JSON.parse(jsonStr);
@@ -60,7 +58,7 @@ function pretifyJSON(input) {
 }
 
 export function createCommandRegex(command) {
-    const safeCommand = command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    const safeCommand = command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-    return new RegExp(`\\b${safeCommand}\\{([^}]*)\\}`, "g")
+    return new RegExp(`\\b${safeCommand}\\{([^}]*)\\}`, "g");
 }

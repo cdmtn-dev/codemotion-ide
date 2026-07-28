@@ -6,7 +6,7 @@
     border-radius: 10px;
     font-size: 14px;
     border: 1px solid var(--block-divider-border-color);
-    transition: .2s;
+    transition: 0.2s;
 }
 .modal-button:hover {
     background: var(--topbar-menu-item-hover-bg);

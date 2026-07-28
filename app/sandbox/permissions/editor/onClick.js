@@ -1,5 +1,5 @@
-const { setAceClickedCallback } = require("../../../main/ipc/ace.ts")
-const { getAceTriggeredData } = require("./__api.js")
+const { setAceClickedCallback } = require("../../../main/ipc/ace.ts");
+const { getAceTriggeredData } = require("./__api.js");
 
 function callback(data) {
     const cb = data.selfArgs[0];
@@ -8,10 +8,12 @@ function callback(data) {
     if (typeof cb !== "function") return;
 
     setAceClickedCallback((rawData) => {
-        cb(getAceTriggeredData({
-            data: rawData,
-            mainSender
-        }));
+        cb(
+            getAceTriggeredData({
+                data: rawData,
+                mainSender,
+            }),
+        );
     });
 }
 

@@ -1,6 +1,6 @@
 body[theme="terminal"] * {
-    transition: none!important;
-    border-radius: 0!important;
+    transition: none !important;
+    border-radius: 0 !important;
 }
 
 body[theme="terminal"] {

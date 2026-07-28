@@ -1,31 +1,36 @@
-const { checkFields, saveReadFile } = require("../../../tools")
-const path = require("path")
+const { checkFields, saveReadFile } = require("../../../tools");
+const path = require("path");
 
 function callback(data) {
-    const configPath = data.selfArgs[0]
-    const extPath = data.extensionPath
+    const configPath = data.selfArgs[0];
+    const extPath = data.extensionPath;
 
-    let documentationProperties = {}
+    let documentationProperties = {};
 
     if (configPath) {
-        let configContent = saveReadFile(path.join(extPath, configPath + ".json"), true)
-        configContent = JSON.parse(configContent)
+        let configContent = saveReadFile(path.join(extPath, configPath + ".json"), true);
+        configContent = JSON.parse(configContent);
 
-        const docPropertiesKey = "__$props__"
+        const docPropertiesKey = "__$props__";
 
         if (Object.keys(configContent).length > 0) {
             // check $props and fields
-            if(docPropertiesKey in configContent) {
-                documentationProperties = configContent[docPropertiesKey]
+            if (docPropertiesKey in configContent) {
+                documentationProperties = configContent[docPropertiesKey];
 
-                checkFields(`${data.permissionName}:config:${docPropertiesKey}`, documentationProperties, {
-                    onMode: "string"
-                })
+                checkFields(
+                    `${data.permissionName}:config:${docPropertiesKey}`,
+                    documentationProperties,
+                    {
+                        onMode: "string",
+                    },
+                );
 
-                delete configContent[docPropertiesKey]
-            }
-            else {
-                throw new Error(`${data.permissionName}: key "$props" in documentation config is required`)
+                delete configContent[docPropertiesKey];
+            } else {
+                throw new Error(
+                    `${data.permissionName}: key "$props" in documentation config is required`,
+                );
             }
 
             // check each config item
@@ -34,16 +39,16 @@ function callback(data) {
                     type: "string",
                     description: "string",
                     example: "string",
-                    sources: "array"
-                })
-            })
+                    sources: "array",
+                });
+            });
 
             data.mainSender.send("new-documentation-register", {
                 config: configContent,
-                props: documentationProperties
-            })
+                props: documentationProperties,
+            });
         }
     }
 }
 
-module.exports = { callback }
+module.exports = { callback };

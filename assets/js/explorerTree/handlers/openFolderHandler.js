@@ -1,61 +1,64 @@
-import { closeAllTabs } from "../tabHandler.js";
-import { buildTreeHtml, renderNodes } from "../render.js";
-import { bindFileClicks } from "./bindFileClicksHandler.js";
-import { tabsByPath, recentlyClosed } from "../tabHandler.js";
-import { initializeExplorerContextMenu } from "./contextMenuHandler.js";
 import { getFolderIconUrl } from "../../iconRegistry.js";
+import { buildTreeHtml, renderNodes } from "../render.js";
+import { closeAllTabs, recentlyClosed, tabsByPath } from "../tabHandler.js";
+import { bindFileClicks } from "./bindFileClicksHandler.js";
+import { initializeExplorerContextMenu } from "./contextMenuHandler.js";
 
 async function setProjectDataUsedLanguages(path) {
-    const usedLanguages = await window.electron.getUsedLanguagesByPath(path)
-    const unknownPercentage = usedLanguages.unknown.percentage
+    const usedLanguages = await window.electron.getUsedLanguagesByPath(path);
+    const unknownPercentage = usedLanguages.unknown.percentage;
 
-    const graph = document.querySelector("#project_analys_graphic")
-    const graphItems = document.querySelector("#project_analys_graphic_items")
+    const graph = document.querySelector("#project_analys_graphic");
+    const graphItems = document.querySelector("#project_analys_graphic_items");
 
-    graph.innerHTML = ""
-    graphItems.innerHTML = ""
+    graph.innerHTML = "";
+    graphItems.innerHTML = "";
 
-    document.querySelector("#project_analys_files").textContent = usedLanguages.totalFiles
-    document.querySelector("#project_analys_path").textContent = path
+    document.querySelector("#project_analys_files").textContent = usedLanguages.totalFiles;
+    document.querySelector("#project_analys_path").textContent = path;
 
     function createGraphElement({ name, perc, color }) {
-        const languageGraphLine = document.createElement("div")
-        languageGraphLine.classList.add("column-element__linear-graphic__element")
-        languageGraphLine.style.width = perc + "%"
-        languageGraphLine.id = name
-        languageGraphLine.style.background = color
+        const languageGraphLine = document.createElement("div");
+        languageGraphLine.classList.add("column-element__linear-graphic__element");
+        languageGraphLine.style.width = perc + "%";
+        languageGraphLine.id = name;
+        languageGraphLine.style.background = color;
 
-        graph.appendChild(languageGraphLine)
+        graph.appendChild(languageGraphLine);
 
-        const languageGraphItem = document.createElement("div")
-        languageGraphItem.classList.add("column-element-linear-graphic__items-item")
+        const languageGraphItem = document.createElement("div");
+        languageGraphItem.classList.add("column-element-linear-graphic__items-item");
         languageGraphItem.innerHTML = `
             <div class="column-element-linear-graphic__items-item__color" style="background:${color}"></div>
             <div class="column-element-linear-graphic__items-item__name">${name}</div>
             <div class="column-element-linear-graphic__items-item__perc">${perc}%</div>
-        `
+        `;
 
-        graphItems.appendChild(languageGraphItem)
+        graphItems.appendChild(languageGraphItem);
     }
 
-    usedLanguages.languages.forEach(key => {
-        const languageName = key.name
-        const languagePercentage = key.percentage
-        const languageColor = key.color
+    usedLanguages.languages.forEach((key) => {
+        const languageName = key.name;
+        const languagePercentage = key.percentage;
+        const languageColor = key.color;
 
-        if(languagePercentage != 0) {
-            createGraphElement({ name: languageName, perc: languagePercentage, color: languageColor })
+        if (languagePercentage != 0) {
+            createGraphElement({
+                name: languageName,
+                perc: languagePercentage,
+                color: languageColor,
+            });
         }
-    })
+    });
 
-    createGraphElement({ name: "Unknown", perc: unknownPercentage, color: "#4747478f" })
+    createGraphElement({ name: "Unknown", perc: unknownPercentage, color: "#4747478f" });
 }
 
 export async function openFolder({ pathRoot, filesPanel, addToHistory, pathContext, settings }) {
-    setProjectDataUsedLanguages(pathRoot)
+    setProjectDataUsedLanguages(pathRoot);
 
     closeAllTabs();
-    
+
     if (!filesPanel) {
         console.warn("Files panel not found");
         return;
@@ -64,47 +67,43 @@ export async function openFolder({ pathRoot, filesPanel, addToHistory, pathConte
     try {
         filesPanel.innerHTML = await buildTreeHtml(pathRoot);
 
-        updatePathContext(
-            {
-                pathRoot: pathRoot,
-                pathContext: pathContext
-            }
-        );
+        updatePathContext({
+            pathRoot,
+            pathContext,
+        });
         updateTabName(pathContext);
 
-        bindFileClicks(
-            {
-                scopeEl: filesPanel,
-                tabsByPath: tabsByPath,
-                recentlyClosed: recentlyClosed,
-                pathContext: pathContext,
-                settings: settings
-            }
-        );
+        bindFileClicks({
+            scopeEl: filesPanel,
+            tabsByPath,
+            recentlyClosed,
+            pathContext,
+            settings,
+        });
 
-        addToHistory(
-            {
-                actionType: "created",
-                value: "Project created",
-                desc: `Project in ${pathRoot} created. Now you can edit and create files`
-            }
-        );
+        addToHistory({
+            actionType: "created",
+            value: "Project created",
+            desc: `Project in ${pathRoot} created. Now you can edit and create files`,
+        });
 
-        window.electron.setSettings({ app: { lastFolder: pathRoot } })
+        window.electron.setSettings({ app: { lastFolder: pathRoot } });
 
         initializeFolderToggle(filesPanel, { pathContext, settings });
-        initializeExplorerContextMenu(filesPanel, { tabsByPath, recentlyClosed, pathContext, settings });
-
+        initializeExplorerContextMenu(filesPanel, {
+            tabsByPath,
+            recentlyClosed,
+            pathContext,
+            settings,
+        });
     } catch (error) {
         console.error("Error opening folder:", error);
 
-        addToHistory(
-            {
-                actionType: "error",
-                value: "Failed to open project",
-                desc: error.message
-            }
-        );
+        addToHistory({
+            actionType: "error",
+            value: "Failed to open project",
+            desc: error.message,
+        });
     }
 }
 
@@ -134,7 +133,7 @@ export function initializeFolderToggle(container, context = {}) {
         event.stopPropagation();
 
         const dirElement = dirTitle.closest(".dir");
-        
+
         if (!dirElement) return;
 
         const isExpanding = !dirElement.classList.contains("expanded");
@@ -146,29 +145,36 @@ export function initializeFolderToggle(container, context = {}) {
             folderImg.src = getFolderIconUrl(folderName, isExpanding);
         }
 
-        if (!isExpanding || dirElement.dataset.loaded !== "false" || dirElement.dataset.loading === "true") {
+        if (
+            !isExpanding ||
+            dirElement.dataset.loaded !== "false" ||
+            dirElement.dataset.loading === "true"
+        ) {
             return;
         }
 
         dirElement.dataset.loading = "true";
-        const content = Array.from(dirElement.children).find(child => child.classList.contains("dir-content"));
+        const content = Array.from(dirElement.children).find((child) =>
+            child.classList.contains("dir-content"),
+        );
 
         try {
             if (!content) return;
 
-            const children = await window.electron.readDirTree(dirElement.dataset.path, { maxDepth: 0, ignoreRoot: context.pathContext?.rootPath });
+            const children = await window.electron.readDirTree(dirElement.dataset.path, {
+                maxDepth: 0,
+                ignoreRoot: context.pathContext?.rootPath,
+            });
             content.innerHTML = await renderNodes(children);
             dirElement.dataset.loaded = "true";
 
-            bindFileClicks(
-                {
-                    scopeEl: content,
-                    tabsByPath: tabsByPath,
-                    recentlyClosed: recentlyClosed,
-                    pathContext: context.pathContext,
-                    settings: context.settings
-                }
-            );
+            bindFileClicks({
+                scopeEl: content,
+                tabsByPath,
+                recentlyClosed,
+                pathContext: context.pathContext,
+                settings: context.settings,
+            });
         } catch (error) {
             console.error("Error loading folder:", error);
         } finally {
@@ -189,7 +195,7 @@ function initializeFolderToggleLegible(container) {
         const folderIcon = event.target.closest(".folder-icon");
         const fileName = event.target.closest(".dir-title .file");
 
-        if (!folderIcon && !fileName) return;
+        if (!(folderIcon || fileName)) return;
 
         event.stopPropagation();
 

@@ -1,11 +1,11 @@
-import { Modal } from "../modalsHandler/engine.js"
-import { GLS } from "../lib.js"
+import { GLS } from "../lib.js";
+import { Modal } from "../modalsHandler/engine.js";
 
 export async function getSettingsModal({ platform }) {
-    const gls = await GLS.initLocal()
-    
+    const gls = await GLS.initLocal();
+
     function lgls(string, replacements) {
-        return gls.get(`modals.appearance.${string}`, replacements)
+        return gls.get(`modals.appearance.${string}`, replacements);
     }
 
     const appearanceModal = Modal.create({
@@ -22,7 +22,7 @@ export async function getSettingsModal({ platform }) {
                     {
                         type: "category",
                         label: lgls("application.applicationLabel"),
-                        items: []
+                        items: [],
                     },
                     {
                         type: "row",
@@ -37,68 +37,68 @@ export async function getSettingsModal({ platform }) {
                                 max: 4,
                                 value: 1,
                                 step: 0.1,
-                                prefix: "x"
+                                prefix: "x",
                             },
                             {
                                 type: "placeholder",
                                 title: lgls("application.language.title"),
                                 description: lgls("application.language.description"),
                                 note: gls.get("modals.needToReloadNote"),
-                                id: "setting_language"
+                                id: "setting_language",
                             },
                             {
                                 type: "switch",
                                 title: lgls("application.useSystemFonts.title"),
                                 description: lgls("application.useSystemFonts.description"),
-                                id: "setting_useSystemFonts"
+                                id: "setting_useSystemFonts",
                             },
                             {
                                 type: "switch",
                                 title: lgls("application.splashWindow.title"),
                                 description: lgls("application.splashWindow.description"),
-                                id: "setting_splash"
+                                id: "setting_splash",
                             },
                             {
                                 type: "switch",
                                 title: lgls("application.reduceMotion.title"),
                                 description: lgls("application.reduceMotion.description"),
-                                id: "setting_reduceMotion"
+                                id: "setting_reduceMotion",
                             },
                             {
                                 type: "switch",
                                 title: lgls("application.boldFont.title"),
                                 description: lgls("application.boldFont.description"),
-                                id: "setting_boldFont"
+                                id: "setting_boldFont",
                             },
                             {
                                 type: "switch",
                                 title: lgls("application.restoreFolder.title"),
                                 description: lgls("application.restoreFolder.description"),
-                                id: "setting_restoreFolder"
+                                id: "setting_restoreFolder",
                             },
                             {
                                 type: "placeholder",
                                 title: lgls("application.theme.title"),
                                 description: lgls("application.theme.description"),
-                                id: "setting_theme"
+                                id: "setting_theme",
                             },
                             {
                                 type: "switch",
                                 title: lgls("application.developerMode.title"),
                                 description: lgls("application.developerMode.description"),
                                 note: gls.get("modals.needToReloadNote"),
-                                id: "setting_devMode"
+                                id: "setting_devMode",
                             },
                             {
                                 type: "placeholder",
                                 id: "settings_appIcon",
                                 title: lgls("application.appIcons.title"),
                                 description: lgls("application.appIcons.description"),
-                                note: gls.get("modals.appReloadNote")
+                                note: gls.get("modals.appReloadNote"),
                             },
-                        ]
-                    }
-                ]
+                        ],
+                    },
+                ],
             },
             {
                 name: lgls("sideBarCategory"),
@@ -107,7 +107,7 @@ export async function getSettingsModal({ platform }) {
                     {
                         type: "category",
                         label: lgls("sideBarCategory"),
-                        items: []
+                        items: [],
                     },
                     {
                         type: "row",
@@ -116,13 +116,14 @@ export async function getSettingsModal({ platform }) {
                             {
                                 type: "switch",
                                 title: "Show hidden files",
-                                description: "Displays files and folders starting with a dot (e.g. .gitignore)",
+                                description:
+                                    "Displays files and folders starting with a dot (e.g. .gitignore)",
                                 id: "setting_sidebarShowHiddenFiles",
-                                disabled: true
-                            }
-                        ]
-                    }
-                ]
+                                disabled: true,
+                            },
+                        ],
+                    },
+                ],
             },
             {
                 name: lgls("terminalCategory"),
@@ -131,7 +132,7 @@ export async function getSettingsModal({ platform }) {
                     {
                         type: "category",
                         label: "Appearance",
-                        items: []
+                        items: [],
                     },
                     {
                         type: "row",
@@ -147,21 +148,21 @@ export async function getSettingsModal({ platform }) {
                                 value: 14,
                                 step: 1,
                                 prefix: "px",
-                                disabled: true
+                                disabled: true,
                             },
                             {
                                 type: "switch",
                                 title: "Cursor blink",
                                 description: "Enables cursor blinking animation in the terminal",
                                 id: "setting_terminalCursorBlink",
-                                disabled: true
+                                disabled: true,
                             },
-                        ]
+                        ],
                     },
                     {
                         type: "category",
                         label: "Behaviour",
-                        items: []
+                        items: [],
                     },
                     {
                         type: "row",
@@ -172,11 +173,11 @@ export async function getSettingsModal({ platform }) {
                                 title: "Copy on selection",
                                 description: "Copies selected text to the clipboard automatically",
                                 id: "setting_terminalCopyOnSelect",
-                                disabled: true
-                            }
-                        ]
-                    }
-                ]
+                                disabled: true,
+                            },
+                        ],
+                    },
+                ],
             },
             {
                 name: lgls("fileWindowCategory"),
@@ -185,7 +186,7 @@ export async function getSettingsModal({ platform }) {
                     {
                         type: "category",
                         label: "Tabs",
-                        items: []
+                        items: [],
                     },
                     {
                         type: "row",
@@ -195,24 +196,24 @@ export async function getSettingsModal({ platform }) {
                                 type: "switch",
                                 title: lgls("fileWindow.title"),
                                 description: lgls("fileWindow.description"),
-                                id: "setting_coloredTabs"
+                                id: "setting_coloredTabs",
                             },
                             {
                                 type: "switch",
                                 title: "Show tab close button",
                                 description: "Displays the X close button on editor tabs",
                                 id: "setting_tabShowClose",
-                                disabled: true
+                                disabled: true,
                             },
                             {
                                 type: "switch",
                                 title: lgls("fileWindow.confirmClose.title"),
                                 description: lgls("fileWindow.confirmClose.description"),
-                                id: "setting_confirmCloseTab"
-                            }
-                        ]
-                    }
-                ]
+                                id: "setting_confirmCloseTab",
+                            },
+                        ],
+                    },
+                ],
             },
             {
                 name: lgls("editorCategory"),
@@ -221,7 +222,7 @@ export async function getSettingsModal({ platform }) {
                     {
                         type: "category",
                         label: lgls("editor.editorLabel"),
-                        items: []
+                        items: [],
                     },
                     {
                         type: "row",
@@ -236,14 +237,14 @@ export async function getSettingsModal({ platform }) {
                                 max: 200,
                                 value: 100,
                                 step: 10,
-                                prefix: "%"
+                                prefix: "%",
                             },
                             {
                                 type: "switch",
                                 title: lgls("editor.smoothScroll.title"),
                                 description: lgls("editor.smoothScroll.description"),
                                 id: "setting_smoothScroll",
-                                note: gls.get("modals.needToReloadNote")
+                                note: gls.get("modals.needToReloadNote"),
                             },
                             {
                                 type: "placeholder",
@@ -251,14 +252,17 @@ export async function getSettingsModal({ platform }) {
                                 description: lgls("editor.pythonRunner.description"),
                                 id: "setting_pythonRunMethod",
                                 disabled: platform != "win32",
-                                note: platform == "win32" ? gls.get("modals.needToReloadNote") : `${lgls("editor.builtInPythonCausePlatformNote", { platform: platform.toUpperCase() })}`
-                            }
-                        ]
+                                note:
+                                    platform == "win32"
+                                        ? gls.get("modals.needToReloadNote")
+                                        : `${lgls("editor.builtInPythonCausePlatformNote", { platform: platform.toUpperCase() })}`,
+                            },
+                        ],
                     },
                     {
                         type: "category",
                         label: lgls("editor.contextsLabel"),
-                        items: []
+                        items: [],
                     },
                     {
                         type: "row",
@@ -268,11 +272,11 @@ export async function getSettingsModal({ platform }) {
                                 type: "switch",
                                 title: lgls("editor.contexts.go.title"),
                                 description: lgls("editor.contexts.go.description"),
-                                id: "setting_go_context_parser"
+                                id: "setting_go_context_parser",
                             },
-                        ]
-                    }
-                ]
+                        ],
+                    },
+                ],
             },
             {
                 name: "Extensions",
@@ -281,7 +285,7 @@ export async function getSettingsModal({ platform }) {
                     {
                         type: "category",
                         label: "Security",
-                        items: []
+                        items: [],
                     },
                     {
                         type: "row",
@@ -290,15 +294,16 @@ export async function getSettingsModal({ platform }) {
                             {
                                 type: "switch",
                                 title: "Disable risky permission warning",
-                                description: "Skips the warning modal for extensions with risky permissions and auto-enables them",
-                                id: "setting_disableRiskyPermissionWarning"
-                            }
-                        ]
-                    }
-                ]
-            }
-        ]
-    })
+                                description:
+                                    "Skips the warning modal for extensions with risky permissions and auto-enables them",
+                                id: "setting_disableRiskyPermissionWarning",
+                            },
+                        ],
+                    },
+                ],
+            },
+        ],
+    });
 
-    return appearanceModal
+    return appearanceModal;
 }

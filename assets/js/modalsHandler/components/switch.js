@@ -1,38 +1,38 @@
 export function renderSwitch(properties = {}) {
-    const id = properties.id
-    const title = properties.title
-    const description = properties.description
-    const checked = properties.checked
+    const id = properties.id;
+    const title = properties.title;
+    const description = properties.description;
+    const checked = properties.checked;
 
-    const wrapper = document.createElement("div")
-    wrapper.classList.add("modal-category__item")
-    
-    const element = document.createElement("label")
-    element.classList.add("round-switch")
+    const wrapper = document.createElement("div");
+    wrapper.classList.add("modal-category__item");
 
-    const input = document.createElement("input")
-    input.type = "checkbox"
-    input.id = id
+    const element = document.createElement("label");
+    element.classList.add("round-switch");
 
-    if(checked) input.checked = checked
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.id = id;
 
-    const span = document.createElement("span")
-    span.classList.add("slider")
+    if (checked) input.checked = checked;
 
-    const elementTitle = document.createElement("div")
-    elementTitle.classList.add("modal-category__item-title")
-    elementTitle.textContent = title
+    const span = document.createElement("span");
+    span.classList.add("slider");
 
-    const elementDesc = document.createElement("div")
-    elementDesc.classList.add("modal-category__item-desc")
-    elementDesc.textContent = description
-    
-    element.appendChild(input)
-    element.appendChild(span)
+    const elementTitle = document.createElement("div");
+    elementTitle.classList.add("modal-category__item-title");
+    elementTitle.textContent = title;
 
-    wrapper.appendChild(elementTitle)
-    wrapper.appendChild(elementDesc)
-    wrapper.appendChild(element)
+    const elementDesc = document.createElement("div");
+    elementDesc.classList.add("modal-category__item-desc");
+    elementDesc.textContent = description;
 
-    return wrapper
+    element.appendChild(input);
+    element.appendChild(span);
+
+    wrapper.appendChild(elementTitle);
+    wrapper.appendChild(elementDesc);
+    wrapper.appendChild(element);
+
+    return wrapper;
 }

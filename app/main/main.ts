@@ -1,54 +1,54 @@
-import type { IpcMainEvent } from "electron"
-
-import { app, BrowserWindow, screen, ipcMain, shell } from "electron"
-import path from "node:path"
-import fs from "node:fs"
+import fs from "node:fs";
+import path from "node:path";
+import process from "node:process";
+import type { IpcMainEvent } from "electron";
+import { app, BrowserWindow, ipcMain, screen, shell } from "electron";
 import { GlobalKeyboardListener } from "node-global-key-listener";
 
 const v = new GlobalKeyboardListener();
-const bus = require("../../helpers/eventBus")
+const bus = require("../../helpers/eventBus");
 
-const { verifyToken } = require("../auth")
+const { verifyToken } = require("../auth");
 
-const { HTML_PATH, JSON_PATH } = require("../main/helpers/paths.js")
+const { HTML_PATH, JSON_PATH } = require("../main/helpers/paths.js");
 
-let mainWindow: any
-let workSeconds: number = 0
+let mainWindow: any;
+let workSeconds = 0;
 
-require("../sandbox/sandbox")
-require("../../helpers/getPython")
-require("../auth")
-require("../electron/live-server")
-require("./runtime/runtimeHandler")
-require("./tools/diagnostics")
-require("./tools/js-ts/ast")
-require("./tools/go/ast")
+require("../sandbox/sandbox");
+require("../../helpers/getPython");
+require("../auth");
+require("../electron/live-server");
+require("./runtime/runtimeHandler");
+require("./tools/diagnostics");
+require("./tools/js-ts/ast");
+require("./tools/go/ast");
 
-require("./ipc/filesWork")
-require("./ipc/api")
-require("./ipc/getters")
-require("./ipc/setters")
-require("./ipc/updaters")
-require("./ipc/misc")
-require("./ipc/organizations")
-require("./ipc/bugs")
-require("./ipc/suggest")
+require("./ipc/filesWork");
+require("./ipc/api");
+require("./ipc/getters");
+require("./ipc/setters");
+require("./ipc/updaters");
+require("./ipc/misc");
+require("./ipc/organizations");
+require("./ipc/bugs");
+require("./ipc/suggest");
 
 // ext
-require("../sandbox/regs/language")
-require("../sandbox/regs/docs")
-require("../sandbox/regs/filenames")
-require("../sandbox/regs/fileExtensions")
-require("../sandbox/regs/templates")
+require("../sandbox/regs/language");
+require("../sandbox/regs/docs");
+require("../sandbox/regs/filenames");
+require("../sandbox/regs/fileExtensions");
+require("../sandbox/regs/templates");
 
 console.log("APP PATH:", app.getAppPath());
 
-const { terminalManager } = require("../main/helpers/terminal.js")
+const { terminalManager } = require("../main/helpers/terminal.js");
 
 const { createDebuggerWindow } = require("../../helpers/debuggerWindow/debuggerWindow.js");
-const { createSplashWindow, updateSplash } = require('../splash/splash.js');
-const { 
-    readSettings, 
+const { createSplashWindow, updateSplash } = require("../splash/splash.js");
+const {
+    readSettings,
     writeSettings,
     ensureLocalJson,
     ensureSettingsJson,
@@ -57,43 +57,40 @@ const {
     getSettingsData,
     getAppIcon,
     checkStatus,
-} = require("../main/helpers/requests.js")
+} = require("../main/helpers/requests.js");
 
-const { spawnNotification, notifications } = require("../notifications/notifications.js")
+const { spawnNotification, notifications } = require("../notifications/notifications.js");
 
-const { 
-    selectFile, 
-    selectFolder,
-} = require("../main/helpers/os.js");
+const { selectFile, selectFolder } = require("../main/helpers/os.js");
 
-const { APP_PATH } = require('../main/helpers/paths.js');
+const { APP_PATH } = require("../main/helpers/paths.js");
 
-console.log(`App started on ${process.arch} system`)
+console.log(`App started on ${process.arch} system`);
 
 async function createWindow() {
     if (!fs.existsSync(JSON_PATH)) {
         fs.mkdirSync(JSON_PATH, { recursive: true });
     }
-    
+
     ensureLocalJson();
     ensureLocalBugs();
     ensureSettingsJson();
 
     const localData = getLocalAppData();
-    const settingsData = getSettingsData()
+    const settingsData = getSettingsData();
     const appIcon = await getAppIcon();
     const isPackaged = !app.isPackaged;
     const primaryDisplay = screen.getPrimaryDisplay();
     const { width, height } = primaryDisplay.workAreaSize;
 
-    let dev = false
-    let splash: InstanceType<typeof BrowserWindow> | null = null
+    let dev = false;
+    let splash: InstanceType<typeof BrowserWindow> | null = null;
 
-    if("app" in settingsData && settingsData.app.splashScreen) {
-        splash = await createSplashWindow()
+    if ("app" in settingsData && settingsData.app.splashScreen) {
+        splash = await createSplashWindow();
     }
 
-	if(process.argv.includes('--d')) dev = true
+    if (process.argv.includes("--d")) dev = true;
 
     mainWindow = new BrowserWindow({
         width,
@@ -103,75 +100,80 @@ async function createWindow() {
         backgroundColor: "#0a0a0a",
         webPreferences: {
             preload: path.join(APP_PATH, "dist", "preload.js"),
-            contextIsolation: true
+            contextIsolation: true,
         },
-        icon: appIcon
+        icon: appIcon,
     });
 
     mainWindow.webContents.setWindowOpenHandler(({ url }: { url: string }) => {
         shell.openExternal(url);
-        return { action: 'deny' };
+        return { action: "deny" };
     });
-    mainWindow.webContents.on('did-finish-load', () => {
-        if(splash) splash.destroy();
-        mainWindow.maximize()
+    mainWindow.webContents.on("did-finish-load", () => {
+        if (splash) splash.destroy();
+        mainWindow.maximize();
         mainWindow.show();
-    })
+    });
     mainWindow.on("closed", () => {
         for (const win of notifications) {
-            if (win && !win.isDestroyed()) win.close()
+            if (win && !win.isDestroyed()) win.close();
         }
-    })
+    });
 
-    if(splash) updateSplash("Waiting for connect...")
+    if (splash) updateSplash("Waiting for connect...");
 
     // if offline mode (w/o account) then dont check status
     if (localData.nonAccountMode) {
         await mainWindow.loadFile(path.join(HTML_PATH, "index.html"));
-    }
-    else {
-        checkStatus({ updateSplash: updateSplash })
+    } else {
+        checkStatus({ updateSplash })
             .then(async () => {
-                if (!localData.token) {
-                    await mainWindow.loadFile(path.join(HTML_PATH, "login.html"));
-                }
-                else {
-                    let userCheckLogin = await verifyToken(localData.token);
+                if (localData.token) {
+                    const userCheckLogin = await verifyToken(localData.token);
 
                     if (userCheckLogin.success) {
                         await mainWindow.loadFile(path.join(HTML_PATH, "index.html"));
-                    }
-                    else {
+                    } else {
                         await mainWindow.loadFile(path.join(HTML_PATH, "login.html"));
-                        mainWindow.webContents.send("auth-msg", { type: "error", content: userCheckLogin.result })
+                        mainWindow.webContents.send("auth-msg", {
+                            type: "error",
+                            content: userCheckLogin.result,
+                        });
                     }
+                } else {
+                    await mainWindow.loadFile(path.join(HTML_PATH, "login.html"));
                 }
 
-                v.addListener(function (e: any, down: any) {
-                    if (mainWindow && mainWindow.isFocused() && e.state == "DOWN" && e.name == "S" && down["LEFT CTRL"]) {
+                v.addListener((e: any, down: any) => {
+                    if (
+                        mainWindow &&
+                        mainWindow.isFocused() &&
+                        e.state == "DOWN" &&
+                        e.name == "S" &&
+                        down["LEFT CTRL"]
+                    ) {
                         mainWindow.webContents.send("keyboard_action", {
-                            type: "saved"
+                            type: "saved",
                         });
                     }
                 });
             })
             .catch((err: TypeError) => {
-                updateSplash(`Error: ${err.message}. Please report this error to the developer and try again later`, true)
+                updateSplash(
+                    `Error: ${err.message}. Please report this error to the developer and try again later`,
+                    true,
+                );
             });
     }
 
-    ipcMain.handle("request-file-open", () => {
-        return selectFile(mainWindow)
-    })
-    ipcMain.handle("request-folder-open", () => {
-        return selectFolder(mainWindow)
-    })
+    ipcMain.handle("request-file-open", () => selectFile(mainWindow));
+    ipcMain.handle("request-folder-open", () => selectFolder(mainWindow));
     ipcMain.on("main-ready", (event: IpcMainEvent) => {
         bus.emit("main-ready", event.sender);
-    })
+    });
     ipcMain.on("custom-language-registration-ready", () => {
-        mainWindow.webContents.send("custom-language-registered")
-    })
+        mainWindow.webContents.send("custom-language-registered");
+    });
 
     ipcMain.on("close", () => {
         terminalManager.killProcessTree(true);
@@ -191,11 +193,10 @@ async function createWindow() {
 
     ipcMain.on("set-app-title", (_, title) => {
         if (mainWindow) {
-            if(title != undefined) {
-                mainWindow.setTitle(`${title} - CodeMotion IDE`)
-            }
-            else {
-                mainWindow.setTitle(`CodeMotion IDE`)
+            if (title == undefined) {
+                mainWindow.setTitle("CodeMotion IDE");
+            } else {
+                mainWindow.setTitle(`${title} - CodeMotion IDE`);
             }
         }
     });
@@ -204,51 +205,51 @@ async function createWindow() {
         terminalManager.killProcessTree(true);
         terminalManager.cleanupInputHandler();
         app.relaunch();
-        app.quit(); 
+        app.quit();
     });
     ipcMain.handle("create-debugger-window", async () => {
-        createDebuggerWindow(mainWindow)
-        return true
-    })
+        createDebuggerWindow(mainWindow);
+        return true;
+    });
 
     // send app close. Example: close all notification windows
-    app.on('window-all-closed', () => {
+    app.on("window-all-closed", () => {
         bus.emit("main-closed", mainWindow);
-    })
+    });
 
     return { mainWindow, splash };
 }
 
 ipcMain.on("spawn-notification", (_: IpcMainEvent, data: any) => {
-    spawnNotification(data)
-})
+    spawnNotification(data);
+});
 
 app.whenReady().then(createWindow);
 
-app.on('before-quit', () => {
+app.on("before-quit", () => {
     terminalManager.killProcessTree(true);
     terminalManager.cleanupInputHandler();
 });
 
 setInterval(() => {
-    workSeconds += 0.1
-}, 100)
+    workSeconds += 0.1;
+}, 100);
 
-app.on('window-all-closed', () => {
+app.on("window-all-closed", () => {
     terminalManager.killProcessTree(true);
     terminalManager.cleanupInputHandler();
 
-    if (process.platform !== 'darwin') app.quit();
+    if (process.platform !== "darwin") app.quit();
 
-    const settings = readSettings()
+    const settings = readSettings();
 
-    if("app" in settings) {
-        if("workSeconds" in settings.app) {
-            let seconds = settings.app.workSeconds
-            writeSettings({ app: { workSeconds: Math.round((workSeconds + seconds) * 10) / 10 }})
+    if ("app" in settings) {
+        if ("workSeconds" in settings.app) {
+            const seconds = settings.app.workSeconds;
+            writeSettings({ app: { workSeconds: Math.round((workSeconds + seconds) * 10) / 10 } });
         }
-        if("workSecondsSession" in settings.app) {
-            writeSettings({ app: { workSecondsSession: Math.round(workSeconds * 10) / 10 }})
+        if ("workSecondsSession" in settings.app) {
+            writeSettings({ app: { workSecondsSession: Math.round(workSeconds * 10) / 10 } });
         }
     }
 });

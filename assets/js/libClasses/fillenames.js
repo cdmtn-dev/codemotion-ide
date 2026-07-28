@@ -5,93 +5,87 @@ export class _Filenames {
             icon: "tsconfig",
             iconExt: "svg",
             mode: "json",
-            color: "#2e70ff"
+            color: "#2e70ff",
         },
-        "LICENSE": {
+        LICENSE: {
             name: "License file",
             icon: "license",
             iconExt: "svg",
             mode: "text",
-            color: "#929292"
+            color: "#929292",
         },
         "package.json": {
             name: "NPM Package file",
             icon: "npm",
             iconExt: "svg",
             mode: "json",
-            color: "#ff2828"
+            color: "#ff2828",
         },
         "package-lock.json": {
             name: "NPM Package file",
             icon: "npm",
             iconExt: "svg",
             mode: "json",
-            color: "#ff2828"
+            color: "#ff2828",
         },
         "go.mod": {
             name: "GO Mod File",
             icon: "gomod",
             iconExt: "svg",
             mode: "gomod",
-            color: "#eecb80"
-        }
-    }
+            color: "#eecb80",
+        },
+    };
 
     static add(name, properties) {
-        this.filenames[name] = properties
+        _Filenames.filenames[name] = properties;
     }
 
     static list() {
-        return this.filenames
+        return _Filenames.filenames;
     }
 
     static get(name) {
-        if (name in this.filenames) {
-            return this.filenames[name]
+        if (name in _Filenames.filenames) {
+            return _Filenames.filenames[name];
         }
-        else {
-            return false
-        }
+        return false;
     }
 
     static async getIcon(name) {
-        let info = this.get(name)
-        let allFilenamesIcons = await window.electron.getAllFilenamesIcons()
+        const info = _Filenames.get(name);
+        let allFilenamesIcons = await window.electron.getAllFilenamesIcons();
 
-        allFilenamesIcons = allFilenamesIcons.map(item => { if (item.type != "folder") return item.name })
-        allFilenamesIcons = allFilenamesIcons.filter(item => item != undefined)
+        allFilenamesIcons = allFilenamesIcons.map((item) => {
+            if (item.type != "folder") return item.name;
+        });
+        allFilenamesIcons = allFilenamesIcons.filter((item) => item != undefined);
 
-        if (name in this.filenames) {
-            let fileName = `${this.filenames[name].icon}.${this.filenames[name].iconExt}`
+        if (name in _Filenames.filenames) {
+            let fileName = `${_Filenames.filenames[name].icon}.${_Filenames.filenames[name].iconExt}`;
 
             if (info.customIcon) {
-                fileName = this.filenames[name].icon
+                fileName = _Filenames.filenames[name].icon;
             }
 
             if (allFilenamesIcons.includes(fileName)) {
-                return fileName
+                return fileName;
             }
-            else {
-                return fileName
-            }
+            return fileName;
         }
-        else {
-            return false
-        }
+        return false;
     }
 
     static async getIconPath(name) {
-        let info = this.get(name)
-        let icon = await this.getIcon(name)
+        const info = _Filenames.get(name);
+        const icon = await _Filenames.getIcon(name);
 
         if (info.customIcon) {
-            return icon
+            return icon;
         }
-        else if(icon) {
-            return `../assets/media/icons/symbols/files/${icon}`
+        if (icon) {
+            return `../assets/media/icons/symbols/files/${icon}`;
         }
-        else {
-            return false
-        }
+        return false;
     }
 }

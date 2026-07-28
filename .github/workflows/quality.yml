@@ -1,0 +1,42 @@
+name: Code Quality
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  biome:
+    name: Biome
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check pull request changes
+        if: github.event_name == 'pull_request'
+        run: npm run check -- --changed --since=${{ github.event.pull_request.base.sha }} --no-errors-on-unmatched --reporter=github
+
+      - name: Check repository
+        if: github.event_name == 'push'
+        run: npm run check -- --reporter=github

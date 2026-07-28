@@ -10,9 +10,7 @@ export class GoParser {
     traverse(node, row, chain) {
         if (!node || typeof node !== "object") return;
 
-        const inRange = node.loc &&
-            row >= node.loc.start.line &&
-            row <= node.loc.end.line;
+        const inRange = node.loc && row >= node.loc.start.line && row <= node.loc.end.line;
 
         if (inRange) {
             const item = this.nodeToChainItem(node, row);
@@ -92,13 +90,13 @@ export class GoParser {
                     icon: "data_object",
                     label: node.aliasFor
                         ? `${node.id?.name} = ${node.aliasFor}`
-                        : (node.id?.name || "type"),
+                        : node.id?.name || "type",
                     class: "variable",
                 };
 
             case "ShortVarDeclaration": {
                 const names = (node.names || []).join(", ");
-                const call = (node.values || []).find(v => v?.type === "CallExpression");
+                const call = (node.values || []).find((v) => v?.type === "CallExpression");
                 const suffix = call ? ` := ${call.calleeName}` : " :=";
                 return {
                     icon: "data_object",
@@ -108,8 +106,9 @@ export class GoParser {
             }
 
             case "VariableDeclaration": {
-                const names = (node.names || [])
-                    .concat((node.declarations || []).flatMap(d => d.names || []));
+                const names = (node.names || []).concat(
+                    (node.declarations || []).flatMap((d) => d.names || []),
+                );
                 if (!names.length) return null;
                 return {
                     icon: "data_object",
@@ -119,7 +118,7 @@ export class GoParser {
             }
 
             case "ConstDeclaration": {
-                const names = (node.declarations || []).flatMap(d => d.names || []);
+                const names = (node.declarations || []).flatMap((d) => d.names || []);
                 if (!names.length) return null;
                 return {
                     icon: "pin",
@@ -129,11 +128,13 @@ export class GoParser {
             }
 
             case "CallExpression":
-                return node.calleeName ? {
-                    icon: "deployed_code",
-                    label: node.calleeName,
-                    class: "object",
-                } : null;
+                return node.calleeName
+                    ? {
+                          icon: "deployed_code",
+                          label: node.calleeName,
+                          class: "object",
+                      }
+                    : null;
 
             case "IfStatement":
                 return { icon: "alt_route", label: "if", class: "object" };
@@ -142,10 +143,18 @@ export class GoParser {
                 return { icon: "loop", label: "for", class: "object" };
 
             case "GoStatement":
-                return { icon: "rocket", label: "go " + (node.call?.calleeName || ""), class: "function" };
+                return {
+                    icon: "rocket",
+                    label: "go " + (node.call?.calleeName || ""),
+                    class: "function",
+                };
 
             case "DeferStatement":
-                return { icon: "hourglass_empty", label: "defer " + (node.call?.calleeName || ""), class: "function" };
+                return {
+                    icon: "hourglass_empty",
+                    label: "defer " + (node.call?.calleeName || ""),
+                    class: "function",
+                };
 
             default:
                 return null;
@@ -156,7 +165,7 @@ export class GoParser {
         for (const key of ["body", "declarations", "methods", "fields", "values", "call"]) {
             const val = node[key];
             if (Array.isArray(val)) {
-                val.forEach(v => this.traverse(v, row, chain));
+                val.forEach((v) => this.traverse(v, row, chain));
             } else if (val && typeof val === "object" && val.loc) {
                 this.traverse(val, row, chain);
             }
@@ -165,10 +174,12 @@ export class GoParser {
 
     formatParams(params) {
         if (!params || params.length === 0) return "";
-        return params.map(p => {
-            const names = (p.names || []).join(", ");
-            return names ? `${names} ${p.paramType}` : p.paramType;
-        }).join(", ");
+        return params
+            .map((p) => {
+                const names = (p.names || []).join(", ");
+                return names ? `${names} ${p.paramType}` : p.paramType;
+            })
+            .join(", ");
     }
 
     renderContext(chain) {

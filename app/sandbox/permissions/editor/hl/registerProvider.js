@@ -1,5 +1,5 @@
 const { setEditorChangedCallback } = require("../../../../dist/ipc/ace.js");
-const { getAceTriggeredData } = require("../__api.js")
+const { getAceTriggeredData } = require("../__api.js");
 
 const providers = new Map();
 
@@ -8,11 +8,11 @@ function registerProvider(id, cb) {
 }
 
 function callback(data) {
-    const providerID = data.selfArgs[0];
+    const providerId = data.selfArgs[0];
     const cb = data.selfArgs[1];
     const mainSender = data.mainSender;
 
-    registerProvider(providerID, cb)
+    registerProvider(providerId, cb);
 
     if (typeof cb !== "function") return;
 
@@ -21,13 +21,13 @@ function callback(data) {
 
         const allRules = [];
 
-        for (const [providerID, cb] of providers) {
+        for (const [providerId, cb] of providers) {
             const data = getAceTriggeredData({
                 data: editorData,
-                mainSender: editorData.mainSender
+                mainSender: editorData.mainSender,
             });
 
-            delete data["api"]
+            delete data["api"];
 
             const result = cb(data);
 
@@ -40,24 +40,30 @@ function callback(data) {
                     typeof item.id !== "string" ||
                     typeof item.regex !== "string" ||
                     typeof item.token !== "string"
-                ) continue;
+                )
+                    continue;
 
                 allRules.push({
-                    id: `${providerID}_${item.id}`,
+                    id: `${providerId}_${item.id}`,
                     regex: item.regex,
-                    token: item.token
+                    token: item.token,
                 });
             }
         }
 
-        applyRules({ editorData: editorData, fileId: fileId, rules: allRules, mainSender: mainSender });
+        applyRules({
+            editorData,
+            fileId,
+            rules: allRules,
+            mainSender,
+        });
     });
 }
 
 function applyRules({ editorData, fileId, rules, mainSender }) {
     mainSender.send("on-editor-change-new-hl-rules", {
-        fileId: fileId,
-        rules: rules
+        fileId,
+        rules,
     });
 }
 

@@ -2,7 +2,7 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
-    padding: 20px!important;
+    padding: 20px !important;
     justify-items: stretch;
     align-items: stretch;
     grid-auto-rows: min-content;
@@ -27,11 +27,13 @@
     height: 50px;
     font-size: 25px;
     border-radius: 5px;
-    box-shadow: var(--background) 0px 0px 200px 0px, #00000026 0px 2px 6px 0px;
+    box-shadow:
+        var(--background) 0px 0px 200px 0px,
+        #00000026 0px 2px 6px 0px;
     font-weight: 500;
 }
 .modal-org .modal-org__title {
-    font-weight: var(--medium-font-weight);;
+    font-weight: var(--medium-font-weight);
     font-size: 15px;
     align-items: center;
     width: fit-content;
@@ -42,7 +44,7 @@
 .modal-org .modal-org-description {
     font-size: small;
     width: 100%;
-    opacity: .5;
+    opacity: 0.5;
     line-height: 18px;
     word-wrap: break-word;
 }
@@ -103,7 +105,7 @@
 .modal-org .modal-org__section-counters .modal-org__section-counter p.title {
     font-size: 12px;
     font-weight: 500;
-    opacity: .5;
+    opacity: 0.5;
 }
 .modal-org .modal-org__section-counters .modal-org__section-counter p.value {
     font-weight: 500;

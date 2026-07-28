@@ -1,8 +1,8 @@
-const { contextBridge, ipcRenderer } = require("electron")
+const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("electron", {
-    onData: callback => {
-        ipcRenderer.on("data", (_, data) => callback(data))
+    onData: (callback) => {
+        ipcRenderer.on("data", (_, data) => callback(data));
     },
-    close: () => ipcRenderer.send("notification-close")
-})
+    close: () => ipcRenderer.send("notification-close"),
+});

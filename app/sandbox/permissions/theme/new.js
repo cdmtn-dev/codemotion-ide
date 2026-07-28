@@ -1,51 +1,50 @@
-const { checkFields } = require("../../tools.js")
+const { checkFields } = require("../../tools.js");
 
 function callback(data) {
-    const themeName = data.selfArgs[0]
-    const themeData = data.selfArgs[1]
-    const extName = data.extensionName
-    const permissionName = data.permissionName
+    const themeName = data.selfArgs[0];
+    const themeData = data.selfArgs[1];
+    const extName = data.extensionName;
+    const permissionName = data.permissionName;
 
-    let allCSSVariables = data.allCSSVariables
+    let allCssVariables = data.allCSSVariables;
 
     checkFields(permissionName, themeData, {
         id: "string",
         variables: "object",
-        editorTheme: "string"
-    })
+        editorTheme: "string",
+    });
 
-    let variables = []
+    const variables = [];
 
-    Object.keys(themeData.variables).forEach(v => {
+    Object.keys(themeData.variables).forEach((v) => {
         variables.push(`${v}: ${themeData.variables[v]}`);
 
-        allCSSVariables = allCSSVariables.map(item => {
+        allCssVariables = allCssVariables.map((item) => {
             const name = item.split(":")[0].trim();
             const value = themeData.variables[name];
 
             if (value) {
                 return `${name}: <important>${value}</important>`;
-            } else {
-                return `${name}: <span class="transparent">default</span>`;
             }
+            return `${name}: <span class="transparent">default</span>`;
         });
     });
 
-    themeData.variables = variables.join(";")
+    themeData.variables = variables.join(";");
 
-    data.mainSender.send("new-theme-register", themeName, themeData)
+    data.mainSender.send("new-theme-register", themeName, themeData);
 
     data.debuggerSender.send("debug-event", {
         data: {
             type: "newCommand",
             command: {
                 name: "CSSVariables",
-                response: `A list of current CSS variables will be displayed below. The format is "name:value":\n${allCSSVariables.join(", \n")}`
+                response: `A list of current CSS variables will be displayed below. The format is "name:value":\n${allCssVariables.join(", \n")}`,
             },
-            from: extName
+            from: extName,
         },
-        time: Date.now()
-    })
+        time: Date.now(),
+    });
 }
 
-module.exports = { callback }
+module.exports = { callback };

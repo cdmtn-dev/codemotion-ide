@@ -6,19 +6,11 @@
         "rootDir": "app/main",
         "strict": true,
         "types": ["node", "electron"],
-        "lib": [
-            "ES2022"
-        ],
+        "lib": ["ES2022"],
         "esModuleInterop": true,
         "skipLibCheck": true,
         "allowJs": true
     },
     "include": ["app/main/**/*", "assets/js/editor/colorComments.js", "textmate/**/*"],
-    "exclude": [
-        "ace/**/*",
-        "assets/**/*",
-        "helpers/**/*",
-        "node_modules",
-        "dist"
-    ]
+    "exclude": ["ace/**/*", "assets/**/*", "helpers/**/*", "node_modules", "dist"]
 }

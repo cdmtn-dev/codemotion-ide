@@ -55,15 +55,15 @@ export class JSONParser {
             }
         }
 
-        path = stack.map(e => {
-            let icon = e.type === "object" ? "data_object" : "data_array";
-            let className = e.type === "object" ? "object" : "array";
-            let label = e.key ? e.key : "";
+        path = stack.map((e) => {
+            const icon = e.type === "object" ? "data_object" : "data_array";
+            const className = e.type === "object" ? "object" : "array";
+            const label = e.key ? e.key : "";
             return { icon, label, className };
         });
 
-        if (/\"[a-zA-Z0-9_]+\"/.test(lines[pos.row])) {
-            const match = lines[pos.row].match(/\"([a-zA-Z0-9_]+)\"/);
+        if (/"[a-zA-Z0-9_]+"/.test(lines[pos.row])) {
+            const match = lines[pos.row].match(/"([a-zA-Z0-9_]+)"/);
             if (match) path.push({ icon: "token", label: match[1], className: "object" });
         }
 
@@ -89,7 +89,7 @@ export class JSONParser {
             contextPanel.appendChild(el);
 
             if (i < chain.length - 1) {
-                const sep = renderSeparator()
+                const sep = renderSeparator();
                 contextPanel.appendChild(sep);
             }
         });

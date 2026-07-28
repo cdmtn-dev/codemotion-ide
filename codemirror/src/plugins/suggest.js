@@ -1,5 +1,5 @@
-import { EditorView, Decoration, ViewPlugin, WidgetType } from "@codemirror/view";
-import { StateField, StateEffect } from "@codemirror/state";
+import { StateEffect, StateField } from "@codemirror/state";
+import { Decoration, EditorView, ViewPlugin, WidgetType } from "@codemirror/view";
 
 const setSuggestion = StateEffect.define();
 const clearSuggestion = StateEffect.define();
@@ -42,7 +42,7 @@ const suggestionField = StateField.define({
         }
 
         return value;
-    }
+    },
 });
 
 const suggestionTheme = EditorView.baseTheme({
@@ -50,8 +50,8 @@ const suggestionTheme = EditorView.baseTheme({
         opacity: "0.4",
         fontStyle: "italic",
         pointerEvents: "none",
-        color: "inherit"
-    }
+        color: "inherit",
+    },
 });
 
 let debounceTimer = null;
@@ -64,7 +64,7 @@ function setLanguage(lang) {
 function buildDecorations(view) {
     try {
         const field = view.state.field(suggestionField, false);
-        if (!field || !field.text) return Decoration.none;
+        if (!(field && field.text)) return Decoration.none;
 
         const lines = field.text.split("\n");
         const decorations = [];
@@ -75,8 +75,8 @@ function buildDecorations(view) {
             Decoration.widget({
                 widget: new GhostLineWidget(firstLineSuffix),
                 side: 1,
-                block: false
-            }).range(firstLine.to)
+                block: false,
+            }).range(firstLine.to),
         );
 
         for (let i = 1; i < lines.length; i++) {
@@ -87,8 +87,8 @@ function buildDecorations(view) {
                 Decoration.widget({
                     widget: new GhostLineWidget(lines[i]),
                     side: 1,
-                    block: false
-                }).range(targetLine.to)
+                    block: false,
+                }).range(targetLine.to),
             );
         }
 
@@ -109,20 +109,20 @@ const suggestPlugin = ViewPlugin.fromClass(
         }
     },
     {
-        decorations: (v) => v.decorations
-    }
+        decorations: (v) => v.decorations,
+    },
 );
 
 function acceptSuggestion(view) {
     try {
         const field = view.state.field(suggestionField, false);
-        if (!field || !field.text) return false;
+        if (!(field && field.text)) return false;
 
         const to = field.from + field.text.length;
         view.dispatch({
             changes: { from: field.from, insert: field.text },
             selection: { anchor: to },
-            effects: clearSuggestion.of(null)
+            effects: clearSuggestion.of(null),
         });
         return true;
     } catch {
@@ -133,7 +133,7 @@ function acceptSuggestion(view) {
 function dismissSuggestion(view) {
     try {
         const field = view.state.field(suggestionField, false);
-        if (!field || !field.text) return false;
+        if (!(field && field.text)) return false;
 
         view.dispatch({ effects: clearSuggestion.of(null) });
         return true;
@@ -159,28 +159,28 @@ const suggestUpdateListener = EditorView.updateListener.of((update) => {
         const cursor = view.state.selection.main.head;
         const line = view.state.doc.lineAt(cursor).number;
 
-        const electronAPI = typeof window !== "undefined" && window.electron;
-        if (!electronAPI || typeof electronAPI.sendCodeSuggestRequest !== "function") return;
+        const electronApi = typeof window !== "undefined" && window.electron;
+        if (!electronApi || typeof electronApi.sendCodeSuggestRequest !== "function") return;
 
-        electronAPI.sendCodeSuggestRequest({
+        electronApi.sendCodeSuggestRequest({
             code: fullCode,
-            cursor: cursor,
+            cursor,
             cursorLine: line,
-            language: currentLanguage
+            language: currentLanguage,
         });
     }, 800);
 });
 
 function initSuggestListener() {
-    const electronAPI = typeof window !== "undefined" && window.electron;
-    if (!electronAPI || typeof electronAPI.onCodeSuggestResult !== "function") return;
+    const electronApi = typeof window !== "undefined" && window.electron;
+    if (!electronApi || typeof electronApi.onCodeSuggestResult !== "function") return;
 
-    electronAPI.onCodeSuggestResult((result) => {
+    electronApi.onCodeSuggestResult((result) => {
         if (!pendingView) return;
 
         const view = pendingView;
 
-        if (!result || !result.text) {
+        if (!(result && result.text)) {
             view.dispatch({ effects: clearSuggestion.of(null) });
             return;
         }
@@ -188,21 +188,21 @@ function initSuggestListener() {
         view.dispatch({
             effects: setSuggestion.of({
                 text: result.text,
-                from: view.state.selection.main.head
-            })
+                from: view.state.selection.main.head,
+            }),
         });
     });
 }
 
 export {
+    acceptSuggestion,
+    clearSuggestion,
+    dismissSuggestion,
+    initSuggestListener,
+    setLanguage,
+    setSuggestion,
     suggestionField,
     suggestionTheme,
     suggestPlugin,
     suggestUpdateListener,
-    setSuggestion,
-    clearSuggestion,
-    acceptSuggestion,
-    dismissSuggestion,
-    setLanguage,
-    initSuggestListener
 };

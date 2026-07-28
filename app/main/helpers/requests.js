@@ -1,8 +1,8 @@
-const { app } = require("electron")
-const fs = require("fs")
-const path = require("path")
-const fsPromise = require('fs/promises');
-const https = require("https")
+const { app } = require("electron");
+const fs = require("fs");
+const path = require("path");
+const fsPromise = require("fs/promises");
+const https = require("https");
 const {
     SETTINGS_PATH,
     LOCAL_BUGS_PATH,
@@ -11,8 +11,8 @@ const {
     DEFAULT_ICON,
     ASSETS_PATH,
     LANGUAGES_PATH,
-    API
-} = require("./paths.js")
+    API,
+} = require("./paths.js");
 
 function deepMerge(target, source) {
     if (!source || typeof source !== "object") return target;
@@ -54,9 +54,9 @@ function readSettings() {
 }
 function writeLocalBugs(data) {
     try {
-        fs.writeFileSync(LOCAL_BUGS_PATH, JSON.stringify(data, null, 4), "utf-8")
+        fs.writeFileSync(LOCAL_BUGS_PATH, JSON.stringify(data, null, 4), "utf-8");
     } catch (e) {
-        console.error("Write error:", e)
+        console.error("Write error:", e);
     }
 }
 
@@ -77,7 +77,7 @@ function ensureLocalJson() {
     if (!fs.existsSync(LOCAL_FILE_PATH)) {
         const defaultData = {
             user: false,
-            password: false
+            password: false,
         };
         fs.writeFileSync(LOCAL_FILE_PATH, JSON.stringify(defaultData, null, 4), "utf-8");
     }
@@ -85,20 +85,20 @@ function ensureLocalJson() {
 function ensureSettingsJson() {
     if (!fs.existsSync(SETTINGS_PATH)) {
         const defaultData = {
-            "app": {
-                "icon": "default",
-                "workSeconds": 0,
-                "workSecondsSession": 0,
-                "devMode": false,
-                "splashScreen": true,
-                "uiScale": 1,
-                "language": "en",
-                "restoreFolder": true
+            app: {
+                icon: "default",
+                workSeconds: 0,
+                workSecondsSession: 0,
+                devMode: false,
+                splashScreen: true,
+                uiScale: 1,
+                language: "en",
+                restoreFolder: true,
             },
-            "editor": {
-                "smoothScroll": true
-            }
-        }
+            editor: {
+                smoothScroll: true,
+            },
+        };
 
         fs.writeFileSync(SETTINGS_PATH, JSON.stringify(defaultData, null, 4), "utf-8");
     }
@@ -145,51 +145,51 @@ function getPackageData() {
     }
 }
 async function getAppIcon() {
-    const settings = await readSettings()
+    const settings = await readSettings();
 
     if ("app" in settings) {
         if ("icon" in settings.app) {
-            const appIcon = settings.app.icon == "default"
-                ? DEFAULT_ICON
-                : path.join(ASSETS_PATH, "media", "app-icons", `codemotion-icon-${settings.app.icon}.png`)
+            const appIcon =
+                settings.app.icon == "default"
+                    ? DEFAULT_ICON
+                    : path.join(
+                          ASSETS_PATH,
+                          "media",
+                          "app-icons",
+                          `codemotion-icon-${settings.app.icon}.png`,
+                      );
 
-            return appIcon
+            return appIcon;
         }
-        else {
-            return DEFAULT_ICON
-        }
+        return DEFAULT_ICON;
     }
-    else {
-        return DEFAULT_ICON
-    }
+    return DEFAULT_ICON;
 }
 function readFilesInFolder(folderPath) {
-    const base = path.isAbsolute(folderPath)
-        ? folderPath
-        : path.join(app.getAppPath(), folderPath);
+    const base = path.isAbsolute(folderPath) ? folderPath : path.join(app.getAppPath(), folderPath);
 
     if (!fs.existsSync(base)) {
         return [];
     }
 
-    return fs.readdirSync(base).map(file => {
+    return fs.readdirSync(base).map((file) => {
         const fullPath = path.join(base, file);
         const isDir = fs.statSync(fullPath).isDirectory();
 
         return {
             name: file,
             path: fullPath,
-            type: isDir ? "folder" : "file"
+            type: isDir ? "folder" : "file",
         };
     });
 }
-async function readFileContent(filePath, encoding = 'utf8') {
-    const base = path.isAbsolute(filePath)
-        ? filePath
-        : path.join(app.getAppPath(), filePath);
+async function readFileContent(filePath, encoding = "utf8") {
+    const base = path.isAbsolute(filePath) ? filePath : path.join(app.getAppPath(), filePath);
 
     const abs = path.resolve(base, filePath);
-    const data = await fsPromise.readFile(abs, { encoding: encoding === null ? undefined : encoding });
+    const data = await fsPromise.readFile(abs, {
+        encoding: encoding === null ? undefined : encoding,
+    });
     return data;
 }
 function updateLocalAppData(newData) {
@@ -209,17 +209,17 @@ function updateLocalAppData(newData) {
 
     try {
         fs.writeFileSync(filePath, JSON.stringify(updatedData, null, 4), "utf-8");
-        console.log("local.json updated")
+        console.log("local.json updated");
     } catch (e) {
         console.error("Error while updating local.json:", e);
     }
 }
 async function checkStatus({ updateSplash }) {
-    function checkURL(url, stepName) {
+    function checkUrl(url, stepName) {
         return new Promise((resolve, reject) => {
             const req = https.get(url, (res) => {
                 if (res.statusCode >= 200 && res.statusCode < 400) {
-                    updateSplash(`${stepName}: OK (${res.statusCode})`)
+                    updateSplash(`${stepName}: OK (${res.statusCode})`);
                     res.resume();
                     resolve(true);
                 } else {
@@ -238,234 +238,229 @@ async function checkStatus({ updateSplash }) {
         });
     }
 
-    updateSplash("Internet check...")
+    updateSplash("Internet check...");
 
     try {
-        await checkURL("https://www.gstatic.com/generate_204", "Internet");
+        await checkUrl("https://www.gstatic.com/generate_204", "Internet");
     } catch (err) {
-        updateSplash(`Error: ${err.message}`, true)
+        updateSplash(`Error: ${err.message}`, true);
 
         throw new Error("Error: " + err.message);
     }
 
-    const hosts = [
-        { name: "API Server", url: API }
-    ];
+    const hosts = [{ name: "API Server", url: API }];
 
     for (let i = 0; i < hosts.length; i++) {
         const { name, url } = hosts[i];
 
-        updateSplash(`Requesting ${url}...`)
+        updateSplash(`Requesting ${url}...`);
 
         try {
-            await checkURL(url, name);
+            await checkUrl(url, name);
         } catch (err) {
             throw new Error(`${name} not aviable: ${err.message}`);
         }
     }
 
-    updateSplash("Everything is okey. Starting the program...")
+    updateSplash("Everything is okey. Starting the program...");
 
     return true;
 }
 async function getAllLanguages() {
-    if(fs.existsSync(LANGUAGES_PATH)) {
+    if (fs.existsSync(LANGUAGES_PATH)) {
         try {
-            const files = await fs.promises.readdir(LANGUAGES_PATH)
-            const result = []
+            const files = await fs.promises.readdir(LANGUAGES_PATH);
+            const result = [];
 
             for (const file of files) {
-                const fullPath = path.join(LANGUAGES_PATH, file)
-                const stat = await fs.promises.stat(fullPath)
+                const fullPath = path.join(LANGUAGES_PATH, file);
+                const stat = await fs.promises.stat(fullPath);
 
                 if (stat.isFile()) {
-                    const name = file.split(".")[0].trim()
-                    result.push(name)
+                    const name = file.split(".")[0].trim();
+                    result.push(name);
                 }
             }
 
-            return result
+            return result;
         } catch (err) {
-            console.error("getAllLanguages error:", err)
-            return {}
+            console.error("getAllLanguages error:", err);
+            return {};
         }
-    }
-    else {
-        return {}
+    } else {
+        return {};
     }
 }
 
-async function getAllLanguagesJSON() {
-    const languages = await getAllLanguages()
-    let result = {}
+async function getAllLanguagesJson() {
+    const languages = await getAllLanguages();
+    const result = {};
 
-    if(languages.length > 0) {
-        languages.forEach(language => {
+    if (languages.length > 0) {
+        languages.forEach((language) => {
             try {
-                const data = fs.readFileSync(path.join(LANGUAGES_PATH, language + ".json"), 'utf8');
-                result[language] = JSON.parse(data)
+                const data = fs.readFileSync(path.join(LANGUAGES_PATH, language + ".json"), "utf8");
+                result[language] = JSON.parse(data);
             } catch (error) {}
-        })
+        });
     }
 
-    return result
+    return result;
 }
 async function getUserToken() {
-    if(fs.existsSync(LOCAL_FILE_PATH)) {
+    if (fs.existsSync(LOCAL_FILE_PATH)) {
         try {
-            let data = fs.readFileSync(LOCAL_FILE_PATH, 'utf8');
-            data = JSON.parse(data)
+            let data = fs.readFileSync(LOCAL_FILE_PATH, "utf8");
+            data = JSON.parse(data);
 
-            if("token" in data) {
-                return data.token
+            if ("token" in data) {
+                return data.token;
             }
-            else {
-                return false
-            }
-        }
-        catch {
-            return false
+            return false;
+        } catch {
+            return false;
         }
     }
 }
 
-async function requestAddBug({ title = "Unnamed", description = "No description provided", priority = 0, isPrivate = 0, assignTo = 0 }) {
-    const userToken = await getUserToken()
+async function requestAddBug({
+    title = "Unnamed",
+    description = "No description provided",
+    priority = 0,
+    isPrivate = 0,
+    assignTo = 0,
+}) {
+    const userToken = await getUserToken();
 
     const formData = new FormData();
-    formData.append('name', title);
-    formData.append('description',  description);
-    formData.append('priority', priority);
-    formData.append('private', isPrivate);
-    
-    if(assignTo != 0) {
-        formData.append('touserid', assignTo);
+    formData.append("name", title);
+    formData.append("description", description);
+    formData.append("priority", priority);
+    formData.append("private", isPrivate);
+
+    if (assignTo != 0) {
+        formData.append("touserid", assignTo);
     }
 
-    console.log(`Request bug creation. assign to: ${assignTo} (allowed: ${assignTo != 0})`)
+    console.log(`Request bug creation. assign to: ${assignTo} (allowed: ${assignTo != 0})`);
 
     try {
         const response = await fetch(`${API}/bug/add`, {
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Authorization': `Bearer ${userToken}`
+                Authorization: `Bearer ${userToken}`,
             },
-            body: formData
+            body: formData,
         });
 
         const data = await response.json();
 
         if (data.success) {
-            return { success: true, msg: data.result }
-        } else {
-            return { success: false, msg: data.result }
+            return { success: true, msg: data.result };
         }
+        return { success: false, msg: data.result };
     } catch (error) {
-        return { success: false, msg: error }
+        return { success: false, msg: error };
     }
 }
 
 async function requestMakeVerifyBug({ bugid }) {
-    const userToken = await getUserToken()
+    const userToken = await getUserToken();
 
     const formData = new FormData();
-    formData.append('bugid', bugid);
+    formData.append("bugid", bugid);
 
     try {
         const response = await fetch(`${API}/bug/makeVerify`, {
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Authorization': `Bearer ${userToken}`
+                Authorization: `Bearer ${userToken}`,
             },
-            body: formData
+            body: formData,
         });
 
         const data = await response.json();
 
         if (data.success) {
-            return { success: true, msg: data.result }
-        } else {
-            return { success: false, msg: data.result }
+            return { success: true, msg: data.result };
         }
+        return { success: false, msg: data.result };
     } catch (error) {
-        return { success: false, msg: error }
+        return { success: false, msg: error };
     }
 }
 
 async function requestGetYourOrgColleagues() {
-    const userToken = await getUserToken()
+    const userToken = await getUserToken();
 
     try {
         const response = await fetch(`${API}/org/getYourColleagues`, {
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Authorization': `Bearer ${userToken}`
+                Authorization: `Bearer ${userToken}`,
             },
-            body: {}
+            body: {},
         });
 
         const data = await response.json();
 
         if (data.success) {
-            return { success: true, msg: data.result }
-        } else {
-            return { success: false, msg: data.result }
+            return { success: true, msg: data.result };
         }
+        return { success: false, msg: data.result };
     } catch (error) {
-        return { success: false, msg: error }
+        return { success: false, msg: error };
     }
 }
 
 async function requestCreateOrganization({ name, description, website }) {
-    const userToken = await getUserToken()
+    const userToken = await getUserToken();
 
     const formData = new FormData();
-    formData.append('name', name);
-    formData.append('description', description);
-    formData.append('website', website);
+    formData.append("name", name);
+    formData.append("description", description);
+    formData.append("website", website);
 
     try {
         const response = await fetch(`${API}/org/create`, {
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Authorization': `Bearer ${userToken}`
+                Authorization: `Bearer ${userToken}`,
             },
-            body: formData
+            body: formData,
         });
 
-        const data = await response.json()
+        const data = await response.json();
 
         if (data.success) {
-            return { success: true, msg: data.result }
-        } else {
-            return { success: false, msg: data.result }
+            return { success: true, msg: data.result };
         }
+        return { success: false, msg: data.result };
     } catch (error) {
-        return { success: false, msg: error }
+        return { success: false, msg: error };
     }
 }
 
 async function requestExploreOrganizations() {
-    const userToken = await getUserToken()
+    const userToken = await getUserToken();
 
     try {
         const response = await fetch(`${API}/org/explore`, {
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Authorization': `Bearer ${userToken}`
+                Authorization: `Bearer ${userToken}`,
             },
-            body: {}
+            body: {},
         });
 
-        const data = await response.json()
+        const data = await response.json();
 
         if (data.success) {
-            return { success: true, msg: data.result }
-        } else {
-            return { success: false, msg: data.result }
+            return { success: true, msg: data.result };
         }
+        return { success: false, msg: data.result };
     } catch (error) {
-        return { success: false, msg: error }
+        return { success: false, msg: error };
     }
 }
 
@@ -473,89 +468,55 @@ async function getUsedLanguagesByPath(targetPath) {
     const languages = {
         js: {
             name: "JavaScript",
-            extensions: [
-                ".js",
-                ".mjs",
-                ".cjs",
-                ".jsx",
-                ".es6"
-            ],
-            color: "#FFCC33"
+            extensions: [".js", ".mjs", ".cjs", ".jsx", ".es6"],
+            color: "#FFCC33",
         },
 
         ts: {
             name: "TypeScript",
-            extensions: [
-                ".ts",
-                ".mts",
-                ".cts",
-                ".tsx"
-            ],
-            color: "#3178c6"
+            extensions: [".ts", ".mts", ".cts", ".tsx"],
+            color: "#3178c6",
         },
 
         html: {
             name: "HTML",
-            extensions: [
-                ".html",
-                ".htm",
-                ".xhtml"
-            ],
-            color: "#FF6933"
+            extensions: [".html", ".htm", ".xhtml"],
+            color: "#FF6933",
         },
 
         css: {
             name: "CSS",
-            extensions: [
-                ".css",
-                ".scss",
-                ".sass",
-                ".less"
-            ],
-            color: "#3388FF"
+            extensions: [".css", ".scss", ".sass", ".less"],
+            color: "#3388FF",
         },
 
         json: {
             name: "JSON",
-            extensions: [
-                ".json",
-                ".jsonc",
-                ".json5"
-            ],
-            color: "#FF8B33"
+            extensions: [".json", ".jsonc", ".json5"],
+            color: "#FF8B33",
         },
 
         php: {
             name: "PHP",
-            extensions: [
-                ".php",
-                ".phtml",
-                ".php3",
-                ".php4",
-                ".php5",
-                ".phps",
-                ".inc"
-            ],
-            color: "#8692ff"
+            extensions: [".php", ".phtml", ".php3", ".php4", ".php5", ".phps", ".inc"],
+            color: "#8692ff",
         },
 
         go: {
             name: "Go",
-            extensions: [
-                ".go"
-            ],
-            color: "#62daff"
-        }
-    }
+            extensions: [".go"],
+            color: "#62daff",
+        },
+    };
 
     const extensionMap = Object.entries(languages).reduce((acc, [key, lang]) => {
         for (const ext of lang.extensions) {
-            acc[ext] = key
+            acc[ext] = key;
         }
-        return acc
-    }, {})
+        return acc;
+    }, {});
 
-    const IGNORED_DIRS = new Set([
+    const IgnoredDirs = new Set([
         "node_modules",
         ".git",
         "dist",
@@ -566,84 +527,80 @@ async function getUsedLanguagesByPath(targetPath) {
         "package-lock.json",
         "LICENSE",
         ".gitignore",
-        "README.md"
-    ])
+        "README.md",
+    ]);
 
     if (!path.isAbsolute(targetPath)) {
-        throw new Error("Path must be absolute")
+        throw new Error("Path must be absolute");
     }
 
-    const counts = {}
-    let knownFiles = 0
-    let unknownFiles = 0
+    const counts = {};
+    let knownFiles = 0;
+    let unknownFiles = 0;
 
     async function scan(dir) {
-        let entries
+        let entries;
 
         try {
-            entries = await fsPromise.readdir(dir, { withFileTypes: true })
+            entries = await fsPromise.readdir(dir, { withFileTypes: true });
         } catch {
-            return
+            return;
         }
 
-        const tasks = []
+        const tasks = [];
 
         for (const entry of entries) {
-            const fullPath = path.join(dir, entry.name)
+            const fullPath = path.join(dir, entry.name);
 
             if (entry.isDirectory()) {
-                if (!IGNORED_DIRS.has(entry.name)) {
-                    tasks.push(scan(fullPath))
+                if (!IgnoredDirs.has(entry.name)) {
+                    tasks.push(scan(fullPath));
                 }
-                continue
+                continue;
             }
 
-            if (!entry.isFile()) continue
+            if (!entry.isFile()) continue;
 
-            const ext = path.extname(entry.name).toLowerCase()
-            const langKey = extensionMap[ext]
+            const ext = path.extname(entry.name).toLowerCase();
+            const langKey = extensionMap[ext];
 
             if (langKey) {
-                counts[langKey] = (counts[langKey] || 0) + 1
-                knownFiles++
+                counts[langKey] = (counts[langKey] || 0) + 1;
+                knownFiles++;
             } else {
-                unknownFiles++
+                unknownFiles++;
             }
         }
 
-        await Promise.all(tasks)
+        await Promise.all(tasks);
     }
 
-    await scan(targetPath)
+    await scan(targetPath);
 
-    const totalFiles = knownFiles + unknownFiles
+    const totalFiles = knownFiles + unknownFiles;
 
     const result = Object.entries(languages).map(([key, lang]) => {
-        const files = counts[key] || 0
+        const files = counts[key] || 0;
 
         return {
             key,
             name: lang.name,
             color: lang.color,
             files,
-            percentage: totalFiles
-                ? Math.round((files / totalFiles) * 100)
-                : 0
-        }
-    })
+            percentage: totalFiles ? Math.round((files / totalFiles) * 100) : 0,
+        };
+    });
 
-    const unknownPercentage = totalFiles
-        ? Math.round((unknownFiles / totalFiles) * 100)
-        : 0
+    const unknownPercentage = totalFiles ? Math.round((unknownFiles / totalFiles) * 100) : 0;
 
     return {
         languages: result,
         unknown: {
             files: unknownFiles,
-            percentage: unknownPercentage
+            percentage: unknownPercentage,
         },
-        totalFiles
-    }
+        totalFiles,
+    };
 }
 
 module.exports = {
@@ -664,12 +621,12 @@ module.exports = {
     updateLocalAppData,
     checkStatus,
     getAllLanguages,
-    getAllLanguagesJSON,
+    getAllLanguagesJSON: getAllLanguagesJson,
     getUserToken,
     requestAddBug,
     requestMakeVerifyBug,
     requestGetYourOrgColleagues,
     getUsedLanguagesByPath,
     requestCreateOrganization,
-    requestExploreOrganizations
-}
+    requestExploreOrganizations,
+};

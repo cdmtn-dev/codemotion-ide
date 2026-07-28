@@ -1,11 +1,11 @@
-const { BrowserWindow, app } = require("electron")
-const { PRELOAD_PATH, SPLASH_HTML_PATH } = require("../main/helpers/paths.js")
-const { getAppIcon } = require("../main/helpers/requests.js")
+const { BrowserWindow, app } = require("electron");
+const { PRELOAD_PATH, SPLASH_HTML_PATH } = require("../main/helpers/paths.js");
+const { getAppIcon } = require("../main/helpers/requests.js");
 
 let splash;
 
 async function createSplashWindow() {
-    const appIcon = await getAppIcon()
+    const appIcon = await getAppIcon();
 
     splash = new BrowserWindow({
         width: 800,
@@ -17,20 +17,20 @@ async function createSplashWindow() {
         center: true,
         show: true,
         webPreferences: {
-            preload: PRELOAD_PATH
+            preload: PRELOAD_PATH,
         },
-        icon: appIcon
+        icon: appIcon,
     });
 
-    splash.loadFile(SPLASH_HTML_PATH)
+    splash.loadFile(SPLASH_HTML_PATH);
 
-    return splash
+    return splash;
 }
 
 function updateSplash(text, isError = false) {
-    if(splash) {
+    if (splash) {
         splash.webContents.send("status-update", { msg: text, error: isError });
     }
 }
 
-module.exports = { createSplashWindow, updateSplash }
+module.exports = { createSplashWindow, updateSplash };

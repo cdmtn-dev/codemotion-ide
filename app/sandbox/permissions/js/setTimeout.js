@@ -1,12 +1,12 @@
 function callback(data) {
-    const cb = data.selfArgs[0]
-    const delay = Number(data.selfArgs[1])
+    const cb = data.selfArgs[0];
+    const delay = Number(data.selfArgs[1]);
 
     if (typeof cb !== "function") {
-        throw new Error(`[${data.permissionName}] First argument must be a function`)
+        throw new Error(`[${data.permissionName}] First argument must be a function`);
     }
 
-    return setTimeout(cb, Number.isFinite(delay) ? delay : 0)
+    return setTimeout(cb, Number.isFinite(delay) ? delay : 0);
 }
 
-module.exports = { callback }
+module.exports = { callback };

@@ -1,6 +1,6 @@
-import { EditorView, Decoration, ViewPlugin } from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
 import { RangeSetBuilder } from "@codemirror/state";
+import { Decoration, EditorView, ViewPlugin } from "@codemirror/view";
 
 const markers = [
     { regex: /^\?/, className: "cm-comment-info" },
@@ -28,7 +28,11 @@ function buildDecorations(view) {
 
                 for (const marker of markers) {
                     if (marker.regex.test(body)) {
-                        builder.add(node.from, node.to, Decoration.mark({ class: marker.className }));
+                        builder.add(
+                            node.from,
+                            node.to,
+                            Decoration.mark({ class: marker.className }),
+                        );
                         break;
                     }
                 }
@@ -50,21 +54,23 @@ export const colorComments = ViewPlugin.fromClass(
             }
         }
     },
-    { decorations: (v) => v.decorations }
+    { decorations: (v) => v.decorations },
 );
 
 export const colorCommentsTheme = EditorView.baseTheme({
     ".cm-comment-info *": {
         color: "#e5c07b",
-        opacity: ".8"
+        opacity: ".8",
     },
-    ".cm-comment-alert *": { 
-        color: "#e06c75", fontWeight: "bold" 
+    ".cm-comment-alert *": {
+        color: "#e06c75",
+        fontWeight: "bold",
     },
-    ".cm-comment-highlight *": { 
-        color: "#98c379" 
+    ".cm-comment-highlight *": {
+        color: "#98c379",
     },
-    ".cm-comment-todo *": { 
-        color: "#61afef", fontWeight: "bold" 
+    ".cm-comment-todo *": {
+        color: "#61afef",
+        fontWeight: "bold",
     },
 });

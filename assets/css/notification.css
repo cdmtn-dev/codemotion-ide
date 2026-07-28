@@ -22,7 +22,7 @@
     overflow: hidden;
 }
 .notification-icon.initials .generated-avatar {
-    background: linear-gradient(0deg, var(--background), var(--background-second))!important;
+    background: linear-gradient(0deg, var(--background), var(--background-second)) !important;
     color: var(--foreground);
     display: flex;
     align-items: center;
@@ -68,7 +68,7 @@
 }
 .notification-info .notification-description {
     font-size: small;
-    opacity: .5;
+    opacity: 0.5;
     font-weight: 300;
     line-height: 20px;
     white-space: pre-wrap;
@@ -79,7 +79,7 @@
     position: absolute;
     right: 15px;
     top: 15px;
-    opacity: .5;
+    opacity: 0.5;
 }
 .notification-info .notification-close span {
     font-size: 14px;

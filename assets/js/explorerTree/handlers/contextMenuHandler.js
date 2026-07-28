@@ -1,8 +1,8 @@
 import { BottomWindow } from "../../handlers/BottomWindowHandler.js";
 import { Console } from "../../handlers/terminalHandler.js";
 import { copyText, normalizePath } from "../../lib.js";
-import { closeTab, updateTabPath } from "../tabHandler.js";
 import { renderNodes } from "../render.js";
+import { closeTab, updateTabPath } from "../tabHandler.js";
 import { bindFileClicks } from "./bindFileClicksHandler.js";
 
 let menuEl = null;
@@ -26,7 +26,7 @@ function relativePath(targetPath, pathContext = {}) {
     const rootPath = normalizePath(pathContext.rootPath || "");
     const normalized = normalizePath(targetPath);
 
-    if (!rootPath || !normalized.startsWith(rootPath)) {
+    if (!(rootPath && normalized.startsWith(rootPath))) {
         return normalized;
     }
 
@@ -71,11 +71,11 @@ function addItem({ content, shortcut, disabled, action, icon }) {
     item.classList.add("context-menu__item");
     if (disabled) item.classList.add("disabled");
 
-    const iconHTML = icon ? `<span class="material-symbols-rounded">${icon}</span>` : "";
+    const iconHtml = icon ? `<span class="material-symbols-rounded">${icon}</span>` : "";
 
     item.innerHTML = `
         <div class="context-menu__item-block ${icon ? "" : "no-icon"}">
-            ${iconHTML}
+            ${iconHtml}
             <div class="content">${content}</div>
         </div>
         <div class="context-menu__item-block">
@@ -104,7 +104,7 @@ function showMenu(event, items) {
     const menu = ensureMenu();
     menu.innerHTML = "";
 
-    document.querySelectorAll(".context-menu").forEach(m => {
+    document.querySelectorAll(".context-menu").forEach((m) => {
         if (m !== menu) m.classList.add("hidden");
     });
 
@@ -137,10 +137,15 @@ function showMenu(event, items) {
 async function refreshFolder(dirElement, context) {
     if (!dirElement) return;
 
-    const content = Array.from(dirElement.children).find(child => child.classList.contains("dir-content"));
+    const content = Array.from(dirElement.children).find((child) =>
+        child.classList.contains("dir-content"),
+    );
     if (!content) return;
 
-    const children = await window.electron.readDirTree(dirElement.dataset.path, { maxDepth: 0, ignoreRoot: context.pathContext?.rootPath });
+    const children = await window.electron.readDirTree(dirElement.dataset.path, {
+        maxDepth: 0,
+        ignoreRoot: context.pathContext?.rootPath,
+    });
     content.innerHTML = await renderNodes(children);
     dirElement.dataset.loaded = "true";
     dirElement.classList.add("expanded");
@@ -149,28 +154,33 @@ async function refreshFolder(dirElement, context) {
         tabsByPath: context.tabsByPath,
         recentlyClosed: context.recentlyClosed,
         pathContext: context.pathContext,
-        settings: context.settings
+        settings: context.settings,
     });
 }
 
 async function refreshRoot(context) {
-    if (!context.container || !context.pathContext?.rootPath) return;
+    if (!(context.container && context.pathContext?.rootPath)) return;
 
-    const children = await window.electron.readDirTree(context.pathContext.rootPath, { maxDepth: 0, ignoreRoot: context.pathContext.rootPath });
+    const children = await window.electron.readDirTree(context.pathContext.rootPath, {
+        maxDepth: 0,
+        ignoreRoot: context.pathContext.rootPath,
+    });
     context.container.innerHTML = await renderNodes(children);
     bindFileClicks({
         scopeEl: context.container,
         tabsByPath: context.tabsByPath,
         recentlyClosed: context.recentlyClosed,
         pathContext: context.pathContext,
-        settings: context.settings
+        settings: context.settings,
     });
 }
 
 function getCreateContainer(context, dirElement) {
     if (!dirElement) return context.container;
 
-    const content = Array.from(dirElement.children).find(child => child.classList.contains("dir-content"));
+    const content = Array.from(dirElement.children).find((child) =>
+        child.classList.contains("dir-content"),
+    );
     if (!content) return null;
 
     dirElement.classList.add("expanded");
@@ -191,7 +201,8 @@ function startCreateChild(type, dirPath, context, dirElement = null) {
     }
 
     const method = type === "file" ? "createFile" : "createFolder";
-    const canCreateFileWithSave = type === "file" && typeof window.electron?.saveFile === "function";
+    const canCreateFileWithSave =
+        type === "file" && typeof window.electron?.saveFile === "function";
 
     if (typeof window.electron?.[method] !== "function" && !canCreateFileWithSave) {
         window.alert("File creation API is not loaded. Restart CodeMotion and try again.");
@@ -216,12 +227,13 @@ function startCreateChild(type, dirPath, context, dirElement = null) {
         const cleanName = input.value.trim();
         pending.remove();
 
-        if (!save || !cleanName) return;
+        if (!(save && cleanName)) return;
 
         const targetPath = joinPath(dirPath, cleanName);
-        const result = typeof window.electron?.[method] === "function"
-            ? await window.electron[method](targetPath)
-            : await window.electron.saveFile(targetPath, "");
+        const result =
+            typeof window.electron?.[method] === "function"
+                ? await window.electron[method](targetPath)
+                : await window.electron.saveFile(targetPath, "");
 
         if (!result.success) {
             console.error(result.error);
@@ -272,7 +284,9 @@ async function commitRename(targetPath, targetElement, newName) {
         targetElement.dataset.path = result.path;
         targetElement.dataset.loaded = "false";
         targetElement.classList.remove("expanded");
-        const content = Array.from(targetElement.children).find(child => child.classList.contains("dir-content"));
+        const content = Array.from(targetElement.children).find((child) =>
+            child.classList.contains("dir-content"),
+        );
         if (content) content.innerHTML = "";
     } else {
         targetElement.dataset.path = result.path;
@@ -308,7 +322,7 @@ function renameTarget(targetPath, targetElement) {
         span.textContent = oldName;
         input.replaceWith(span);
 
-        if (!save || !nextName || nextName === oldName) return;
+        if (!(save && nextName) || nextName === oldName) return;
 
         const newPath = await commitRename(targetPath, targetElement, nextName);
         if (newPath) {
@@ -343,7 +357,10 @@ async function deleteTarget(targetPath, targetElement, context) {
     const normalizedTarget = normalizePath(targetPath);
     for (const path of [...context.tabsByPath.keys()]) {
         const normalizedPath = normalizePath(path);
-        if (normalizedPath === normalizedTarget || normalizedPath.startsWith(`${normalizedTarget}/`)) {
+        if (
+            normalizedPath === normalizedTarget ||
+            normalizedPath.startsWith(`${normalizedTarget}/`)
+        ) {
             closeTab(path);
         }
     }
@@ -368,22 +385,59 @@ function fileItems(fileEl, context) {
     const targetDirPath = parentDirElement?.dataset.path || getDirname(filePath);
 
     return [
-        { content: "New File...", icon: "note_add", action: () => startCreateChild("file", targetDirPath, context, parentDirElement) },
-        { content: "New Folder...", icon: "create_new_folder", action: () => startCreateChild("folder", targetDirPath, context, parentDirElement) },
+        {
+            content: "New File...",
+            icon: "note_add",
+            action: () => startCreateChild("file", targetDirPath, context, parentDirElement),
+        },
+        {
+            content: "New Folder...",
+            icon: "create_new_folder",
+            action: () => startCreateChild("folder", targetDirPath, context, parentDirElement),
+        },
         { type: "divider" },
         { content: "Open With...", icon: "open_in_new", disabled: true },
-        { content: "Reveal in File Explorer", icon: "folder_open", shortcut: "Shift+Alt+R", action: () => window.electron.revealInFileExplorer(filePath) },
-        { content: "Open in Integrated Terminal", icon: "terminal", action: () => openTerminal(filePath, false) },
+        {
+            content: "Reveal in File Explorer",
+            icon: "folder_open",
+            shortcut: "Shift+Alt+R",
+            action: () => window.electron.revealInFileExplorer(filePath),
+        },
+        {
+            content: "Open in Integrated Terminal",
+            icon: "terminal",
+            action: () => openTerminal(filePath, false),
+        },
         { type: "divider" },
         { content: "Cut", icon: "content_cut", shortcut: "Ctrl+X", disabled: true },
         { content: "Copy", icon: "content_copy", shortcut: "Ctrl+C", disabled: true },
         { content: "Paste", icon: "content_paste", shortcut: "Ctrl+V", disabled: true },
         { type: "divider" },
-        { content: "Copy Path", icon: "content_copy", shortcut: "Shift+Alt+C", action: () => copyText(filePath) },
-        { content: "Copy Relative Path", icon: "content_copy", shortcut: "Ctrl+K Ctrl+Shift+C", action: () => copyText(relativePath(filePath, context.pathContext)) },
+        {
+            content: "Copy Path",
+            icon: "content_copy",
+            shortcut: "Shift+Alt+C",
+            action: () => copyText(filePath),
+        },
+        {
+            content: "Copy Relative Path",
+            icon: "content_copy",
+            shortcut: "Ctrl+K Ctrl+Shift+C",
+            action: () => copyText(relativePath(filePath, context.pathContext)),
+        },
         { type: "divider" },
-        { content: "Rename...", icon: "edit", shortcut: "F2", action: () => renameTarget(filePath, fileEl) },
-        { content: "Delete", icon: "delete", shortcut: "Delete", action: () => deleteTarget(filePath, fileEl, context) }
+        {
+            content: "Rename...",
+            icon: "edit",
+            shortcut: "F2",
+            action: () => renameTarget(filePath, fileEl),
+        },
+        {
+            content: "Delete",
+            icon: "delete",
+            shortcut: "Delete",
+            action: () => deleteTarget(filePath, fileEl, context),
+        },
     ];
 }
 
@@ -391,21 +445,58 @@ function folderItems(dirElement, context) {
     const dirPath = dirElement.dataset.path;
 
     return [
-        { content: "New File...", icon: "note_add", action: () => startCreateChild("file", dirPath, context, dirElement) },
-        { content: "New Folder...", icon: "create_new_folder", action: () => startCreateChild("folder", dirPath, context, dirElement) },
-        { content: "Reveal in File Explorer", icon: "folder_open", shortcut: "Shift+Alt+R", action: () => window.electron.revealInFileExplorer(dirPath) },
-        { content: "Open in Integrated Terminal", icon: "terminal", action: () => openTerminal(dirPath, true) },
+        {
+            content: "New File...",
+            icon: "note_add",
+            action: () => startCreateChild("file", dirPath, context, dirElement),
+        },
+        {
+            content: "New Folder...",
+            icon: "create_new_folder",
+            action: () => startCreateChild("folder", dirPath, context, dirElement),
+        },
+        {
+            content: "Reveal in File Explorer",
+            icon: "folder_open",
+            shortcut: "Shift+Alt+R",
+            action: () => window.electron.revealInFileExplorer(dirPath),
+        },
+        {
+            content: "Open in Integrated Terminal",
+            icon: "terminal",
+            action: () => openTerminal(dirPath, true),
+        },
         { type: "divider" },
         { content: "Find in Folder...", icon: "search", shortcut: "Shift+Alt+F", disabled: true },
         { type: "divider" },
         { content: "Cut", icon: "content_cut", shortcut: "Ctrl+X", disabled: true },
         { content: "Copy", icon: "content_copy", shortcut: "Ctrl+C", disabled: true },
         { type: "divider" },
-        { content: "Copy Path", icon: "content_copy", shortcut: "Shift+Alt+C", action: () => copyText(dirPath) },
-        { content: "Copy Relative Path", icon: "content_copy", shortcut: "Ctrl+K Ctrl+Shift+C", action: () => copyText(relativePath(dirPath, context.pathContext)) },
+        {
+            content: "Copy Path",
+            icon: "content_copy",
+            shortcut: "Shift+Alt+C",
+            action: () => copyText(dirPath),
+        },
+        {
+            content: "Copy Relative Path",
+            icon: "content_copy",
+            shortcut: "Ctrl+K Ctrl+Shift+C",
+            action: () => copyText(relativePath(dirPath, context.pathContext)),
+        },
         { type: "divider" },
-        { content: "Rename...", icon: "edit", shortcut: "F2", action: () => renameTarget(dirPath, dirElement) },
-        { content: "Delete", icon: "delete", shortcut: "Delete", action: () => deleteTarget(dirPath, dirElement, context) }
+        {
+            content: "Rename...",
+            icon: "edit",
+            shortcut: "F2",
+            action: () => renameTarget(dirPath, dirElement),
+        },
+        {
+            content: "Delete",
+            icon: "delete",
+            shortcut: "Delete",
+            action: () => deleteTarget(dirPath, dirElement, context),
+        },
     ];
 }
 
@@ -413,13 +504,35 @@ function rootItems(context) {
     const rootPath = context.pathContext?.rootPath;
 
     return [
-        { content: "New File...", icon: "note_add", action: () => startCreateChild("file", rootPath, context) },
-        { content: "New Folder...", icon: "create_new_folder", action: () => startCreateChild("folder", rootPath, context) },
+        {
+            content: "New File...",
+            icon: "note_add",
+            action: () => startCreateChild("file", rootPath, context),
+        },
+        {
+            content: "New Folder...",
+            icon: "create_new_folder",
+            action: () => startCreateChild("folder", rootPath, context),
+        },
         { type: "divider" },
-        { content: "Reveal in File Explorer", icon: "folder_open", shortcut: "Shift+Alt+R", action: () => window.electron.revealInFileExplorer(rootPath) },
-        { content: "Open in Integrated Terminal", icon: "terminal", action: () => openTerminal(rootPath, true) },
+        {
+            content: "Reveal in File Explorer",
+            icon: "folder_open",
+            shortcut: "Shift+Alt+R",
+            action: () => window.electron.revealInFileExplorer(rootPath),
+        },
+        {
+            content: "Open in Integrated Terminal",
+            icon: "terminal",
+            action: () => openTerminal(rootPath, true),
+        },
         { type: "divider" },
-        { content: "Copy Path", icon: "content_copy", shortcut: "Shift+Alt+C", action: () => copyText(rootPath) }
+        {
+            content: "Copy Path",
+            icon: "content_copy",
+            shortcut: "Shift+Alt+C",
+            action: () => copyText(rootPath),
+        },
     ];
 }
 
@@ -436,7 +549,9 @@ export function initializeExplorerContextMenu(container, context) {
 
     let explorerFocused = false;
 
-    const onContainerMousedown = () => { explorerFocused = true; };
+    const onContainerMousedown = () => {
+        explorerFocused = true;
+    };
     const onOutsideMousedown = (e) => {
         if (!container.contains(e.target)) explorerFocused = false;
     };
@@ -446,19 +561,25 @@ export function initializeExplorerContextMenu(container, context) {
         if (!dirTitle) return;
         const dirEl = dirTitle.closest(".dir[data-path]");
         if (!dirEl) return;
-        container.querySelectorAll(".file.active, .dir.active").forEach(el => el.classList.remove("active"));
+        container
+            .querySelectorAll(".file.active, .dir.active")
+            .forEach((el) => el.classList.remove("active"));
         dirEl.classList.add("active");
     };
 
     const onFileClick = (e) => {
         const fileEl = e.target.closest(".file[data-path]");
         if (!fileEl) return;
-        container.querySelectorAll(".dir.active").forEach(el => el.classList.remove("active"));
+        container.querySelectorAll(".dir.active").forEach((el) => el.classList.remove("active"));
     };
 
     const onKeydown = (e) => {
         if (!explorerFocused) return;
-        if (document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA") return;
+        if (
+            document.activeElement?.tagName === "INPUT" ||
+            document.activeElement?.tagName === "TEXTAREA"
+        )
+            return;
 
         const activeEl =
             container.querySelector(".file.active[data-path]") ||

@@ -1,5 +1,5 @@
-import { escapeHtml } from "../lib.js";
 import { getFileIconUrl, getFolderIconUrl } from "../iconRegistry.js";
+import { escapeHtml } from "../lib.js";
 
 function createFileElement(node, ext, fileIcon) {
     return `
@@ -34,7 +34,7 @@ function normalizeNode(node) {
     return {
         ...node,
         escapedName: escapeHtml(node.name),
-        escapedPath: escapeHtml(node.path)
+        escapedPath: escapeHtml(node.path),
     };
 }
 
@@ -44,7 +44,10 @@ function normalizeNode(node) {
  * @returns {Promise<string>} Rendered HTML string of the file tree.
  */
 export async function buildTreeHtml(rootPath) {
-    const nodes = await window.electron.readDirTree(rootPath, { maxDepth: 0, ignoreRoot: rootPath });
+    const nodes = await window.electron.readDirTree(rootPath, {
+        maxDepth: 0,
+        ignoreRoot: rootPath,
+    });
     return renderNodes(nodes);
 }
 

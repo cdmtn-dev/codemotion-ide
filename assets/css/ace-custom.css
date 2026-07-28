@@ -16,31 +16,30 @@
 
 .ace_boolean,
 .ace_constant.ace_boolean {
-    color: var(--color-boolean)!important;
+    color: var(--color-boolean) !important;
 }
 .ace_numeric,
 .ace_constant.ace_numeric {
-    color: var(--color-number)!important;
+    color: var(--color-number) !important;
 }
 .ace_constant {
-    color: var(--color-const)!important;
+    color: var(--color-const) !important;
 }
 .ace_class {
-    color: var(--color-class)!important;
+    color: var(--color-class) !important;
 }
 .ace_function {
-    color: var(--color-function)!important;
+    color: var(--color-function) !important;
 }
 .ace_storage.ace_type.ace_ts {
-    color: var(--color-class)!important;
+    color: var(--color-class) !important;
 }
 .ace_variable {
-    color: var(--color-const)!important;
+    color: var(--color-const) !important;
 }
 .ace_keyword {
-    color: var(--color-keyword)!important;
+    color: var(--color-keyword) !important;
 }
-
 
 .ace_editor .ace_dom.ace_global {
     color: var(--color-keyword);
@@ -83,7 +82,7 @@
     color: var(--warning);
 }
 .ace_completion-meta {
-    opacity: .2;
+    opacity: 0.2;
     font-size: 12px;
     font-family: var(--main-font);
 }
@@ -91,28 +90,28 @@
     padding: 0px 5px;
     font-size: 14px;
     cursor: pointer;
-    transition: .2s;
+    transition: 0.2s;
 }
 .ace_dark.ace_editor.ace_autocomplete .ace_marker-layer .ace_active-line {
     background: var(--block-divider-border-color);
 }
 .ace_autocomplete .ace_text-layer {
     width: 100%;
-    margin: 0px!important;
+    margin: 0px !important;
 }
 .ace_line-hover {
-    border: 0px!important;
-    background: var(--body-color-solid)!important;
+    border: 0px !important;
+    background: var(--body-color-solid) !important;
 }
 .ace_invalid.ace_deprecated,
 .ace_invalid {
-    background: var(--topbar-menu-item-hover-bg)!important;
+    background: var(--topbar-menu-item-hover-bg) !important;
     border-radius: 4px;
     text-decoration: line-through;
 }
 
 .ace_tooltip {
-    background: var(--body-color)!important;
+    background: var(--body-color) !important;
     border: 1px solid var(--topbar-menu-item-hover-bg);
     border-radius: 5px;
     box-shadow: #0000005e 0px 2px 7px 0px;
@@ -142,17 +141,16 @@
     margin-right: 5px;
 }
 
-
 .ace_search {
     background: var(--body-color-transparent);
-    border: 1px solid var(--block-divider-border-color)!important;
+    border: 1px solid var(--block-divider-border-color) !important;
     backdrop-filter: blur(5px);
-    border-radius: 10px!important;
+    border-radius: 10px !important;
     padding: 5px;
 }
 .ace_search.right {
     top: 10px;
-    right: 10px!important;
+    right: 10px !important;
 }
 .ace_search_form {
     display: flex;
@@ -176,10 +174,10 @@
     background: none;
     border: 0px;
     color: var(--text-color);
-    opacity: .2;
+    opacity: 0.2;
     font-family: var(--main-font);
-    padding: 0px!important;
-    transition: .2s;
+    padding: 0px !important;
+    transition: 0.2s;
 }
 .ace_searchbtn:last-child {
     border: 0px;
@@ -212,13 +210,13 @@
     font-size: 12px;
 }
 .ace_searchbtn_close {
-    background: url('data:image/svg+xml,%3Csvg%20width%3D%222156%22%20height%3D%222156%22%20viewBox%3D%220%200%202156%202156%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20clip-path%3D%22url(%23a)%22%3E%3Cpath%20d%3D%22m1078%201307.54-803.376%20803.37Q229.536%202156%20159.855%202156q-69.68%200-114.768-45.09C15.03%202080.85%200%202042.6%200%201996.14c0-46.45%2015.03-84.71%2045.087-114.76L848.464%201078%2045.087%20274.624Q0%20229.536%200%20159.855q0-69.68%2045.087-114.768T159.855%200t114.769%2045.087L1078%20848.464l803.38-803.377C1911.43%2015.03%201949.69%200%201996.14%200c46.46%200%2084.71%2015.03%20114.77%2045.087Q2156%2090.175%202156%20159.855t-45.09%20114.769L1307.54%201078l803.37%20803.38c30.06%2030.05%2045.09%2068.31%2045.09%20114.76%200%2046.46-15.03%2084.71-45.09%20114.77S2042.6%202156%201996.14%202156c-46.45%200-84.71-15.03-114.76-45.09z%22%20fill%3D%22%23fff%22%2F%3E%3C%2Fg%3E%3Cdefs%3E%3CclipPath%20id%3D%22a%22%3E%3Cpath%20fill%3D%22%23fff%22%20d%3D%22M0%200h2156v2156H0z%22%2F%3E%3C%2FclipPath%3E%3C%2Fdefs%3E%3C%2Fsvg%3E');
+    background: url("data:image/svg+xml,%3Csvg%20width%3D%222156%22%20height%3D%222156%22%20viewBox%3D%220%200%202156%202156%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20clip-path%3D%22url(%23a)%22%3E%3Cpath%20d%3D%22m1078%201307.54-803.376%20803.37Q229.536%202156%20159.855%202156q-69.68%200-114.768-45.09C15.03%202080.85%200%202042.6%200%201996.14c0-46.45%2015.03-84.71%2045.087-114.76L848.464%201078%2045.087%20274.624Q0%20229.536%200%20159.855q0-69.68%2045.087-114.768T159.855%200t114.769%2045.087L1078%20848.464l803.38-803.377C1911.43%2015.03%201949.69%200%201996.14%200c46.46%200%2084.71%2015.03%20114.77%2045.087Q2156%2090.175%202156%20159.855t-45.09%20114.769L1307.54%201078l803.37%20803.38c30.06%2030.05%2045.09%2068.31%2045.09%20114.76%200%2046.46-15.03%2084.71-45.09%20114.77S2042.6%202156%201996.14%202156c-46.45%200-84.71-15.03-114.76-45.09z%22%20fill%3D%22%23fff%22%2F%3E%3C%2Fg%3E%3Cdefs%3E%3CclipPath%20id%3D%22a%22%3E%3Cpath%20fill%3D%22%23fff%22%20d%3D%22M0%200h2156v2156H0z%22%2F%3E%3C%2FclipPath%3E%3C%2Fdefs%3E%3C%2Fsvg%3E");
     background-size: cover;
     border-radius: 0px;
     height: 8px;
     width: 8px;
-    opacity: .2;
-    transition: .2s;
+    opacity: 0.2;
+    transition: 0.2s;
 }
 .ace_searchbtn_close:hover {
     opacity: 1;
@@ -229,20 +227,20 @@
 }
 
 .ace_comment_danger {
-    opacity: .5;
+    opacity: 0.5;
     color: var(--danger);
 }
 .ace_comment_what {
-    opacity: .5;
+    opacity: 0.5;
     color: var(--success);
 }
 .ace_comment_todo {
-    opacity: .5;
+    opacity: 0.5;
     color: var(--warning);
 }
 
 .ace_marker-layer .ace_selected-word {
-    border: none!important;
+    border: none !important;
 }
 
 .ace-github-dark .ace_indent-guide {
@@ -251,15 +249,15 @@
 }
 
 .ace_no_usage {
-    opacity: .5;
+    opacity: 0.5;
     text-decoration: underline wavy #888;
 }
 
 .ace_operator {
-    color: var(--color-operator)
+    color: var(--color-operator);
 }
 .ace_punctuation.ace_operator {
-    color: inherit!important;
+    color: inherit !important;
 }
 
 .ace_other {
@@ -275,24 +273,24 @@
     position: absolute;
     width: 100%;
     height: 100%;
-    opacity: .1;
+    opacity: 0.1;
     background: white;
     top: 0;
     left: 0;
     z-index: 999999;
-    transition: .2s;
+    transition: 0.2s;
 }
 .ace-flash.hidden {
-    display: flex!important;
+    display: flex !important;
     opacity: 0;
     pointer-events: none;
 }
 
 .ace_paren.ace_lparen:not(.ace_func),
 .ace_paren.ace_rparen:not(.ace_func) {
-    color: var(--color-template-literal-wrapper)
+    color: var(--color-template-literal-wrapper);
 }
 
 .ace_character {
-    color: var(--color-character)
+    color: var(--color-character);
 }

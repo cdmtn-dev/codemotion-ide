@@ -13,12 +13,12 @@
 }
 .top-window.list .top-window__list-item {
     color: var(--text-color);
-    opacity: .5;
+    opacity: 0.5;
     background: transparent;
     border-radius: 5px;
     padding: 3px 5px;
     font-size: 14px;
-    transition: .2s;
+    transition: 0.2s;
 }
 .top-window.list .top-window__list-item:hover {
     opacity: 1;
@@ -42,5 +42,5 @@
     gap: 10px;
 }
 .top-window.list .top-window__list-item .top-window__list-item__name-wrapper .secondary {
-    opacity: .5;
+    opacity: 0.5;
 }

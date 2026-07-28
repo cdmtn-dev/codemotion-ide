@@ -82,14 +82,29 @@ export class JavascriptParser {
 
             case "ClassProperty":
                 return {
-                    icon: node.isPrivate || node.isProtected ? "lock" : node.isStatic ? "variable_add" : "data_object",
+                    icon:
+                        node.isPrivate || node.isProtected
+                            ? "lock"
+                            : node.isStatic
+                              ? "variable_add"
+                              : "data_object",
                     label: `${node.isStatic ? "static " : ""}${node.id?.name || ""}`,
                     class: "variable",
                 };
 
             case "ObjectMethod": {
-                const prefix = node.isGetter ? "get " : node.isSetter ? "set " : node.isAsync ? "async " : "";
-                return { icon: "function", label: `${prefix}${node.id?.name || "anonymous"}()`, class: "method" };
+                const prefix = node.isGetter
+                    ? "get "
+                    : node.isSetter
+                      ? "set "
+                      : node.isAsync
+                        ? "async "
+                        : "";
+                return {
+                    icon: "function",
+                    label: `${prefix}${node.id?.name || "anonymous"}()`,
+                    class: "method",
+                };
             }
 
             case "Property": {
@@ -145,13 +160,22 @@ export class JavascriptParser {
             case "ForOfStatement":
                 return {
                     icon: "loop",
-                    label: node.type === "ForOfStatement" ? "for...of" : node.type === "ForInStatement" ? "for...in" : "for",
+                    label:
+                        node.type === "ForOfStatement"
+                            ? "for...of"
+                            : node.type === "ForInStatement"
+                              ? "for...in"
+                              : "for",
                     class: "object",
                 };
 
             case "WhileStatement":
             case "DoWhileStatement":
-                return { icon: "loop", label: node.type === "DoWhileStatement" ? "do...while" : "while", class: "object" };
+                return {
+                    icon: "loop",
+                    label: node.type === "DoWhileStatement" ? "do...while" : "while",
+                    class: "object",
+                };
 
             default:
                 return null;
@@ -170,14 +194,15 @@ export class JavascriptParser {
                 namespaces.push(`* as ${specifier.name}`);
             } else if (specifier.type === "ImportSpecifier") {
                 const imported = specifier.imported || specifier.name;
-                const alias = imported === specifier.name ? imported : `${imported} as ${specifier.name}`;
+                const alias =
+                    imported === specifier.name ? imported : `${imported} as ${specifier.name}`;
                 named.push(`${specifier.importKind === "type" ? "type " : ""}${alias}`);
             }
         }
 
         const source = JSON.stringify(node.source || "");
         const attributes = (node.attributes || [])
-            .map(attribute => `${attribute.key}: ${JSON.stringify(attribute.value)}`)
+            .map((attribute) => `${attribute.key}: ${JSON.stringify(attribute.value)}`)
             .join(", ");
         const suffix = attributes ? ` with { ${attributes} }` : "";
         const phase = node.phase ? ` ${node.phase}` : "";
@@ -195,7 +220,7 @@ export class JavascriptParser {
         for (const key of CHILD_KEYS) {
             const value = node[key];
             if (Array.isArray(value)) {
-                value.forEach(child => this.traverse(child, row, chain));
+                value.forEach((child) => this.traverse(child, row, chain));
             } else if (value && typeof value === "object") {
                 this.traverse(value, row, chain);
             }
