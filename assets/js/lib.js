@@ -13,6 +13,7 @@ import { _Loader } from "./libClasses/loader.js";
 import { _Notificator } from "./libClasses/notificator.js";
 import { _Options } from "./libClasses/options.js";
 import { _SideBarIconManager } from "./libClasses/sidebarIconManager.js";
+import { _Task } from "./libClasses/task.js";
 import { _TopBarElement } from "./libClasses/topbarElement.js";
 import { valid } from "./modalsHandler/engine.js";
 import { createDIV, createIcon } from "./modalsHandler/handlers/helpers.js";
@@ -35,6 +36,8 @@ export const Loader = _Loader;
 export const GLS = _GLS;
 export const CodeTemplates = _CodeTemplates;
 export const EditorAdapter = _EditorAdapter;
+
+export const Task = _Task;
 
 export const GetOrgAvatar = _GetOrgAvatar;
 
@@ -232,23 +235,24 @@ export function addToBug({
     assignedTo,
     type,
 }) {
-    const bugId = id == undefined ? Object.keys(bugsObject).length + 1 : id;
-    const bugPriority = priority == undefined ? 0 : priority;
-    const bugDesc = desc == undefined ? "No description provided" : desc;
-    const bugToday = today == undefined ? new Date().format("H:i") : today;
-    const bugIsSelf = isSelf == undefined ? false : isSelf;
-    const bugResolved = resolved == undefined ? false : resolved;
-    const bugAuthor = author == undefined ? false : author;
-    const bugAssignedTo = assignedTo == undefined ? {} : assignedTo;
+    const bugID = id != undefined ? id : Object.keys(bugsObject).length + 1;
+    const bugPriority = priority != undefined && !Number.isNaN(priority) ? priority : 0;
+    const bugDesc = desc != undefined ? desc : "No description provided";
+    const bugToday = today != undefined ? today : new Date().format("H:i");
+    const bugIsSelf = isSelf != undefined ? isSelf : false;
+    const bugResolved = resolved != undefined ? resolved : false;
+    const bugAuthor = author != undefined ? author : false;
+    const bugAssignedTo = assignedTo != undefined ? assignedTo : {};
 
+    const priorityInfo = priorityClasses[String(bugPriority)] || priorityClasses["0"];
     addToHistory({
         actionType: "bug-added",
         value,
-        desc: `Bug "${value}" added with ${priorityClasses[String(priority)].name} priority`,
+        desc: `Bug "${value}" added with ${priorityInfo.name} priority`,
     });
 
-    bugsObject[bugId] = {
-        id: bugId,
+    bugsObject[bugID] = {
+        id: bugID,
         time: bugToday,
         priority: bugPriority,
         value,
@@ -748,6 +752,13 @@ export function idify(string) {
     return btoa(binary).replaceAll("=", "");
 }
 
+export function linkify(text) {
+    return text.replace(
+        /(https?:\/\/[^\s<]+)/g,
+        '<a href="$1" target="_blank" rel="noopener noreferrer"><span>$1</span></a>',
+    );
+}
+
 export function splitCamelCase(str) {
     return str
         .replace(/([a-z])([A-Z])/g, "$1 $2")
@@ -953,6 +964,21 @@ export function fitAceHeight(editor, minHeight = 50, maxHeight = 800) {
 }
 export function setAppTitle(title) {
     window.electron.setAppTitle(title);
+}
+
+export async function getGithubToken() {
+    const localData = await window.electron.getLocal();
+
+    if (
+        localData &&
+        typeof localData === "object" &&
+        typeof localData.githubToken === "string" &&
+        localData.githubToken.length > 0
+    ) {
+        return localData.githubToken;
+    }
+
+    return false;
 }
 
 window.Notificator = Notificator;

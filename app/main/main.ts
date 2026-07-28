@@ -79,7 +79,7 @@ async function createWindow() {
     const localData = getLocalAppData();
     const settingsData = getSettingsData();
     const appIcon = await getAppIcon();
-    const isPackaged = !app.isPackaged;
+    const isPackaged = app.isPackaged;
     const primaryDisplay = screen.getPrimaryDisplay();
     const { width, height } = primaryDisplay.workAreaSize;
 

@@ -6,6 +6,7 @@ export function renderInput(properties = {}) {
     const description = properties.description;
     const placeholder = properties.placeholder;
     const prefix = properties.prefix;
+    const inputType = properties.inputType;
 
     const wrapper = document.createElement("div");
     wrapper.classList.add("modal-category__item");
@@ -22,7 +23,7 @@ export function renderInput(properties = {}) {
     inputWrapper.classList.add("form-element");
 
     const input = document.createElement("input");
-    input.type = "text";
+    input.type = inputType ? inputType : "text";
     input.spellcheck = "false";
     input.id = id;
 

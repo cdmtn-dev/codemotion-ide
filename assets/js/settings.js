@@ -3,7 +3,14 @@ import { Modal } from "../js/modalsHandler/engine.js";
 import { bus, sendEvent } from "./bus.js";
 import { BottomWindow } from "./handlers/BottomWindowHandler.js";
 import { optionsThemeButtonHandler } from "./handlers/themesHandler.js";
-import { capitilize, GLS, Notificator, Options, showNeedReloadTopBar } from "./lib.js";
+import {
+    capitilize,
+    createNotify,
+    GLS,
+    Notificator,
+    Options,
+    showNeedReloadTopBar,
+} from "./lib.js";
 
 import { getSettingsModal } from "./modals/settingsModal.js";
 
@@ -32,220 +39,229 @@ function updateThemeSelectDefault(settingsObject) {
 // creating options
 
 export async function handleSettings(settingsObject) {
+    const localObject = await window.electron.getLocal();
     const settings = await readSettings();
     const platform = await window.electron.getPlatform();
     const aviableLanguages = await window.electron.getAllLanguages();
-    const gls = await GLS.init();
+    const gls = await GLS.initLocal();
 
     const appearanceModal = await getSettingsModal({ platform });
 
     appearanceModal.bind(document.querySelector("#appearance_n"));
     appearanceModal.preRender();
 
+    function get(id) {
+        return appearanceModal.el.querySelector(`#setting_${id}`);
+    }
+
     updateSettingSelectors({
-        editorTextSize: document.querySelector("#setting_editorTextSize"),
-        editorSmoothScroll: document.querySelector("#setting_smoothScroll"),
-        useSystemFonts: document.querySelector("#setting_useSystemFonts"),
-        boldFont: document.querySelector("#setting_boldFont"),
-        devMode: document.querySelector("#setting_devMode"),
-        splash: document.querySelector("#setting_splash"),
-        reduceMotion: document.querySelector("#setting_reduceMotion"),
-        uiScale: document.querySelector("#setting_uiScale"),
+        editorTextSize: get("editorTextSize"),
+        useSystemFonts: get("useSystemFonts"),
+        boldFont: get("boldFont"),
+        devMode: get("devMode"),
+        splash: get("splash"),
+        reduceMotion: get("reduceMotion"),
+        uiScale: get("uiScale"),
 
-        coloredTabs: document.querySelector("#setting_coloredTabs"),
-        confirmCloseTab: document.querySelector("#setting_confirmCloseTab"),
-        restoreFolder: document.querySelector("#setting_restoreFolder"),
+        coloredTabs: get("coloredTabs"),
+        confirmCloseTab: get("confirmCloseTab"),
+        restoreFolder: get("restoreFolder"),
 
-        goContextParser: document.querySelector("#setting_go_context_parser"),
+        goContextParser: get("go_context_parser"),
 
-        disableRiskyPermissionWarning: document.querySelector(
-            "#setting_disableRiskyPermissionWarning",
-        ),
+        disableRiskyPermissionWarning: get("disableRiskyPermissionWarning"),
+
+        gitGithubTokenInput: get("githubAccessKey"),
+        gitGithubTokenSave: get("githubAccessKeySave"),
+        gitGithubTokenView: get("githubAccessKeyView"),
     });
 
     // handler for options button theme cause it need to be updated. Another one in custom theme handler
     optionsThemeButtonHandler(themeSelect);
 
-    appearanceModal.onOpen(async () => {
-        const appIconsWrapper = document.createElement("div");
-        appIconsWrapper.classList.add("modal-appicons");
+    const appIconsWrapper = document.createElement("div");
+    appIconsWrapper.classList.add("modal-appicons");
 
-        document.querySelector("#settings_appIcon .modal-note").after(appIconsWrapper);
+    document.querySelector("#settings_appIcon .modal-note").after(appIconsWrapper);
 
-        function renderIcon(pathname, name, id) {
-            const isActive = settings.app.icon == name.toLowerCase();
-            const appIcon = document.createElement("div");
+    function renderIcon(pathname, name, id) {
+        const isActive = settings.app.icon == name.toLowerCase();
+        const appIcon = document.createElement("div");
 
-            appIcon.id = id;
-            appIcon.innerHTML = `
+        appIcon.id = id;
+        appIcon.innerHTML = `
             <div style="background: url('${pathname}');background-size:cover;"></div>
             <p>${name}</p>
         `;
 
-            if (isActive) appIcon.classList.add("active");
+        if (isActive) appIcon.classList.add("active");
 
-            appIconsWrapper.appendChild(appIcon);
+        appIconsWrapper.appendChild(appIcon);
 
-            appIcon.addEventListener("click", async () => {
-                await window.electron.setSettings({ app: { icon: id } });
-                await window.electron.reload();
-            });
+        appIcon.addEventListener("click", async () => {
+            await window.electron.setSettings({ app: { icon: id } });
+            await window.electron.reload();
+        });
+    }
+    renderIcon("../assets/media/codemotion_icon.png", "Default", "default");
+
+    const appIcons = await window.electron.getAppIcons();
+    appIcons.forEach((icon) => {
+        const appIconCode = icon.split("codemotion-icon-")[1].split(".")[0];
+        const appIconCodeNormalize = capitilize(appIconCode.split("-").join(" "));
+
+        renderIcon(`../assets/media/app-icons/${icon}`, appIconCodeNormalize, appIconCode);
+    });
+
+    // context parsers
+    settingsSelectors.goContextParser.addEventListener("click", (e) => {
+        const t = e.target;
+        Setting.goContextParser(t.checked);
+    });
+
+    settingsSelectors.disableRiskyPermissionWarning.addEventListener("click", (e) => {
+        const t = e.target;
+        Setting.disableRiskyPermissionWarning(t.checked);
+    });
+
+    settingsSelectors.coloredTabs.addEventListener("click", (e) => {
+        const t = e.target;
+        Setting.coloredTabs(t.checked);
+    });
+
+    settingsSelectors.confirmCloseTab.addEventListener("click", (e) => {
+        const t = e.target;
+        Setting.confirmCloseTab(t.checked);
+    });
+
+    settingsSelectors.restoreFolder.addEventListener("click", (e) => {
+        const t = e.target;
+        Setting.restoreFolder(t.checked);
+    });
+
+    settingsSelectors.editorTextSize.addEventListener("change", (e) => {
+        Setting.editorTextSize(e.target.value);
+    });
+
+    settingsSelectors.useSystemFonts.addEventListener("click", (e) => {
+        const t = e.target;
+        Setting.useSystemFonts(t.checked);
+    });
+
+    settingsSelectors.boldFont.addEventListener("click", (e) => {
+        const t = e.target;
+        Setting.boldFont(t.checked);
+    });
+
+    settingsSelectors.devMode.addEventListener("click", (e) => {
+        const t = e.target;
+        Setting.devMode(t.checked);
+    });
+
+    settingsSelectors.splash.addEventListener("click", (e) => {
+        const t = e.target;
+        Setting.splash(t.checked);
+    });
+
+    settingsSelectors.reduceMotion.addEventListener("click", (e) => {
+        const t = e.target;
+        Setting.reduceMotion(t.checked);
+    });
+
+    settingsSelectors.uiScale.addEventListener("change", (e) => {
+        Setting.uiScale(e.target.value);
+    });
+
+    settingsSelectors.gitGithubTokenSave.addEventListener("click", () => {
+        const token = settingsSelectors.gitGithubTokenInput.value;
+
+        Setting.githubToken(token);
+    });
+    settingsSelectors.gitGithubTokenView.addEventListener(
+        "click",
+        (e) => {
+            settingsSelectors.gitGithubTokenInput.type = "text";
+
+            e.target.remove();
+        },
+        { once: true },
+    );
+
+    themeSelect.appendTo(document.querySelector("#setting_theme"));
+
+    if (platform == "win32") {
+        const pyInfo = await window.electron.getPython();
+
+        pythonRunnerMethodSelect
+            .add("builtin", gls.get("modals.appearance.editor.pythonRunner.select.builtIn"))
+            .default();
+
+        if (pyInfo != false) {
+            pythonRunnerMethodSelect.add(
+                "installed",
+                `${gls.get("modals.appearance.editor.pythonRunner.select.userDefined")} (Python ${pyInfo.version})`,
+            );
         }
-        renderIcon("../assets/media/codemotion_icon.png", "Default", "default");
 
-        const appIcons = await window.electron.getAppIcons();
-        appIcons.forEach((icon) => {
-            const appIconCode = icon.split("codemotion-icon-")[1].split(".")[0];
-            const appIconCodeNormalize = capitilize(appIconCode.split("-").join(" "));
+        pythonRunnerMethodSelect.appendTo(document.querySelector("#setting_pythonRunMethod"));
+        pythonRunnerMethodSelect.on("click", (e) => {
+            const Id = e.id;
 
-            renderIcon(`../assets/media/app-icons/${icon}`, appIconCodeNormalize, appIconCode);
+            Setting.pythonRunnerMethod(Id);
         });
-        //
+    }
 
-        // context parsers
-        settingsSelectors.goContextParser.addEventListener("click", (e) => {
-            const t = e.target;
-            Setting.goContextParser(t.checked);
-        });
+    const aviableExtensionLanguages = [];
 
-        settingsSelectors.disableRiskyPermissionWarning.addEventListener("click", (e) => {
-            const t = e.target;
-            Setting.disableRiskyPermissionWarning(t.checked);
-        });
+    if (aviableLanguages) {
+        for (const index in aviableLanguages) {
+            const id = aviableLanguages[index];
 
-        //
+            const gls = await GLS.init(id);
+            const languageName = gls.get("name");
+            const item = languageSelect.add(
+                id,
+                languageName == "name" ? id.toUpperCase() : languageName,
+            );
 
-        settingsSelectors.coloredTabs.addEventListener("click", (e) => {
-            const t = e.target;
-            Setting.coloredTabs(t.checked);
-        });
+            if (index == 0) item.default();
+        }
 
-        settingsSelectors.confirmCloseTab.addEventListener("click", (e) => {
-            const t = e.target;
-            Setting.confirmCloseTab(t.checked);
-        });
-
-        settingsSelectors.restoreFolder.addEventListener("click", (e) => {
-            const t = e.target;
-            Setting.restoreFolder(t.checked);
-        });
-
-        settingsSelectors.editorTextSize.addEventListener("change", (e) => {
-            Setting.editorTextSize(e.target.value);
-        });
-
-        settingsSelectors.editorSmoothScroll.addEventListener("change", (e) => {
-            const t = e.target;
-            Setting.editorSmoothScroll(t.checked);
-        });
-
-        settingsSelectors.useSystemFonts.addEventListener("click", (e) => {
-            const t = e.target;
-            Setting.useSystemFonts(t.checked);
-        });
-
-        settingsSelectors.boldFont.addEventListener("click", (e) => {
-            const t = e.target;
-            Setting.boldFont(t.checked);
-        });
-
-        settingsSelectors.devMode.addEventListener("click", (e) => {
-            const t = e.target;
-            Setting.devMode(t.checked);
-        });
-
-        settingsSelectors.splash.addEventListener("click", (e) => {
-            const t = e.target;
-            Setting.splash(t.checked);
-        });
-
-        settingsSelectors.reduceMotion.addEventListener("click", (e) => {
-            const t = e.target;
-            Setting.reduceMotion(t.checked);
-        });
-
-        settingsSelectors.uiScale.addEventListener("change", (e) => {
-            Setting.uiScale(e.target.value);
-        });
-
-        themeSelect.appendTo(document.querySelector("#setting_theme"));
-
-        if (platform == "win32") {
-            const pyInfo = await window.electron.getPython();
-
-            pythonRunnerMethodSelect
-                .add("builtin", gls.get("modals.appearance.editor.pythonRunner.select.builtIn"))
-                .default();
-
-            if (pyInfo != false) {
-                pythonRunnerMethodSelect.add(
-                    "installed",
-                    `${gls.get("modals.appearance.editor.pythonRunner.select.userDefined")} (Python ${pyInfo.version})`,
-                );
-            }
-
-            pythonRunnerMethodSelect.appendTo(document.querySelector("#setting_pythonRunMethod"));
-            pythonRunnerMethodSelect.on("click", (e) => {
+        function bindLanguageSelect() {
+            languageSelect.on("click", (e) => {
                 const Id = e.id;
 
-                Setting.pythonRunnerMethod(Id);
+                Setting.language(Id);
             });
         }
 
-        const aviableExtensionLanguages = [];
+        // add external languages (from extensions)
+        bus.addEventListener("extension-localization-register", (data) => {
+            const id = data.detail.langName;
+            const content = data.detail.configContent;
+            const from = data.detail.from;
 
-        if (aviableLanguages) {
-            for (const index in aviableLanguages) {
-                const id = aviableLanguages[index];
-
-                const gls = await GLS.init(id);
-                const languageName = gls.get("name");
-                const item = languageSelect.add(
-                    id,
-                    languageName == "name" ? id.toUpperCase() : languageName,
-                );
-
-                if (index == 0) item.default();
-            }
-
-            function bindLanguageSelect() {
-                languageSelect.on("click", (e) => {
-                    const Id = e.id;
-
-                    Setting.language(Id);
-                });
-            }
-
-            // add external languages (from extensions)
-            bus.addEventListener("extension-localization-register", (data) => {
-                const id = data.detail.langName;
-                const content = data.detail.configContent;
-                const from = data.detail.from;
-
-                languageSelect.add(id, content.name, { secondary: from });
-
-                bindLanguageSelect();
-            });
+            languageSelect.add(id, content.name, { secondary: from });
 
             bindLanguageSelect();
+        });
 
-            languageSelect.appendTo(document.querySelector("#setting_language"));
-        }
+        bindLanguageSelect();
+
+        languageSelect.appendTo(document.querySelector("#setting_language"));
+    }
+
+    updateThemeSelectDefault(settingsObject);
+
+    bus.addEventListener("new-theme-register", (data) => {
+        const themeData = data.detail;
 
         updateThemeSelectDefault(settingsObject);
-
-        bus.addEventListener("new-theme-register", (data) => {
-            const themeData = data.detail;
-
-            updateThemeSelectDefault(settingsObject);
-        });
     });
 
     if (settingsObject.editor) {
         if ("fontSize" in settingsObject.editor)
             Setting.editorTextSize(settingsObject.editor.fontSize, false, false);
-        if ("smoothScroll" in settingsObject.editor)
-            Setting.editorSmoothScroll(settingsObject.editor.smoothScroll, false, false);
         if ("pythonRunnerMethod" in settingsObject.editor)
             Setting.pythonRunnerMethod(settingsObject.editor.pythonRunnerMethod, false);
         if ("coloredTabs" in settingsObject.editor)
@@ -279,6 +295,10 @@ export async function handleSettings(settingsObject) {
             settingsObject.extensions.disableRiskyPermissionWarning,
             false,
         );
+
+    if (localObject.githubToken) {
+        Setting.githubToken(localObject.githubToken, false);
+    }
 }
 
 export class Setting {
@@ -299,21 +319,6 @@ export class Setting {
         }
 
         document.body.style.setProperty("--editor-font-size", editorFontSize + "px");
-    }
-    static editorSmoothScroll(value, notification = true, set = true) {
-        if (set) {
-            showNeedReloadTopBar();
-            window.electron.setSettings({ editor: { smoothScroll: value } });
-        }
-
-        settingsSelectors.editorSmoothScroll.value = value;
-
-        if (notification) {
-            const n = new Notificator();
-            n.text = `Smooth scroll ${value ? "Enabled" : "Disabled"}`;
-            n.icon = "animation";
-            n.show();
-        }
     }
     static useSystemFonts(value, set = true) {
         if (value) {
@@ -478,6 +483,38 @@ export class Setting {
             await window.electron.setSettings({
                 extensions: { disableRiskyPermissionWarning: value },
             });
+        }
+    }
+
+    static async githubToken(value, set = true) {
+        const gls = GLS.initLocal();
+
+        settingsSelectors.gitGithubTokenInput.value = value;
+
+        if (value.length > 0) {
+            settingsSelectors.gitGithubTokenInput.classList.add("focused");
+        }
+
+        if (set) {
+            const res = window.electron.setLocal({ githubToken: value });
+
+            if (res) {
+                createNotify({
+                    type: "success",
+                    icon: "check",
+                    title: gls.get("modals.appearance.gitGithub.notifications.success.title"),
+                    content: gls.get(
+                        "modals.appearance.gitGithub.notifications.success.description",
+                    ),
+                });
+            } else {
+                createNotify({
+                    type: "danger",
+                    icon: "cancel",
+                    title: gls.get("modals.appearance.gitGithub.notifications.error.title"),
+                    content: gls.get("modals.appearance.gitGithub.notifications.error.description"),
+                });
+            }
         }
     }
 }

@@ -240,13 +240,6 @@ export async function getSettingsModal({ platform }) {
                                 prefix: "%",
                             },
                             {
-                                type: "switch",
-                                title: lgls("editor.smoothScroll.title"),
-                                description: lgls("editor.smoothScroll.description"),
-                                id: "setting_smoothScroll",
-                                note: gls.get("modals.needToReloadNote"),
-                            },
-                            {
                                 type: "placeholder",
                                 title: lgls("editor.pythonRunner.title"),
                                 description: lgls("editor.pythonRunner.description"),
@@ -279,7 +272,7 @@ export async function getSettingsModal({ platform }) {
                 ],
             },
             {
-                name: "Extensions",
+                name: lgls("extensions.title"),
                 icon: "extension",
                 content: [
                     {
@@ -293,10 +286,50 @@ export async function getSettingsModal({ platform }) {
                         items: [
                             {
                                 type: "switch",
-                                title: "Disable risky permission warning",
-                                description:
-                                    "Skips the warning modal for extensions with risky permissions and auto-enables them",
+                                title: lgls("extensions.riskyPermsWarn.title"),
+                                description: lgls("extensions.riskyPermsWarn.description"),
                                 id: "setting_disableRiskyPermissionWarning",
+                            },
+                        ],
+                    },
+                ],
+            },
+
+            {
+                divider: true,
+            },
+
+            {
+                name: lgls("gitGithub.title"),
+                icon: "commit",
+                content: [
+                    {
+                        type: "row-clear",
+                        gap: 10,
+                        items: [
+                            {
+                                type: "placeholder",
+                                title: lgls("gitGithub.integration.title"),
+                                description: lgls("gitGithub.integration.description"),
+                            },
+                            {
+                                type: "divider",
+                            },
+                            {
+                                type: "input",
+                                inputType: "password",
+                                placeholder: lgls("gitGithub.integration.inputs.token.placeholder"),
+                                id: "setting_githubAccessKey",
+                            },
+                            {
+                                type: "button",
+                                title: lgls("gitGithub.integration.buttons.view"),
+                                id: "setting_githubAccessKeyView",
+                            },
+                            {
+                                type: "button",
+                                title: gls.get("save"),
+                                id: "setting_githubAccessKeySave",
                             },
                         ],
                     },

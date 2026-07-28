@@ -78,6 +78,7 @@ contextBridge.exposeInMainWorld("electron", {
     renamePath: (oldPath: string, newPath: string) =>
         ipcRenderer.invoke("rename-path", oldPath, newPath),
 
+    setLocal: (data: any) => ipcRenderer.invoke("set-local", data),
     getLocal: () => ipcRenderer.invoke("get-app-local"),
 
     requestFile: () => ipcRenderer.invoke("request-file-open"),

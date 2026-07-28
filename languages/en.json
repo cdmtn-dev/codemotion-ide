@@ -16,6 +16,38 @@
         "offlineMode": "Offline mode"
     },
 
+    "save": "Save",
+
+    "taskProgress": {
+        "defaults": {
+            "starting": "Starting...",
+            "done": "Done",
+            "error": "Error"
+        },
+
+        "githubFork": {
+            "waiting": {
+                "title": "Forking %{name}",
+                "description": "Waiting for a response from the Github..."
+            },
+            "done": {
+                "title": "Forked!"
+            },
+            "error": {
+                "title": "%{name} forking error"
+            },
+            "errorAny": {
+                "title": "{{taskProgress.githubFork.error.title}}",
+                "description": "You cannot create a fork of this repository"
+            },
+
+            "buttons": {
+                "open": "Open on Github",
+                "cloneAndOpen": "Clone & Open"
+            }
+        }
+    },
+
     "auth": {
         "register": {
             "title": "Register",
@@ -364,11 +396,6 @@
                     "description": "Allows increasing editor text size up to 200%"
                 },
 
-                "smoothScroll": {
-                    "title": "Smooth scrolling",
-                    "description": "Disable smooth scrolling in the editor?"
-                },
-
                 "pythonRunner": {
                     "title": "Python emulator",
                     "description": "Choose the Python version you want to use",
@@ -393,6 +420,40 @@
                 "confirmClose": {
                     "title": "Confirm on close",
                     "description": "Show a confirmation dialog when closing a tab with unsaved changes"
+                }
+            },
+
+            "extensions": {
+                "title": "Extensions",
+                "riskyPermsWarn": {
+                    "title": "Disable risky permission warning",
+                    "description": "Skips the warning modal for extensions with risky permissions and auto-enables them"
+                }
+            },
+
+            "gitGithub": {
+                "title": "Git & Github",
+                "integration": {
+                    "title": "Git & Github Integration",
+                    "description": "Set up and enable access to Git features to unlock more capabilities",
+                    "inputs": {
+                        "token": {
+                            "placeholder": "GitHub Personal Access Token"
+                        }
+                    },
+                    "buttons": {
+                        "view": "View"
+                    }
+                },
+                "notifications": {
+                    "success": {
+                        "title": "Github token saved locally",
+                        "description": "Your GitHub key has been successfully saved locally. It will be used for GitHub API requests"
+                    },
+                    "error": {
+                        "title": "Github token save error",
+                        "description": "An error occurred while saving the key locally. Please try logging back into your account"
+                    }
                 }
             }
         },

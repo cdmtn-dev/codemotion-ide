@@ -32,3 +32,26 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+.modal-githubrepos .modal-githubrepos__item-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.modal-githubrepos .modal-githubrepos__forkbtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: var(--code-background);
+    color: var(--text-color);
+    border: 1px solid var(--block-divider-border-color);
+    border-radius: 10px;
+    height: 40px;
+    transition: 0.4s;
+}
+.modal-githubrepos .modal-githubrepos__forkbtn:hover {
+    opacity: 0.5;
+    cursor: pointer;
+}

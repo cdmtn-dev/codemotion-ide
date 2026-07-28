@@ -73,6 +73,20 @@ function writeSettings(data) {
 
     return merged;
 }
+function writeLocal(data) {
+    const current = getLocalAppData() || {};
+
+    const merged = deepMerge({ ...current }, data);
+
+    try {
+        fs.writeFileSync(LOCAL_FILE_PATH, JSON.stringify(merged, null, 2), "utf8");
+    } catch (err) {
+        console.error("Error writing local.json:", err);
+        return false
+    }
+
+    return merged;
+}
 function ensureLocalJson() {
     if (!fs.existsSync(LOCAL_FILE_PATH)) {
         const defaultData = {
@@ -193,7 +207,7 @@ async function readFileContent(filePath, encoding = "utf8") {
     return data;
 }
 function updateLocalAppData(newData) {
-    const filePath = path.join(__dirname, "local.json");
+    const filePath = LOCAL_FILE_PATH;
 
     let currentData = {};
     if (fs.existsSync(filePath)) {
@@ -608,6 +622,7 @@ module.exports = {
     deepMerge,
     writeLocalBugs,
     writeSettings,
+    writeLocal,
     ensureLocalJson,
     ensureSettingsJson,
     ensureLocalBugs,

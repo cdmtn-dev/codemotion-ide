@@ -254,6 +254,7 @@ function contentItemsHandler(element, itemsData) {
             const values = validArray(item.values) ?? [];
             const valuesReadOnly = validBool(item.valuesReadOnly) ?? false;
             const onAdd = valid(item.onAdd) ?? false;
+            const inputType = valid(item.inputType) ?? false;
 
             const inputElement = renderInput({
                 id,
@@ -264,6 +265,7 @@ function contentItemsHandler(element, itemsData) {
                 values,
                 valuesReadOnly,
                 onAdd,
+                inputType,
             });
 
             element.appendChild(inputElement);
@@ -372,10 +374,12 @@ function contentItemsHandler(element, itemsData) {
         if (type == "githubRepos") {
             const id = valid(item.id) ?? false;
             const urls = validArray(item.urls) ?? [];
+            const forkable = validBool(item.forkable) ?? false;
 
             const githubReposElement = renderGithubRepos({
                 id,
                 urls,
+                forkable,
             });
 
             element.appendChild(githubReposElement);
