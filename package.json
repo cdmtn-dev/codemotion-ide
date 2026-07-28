@@ -5,7 +5,8 @@
     "author": "Yurba.Developers",
     "main": "app/dist/main.js",
     "scripts": {
-        "build": "tsc && tsc -p tsconfig.esm.json",
+        "build": "tsc && tsc -p tsconfig.esm.json && tsc -p tsconfig.renderer.json",
+        "build:renderer": "tsc -p tsconfig.renderer.json",
         "test": "node --test tests/unit/*.test.mjs",
         "cdbuild": "cd codemirror && npm i && npm run build",
         "start": "npm run cdbuild && npm run build && electron .",

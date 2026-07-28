@@ -1,4 +1,4 @@
-import { idify } from "../lib.js"
+import { idify } from "../lib/encoding.js"
 
 export class _TopBarElement {
     static instances = new Map()

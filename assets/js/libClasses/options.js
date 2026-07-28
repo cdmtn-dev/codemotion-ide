@@ -1,4 +1,4 @@
-import { transparentColor } from "../lib.js";
+import { transparentColor } from "../lib/format.js";
 
 export class _Options {
     static instances = new Map();

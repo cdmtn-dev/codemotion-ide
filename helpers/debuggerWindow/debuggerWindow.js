@@ -7,6 +7,8 @@ const bus = require("../eventBus.js")
 const { getAppIcon } = require("../../app/main/helpers/requests.js")
 const { ASSETS_PATH } = require("../../app/main/helpers/paths.js")
 
+let debuggerWindow = null;
+
 async function createDebuggerWindow(mainWindow, title = "Debugger") {
     const overlayIconPath = path.join(ASSETS_PATH, "media", "debugger_icon.png")
     const appIcon = await getAppIcon()

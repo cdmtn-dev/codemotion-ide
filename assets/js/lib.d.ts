@@ -1,0 +1,27 @@
+/** Shared mutable renderer state retained for extension compatibility. */
+export declare const GLOBAL: Record<string, unknown>;
+export declare const Languages: any;
+export declare const Filenames: any;
+export declare const Dirs: any;
+export declare const DragDrop: any;
+export declare const Notificator: any;
+export declare const TopBarElement: any;
+export declare const SideBarIconManager: any;
+export declare const Options: any;
+export declare const ContextMenuLoader: any;
+export declare const Loader: any;
+export declare const GLS: any;
+export declare const CodeTemplates: any;
+export declare const EditorAdapter: any;
+export declare const Task: any;
+export declare const GetOrgAvatar: any;
+export { idify, toBase64 } from "./lib/encoding.js";
+export { SmoothScroll, animate, changeTagName, fitAceHeight, generateAvatar, getAllCSSVariables, handleOnWheelScrollX, handlePopups, hideCodeWindowVisuals, scrollToBottomSmooth, setTabName, setTabNameCounter, showCodeWindowVisuals, showIndicator, tabName, } from "./lib/dom.js";
+export { formatUnix, getCodeByName, normalizePath, secondsToMinutes, transparentColor, } from "./lib/format.js";
+export { addToBug, addToHistory } from "./lib/history.js";
+export { copyText, createNotify, getGithubToken, getTheme, parseTwemojiElement, parseTwemojiString, setAppTitle, } from "./lib/platform.js";
+export { addRuntimeError, clearRuntimeErrors } from "./lib/runtimeErrors.js";
+export { runCode, runSandbox } from "./lib/sandbox.js";
+export { capitilize, dedent, escapeHtml, getInitials, linkify, splitCamelCase, truncateString, } from "./lib/text.js";
+export { showNeedReloadTopBar } from "./lib/ui.js";
+export { eventLog, isArray, isFloat, isObject, isStringifiedObject, type } from "./lib/values.js";

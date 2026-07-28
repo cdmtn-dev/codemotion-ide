@@ -1,5 +1,5 @@
-import { Languages } from "../lib.js";
 import { fromJSONToTextMate } from "../../../app/dist-esm/textmate/compile.js"
+import { _Languages as Languages } from "./languages.js"
 
 export class _EditorAdapter {
     constructor(
