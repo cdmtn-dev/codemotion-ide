@@ -15,17 +15,17 @@ function getTriggerObj({ editor, language, extension }) {
     }
 }
 
-export function triggerAceChanged({ editor, extension, language }) {
-    window.electron.triggers.sendAceChanged(
+export function triggerEditorChanged({ editor, extension, language }) {  
+    window.electron.triggers.sendEditorChanged(
         getTriggerObj({ editor: editor, extension: extension, language: language })
     )
 
-    sendEvent("ace-mode-changed", { extension: extension, editor: editor, mode: editor.currentLanguageId() })
+    sendEvent("editor-language-changed", { extension: extension, editor: editor, mode: editor.currentLanguageId() })
 }
-export function triggerAceClicked({ editor, extension, language }) {
-    window.electron.triggers.sendAceClicked(
+export function triggerEditorClicked({ editor, extension, language }) {
+    window.electron.triggers.sendEditorClicked(
         getTriggerObj({ editor: editor, extension: extension, language: language })
     )
 
-    sendEvent("ace-mode-clicked", { extension: extension, editor: editor, mode: editor.currentLanguageId() })
+    sendEvent("editor-clicked", { extension: extension, editor: editor, mode: editor.currentLanguageId() })
 }

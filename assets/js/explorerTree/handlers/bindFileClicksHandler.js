@@ -17,7 +17,8 @@ export function bindFileClicks({ scopeEl, tabsByPath, recentlyClosed, pathContex
             }
 
             const cached = recentlyClosed.get(filePath);
-            const content = cached ? cached.content : await window.electron.readFileContent(filePath);
+            const isBinaryImage = ["png", "jpg", "jpeg", "gif", "webp", "ico", "bmp"].includes(extension);
+            const content = cached ? cached.content : (isBinaryImage ? "" : await window.electron.readFileContent(filePath));
 
             openTab(filePath, content, extension, name, pathContext, false, settings);
         });

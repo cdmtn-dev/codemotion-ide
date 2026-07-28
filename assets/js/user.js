@@ -1,4 +1,4 @@
-import { generateAvatar, truncateString, GLOBAL } from "./lib.js";
+import { generateAvatar, truncateString, GLOBAL, GLS } from "./lib.js";
 import { Modal } from "./modalsHandler/engine.js";
 
 import { spawnSideBarOrganizationsButton } from "./userHandlers/spawn.js"
@@ -30,21 +30,22 @@ export async function requestUser() {
     }
 }
 
-export async function getCurrentUserDataFromAPI(gls, properties = {}) {
+export async function getCurrentUserDataFromAPI(properties = {}) {
+    const gls = GLS.initLocal()
     const user = await requestUser()
     const greeting = document.querySelector("#greeting")
 
     bus.addEventListener("org-created", async () => {
-        await getCurrentUserDataFromAPI(gls, { orgsModalOpen: true })
+        await getCurrentUserDataFromAPI({ orgsModalOpen: true })
     })
     bus.addEventListener("org-removed", async () => {
-        await getCurrentUserDataFromAPI(gls, { orgsModalOpen: true })
+        await getCurrentUserDataFromAPI({ orgsModalOpen: true })
     })
     bus.addEventListener("org-joined", async () => {
-        await getCurrentUserDataFromAPI(gls, { orgsModalOpen: true })
+        await getCurrentUserDataFromAPI({ orgsModalOpen: true })
     })
     bus.addEventListener("org-update", async () => {
-        await getCurrentUserDataFromAPI(gls, { orgsModalOpen: true })
+        await getCurrentUserDataFromAPI({ orgsModalOpen: true })
     })
 
     setUserPcInfo()
@@ -60,12 +61,11 @@ export async function getCurrentUserDataFromAPI(gls, properties = {}) {
 
     // organizations
 
-    spawnSideBarOrganizationsButton({ gls: gls, userOrgs: userOrgs })
+    spawnSideBarOrganizationsButton({ userOrgs: userOrgs })
 
     Modal.destroy("organizations")
     const organizationsModal = await createUserOrgModal(
         {
-            gls: gls,
             userOrgs: userOrgs,
             userJSON: userJSON
         }

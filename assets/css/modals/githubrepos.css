@@ -1,0 +1,57 @@
+.modal-githubrepos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: start;
+    gap: 5px;
+}
+.modal-githubrepos__item {
+    display: flex;
+    background: var(--body-color-solid);
+    border: 1px solid var(--block-divider-border-color);
+    border-radius: 10px;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 15px;
+    transition: .4s;
+}
+.modal-githubrepos__item:hover {
+    opacity: .5;
+    cursor: pointer;
+}
+.modal-githubrepos__icon {
+    width: 25px;
+    height: 25px;
+    fill: var(--text-color);
+}
+.modal-githubrepos__item p {
+    width: 50%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.modal-githubrepos .modal-githubrepos__item-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.modal-githubrepos .modal-githubrepos__forkbtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: var(--code-background);
+    color: var(--text-color);
+    border: 1px solid var(--block-divider-border-color);
+    border-radius: 10px;
+    height: 40px;
+    transition: .4s;
+}
+.modal-githubrepos .modal-githubrepos__forkbtn:hover {
+    opacity: .5;
+    cursor: pointer;
+}

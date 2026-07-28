@@ -34,7 +34,7 @@ ipcMain.on("language-register", async (event, data) => {
 
         checkFields(`language.register:config:rules`, rulesConfig, {
             syntax: "object",
-            autocomplete: "object"
+            // autocomplete: "object"
         })
 
         let iconPath = false

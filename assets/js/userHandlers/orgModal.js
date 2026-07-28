@@ -1,10 +1,57 @@
 import { Modal } from "../modalsHandler/engine.js"
-import { createNotify, getInitials, GetOrgAvatar, Options, truncateString } from "../lib.js"
+import { createNotify, getInitials, GetOrgAvatar, GLS, Options, truncateString } from "../lib.js"
 import { dashboardModalHandle, dashboardModalObject } from "./organizationModal/dashboard.js"
 import { createNewModalHandle, createNewModalObject } from "./organizationModal/create-new.js"
 import { joinModalHandle, joinModalObject } from "./organizationModal/join.js"
+import { searchModalHandle, searchModalObject } from "./organizationModal/search.js"
 
-export async function createUserOrgsModalStructure({ gls, userOrgs, userJSON, roleVisible }) {
+export async function getModalOrgStructure(organizationData) {
+    const gls = GLS.initLocal()
+    const isOwner = organizationData.is_owner
+
+    const preparedData = {
+        type: "organization",
+
+        name: organizationData.name,
+
+        description:
+            organizationData.description,
+
+        website:
+            organizationData.website,
+
+        columns: [
+            {
+                name: gls.get(
+                    "modals.organizations.membersLabel"
+                ),
+
+                value:
+                    organizationData.members_count
+            }
+        ],
+
+        badgeOwner: isOwner,
+
+        badgeVerified:
+            organizationData.verified == 1
+    }
+
+    const orgAvatar = await GetOrgAvatar.get(organizationData.avatarID, "large")
+    if (orgAvatar) {
+        preparedData["avatar"] = orgAvatar
+    }
+
+    if ("github_repos" in organizationData) {
+        preparedData["repos"] = organizationData.github_repos
+    }
+
+    return preparedData
+}
+
+export async function createUserOrgsModalStructure({ userOrgs, userJSON, roleVisible }) {
+    const gls = GLS.initLocal()
+
     roleVisible = roleVisible == undefined ? true : roleVisible
 
     const organizationsModalData = await Promise.all(
@@ -32,67 +79,48 @@ export async function createUserOrgsModalStructure({ gls, userOrgs, userJSON, ro
 
             const isOwner = organizationData.is_owner
 
-            const preparedData = {
-                type: "organization",
+            // get modal structure
+            const preparedData = await getModalOrgStructure(organizationData)
 
-                name: organizationData.name,
+            // set role
+            preparedData["columns"].push(
+                {
+                    name: gls.get(
+                        "modals.organizations.roleLabel"
+                    ),
 
-                description:
-                    organizationData.description,
-
-                website:
-                    organizationData.website,
-
-                columns: [
-                    {
-                        name: gls.get(
-                            "modals.organizations.membersLabel"
-                        ),
-
-                        value:
-                            organizationData.members_count
-                    },
-
-                    {
-                        name: gls.get(
-                            "modals.organizations.roleLabel"
-                        ),
-
-                        value: isOwner
-                            ? gls.get(
-                                "modals.organizations.ownerRoleLabel"
-                            )
-                            : organizationRole
-                    }
-                ],
-
-                badgeOwner: isOwner,
-
-                badgeVerified:
-                    organizationData.verified == 1
-            }
+                    value: isOwner
+                        ? gls.get(
+                            "modals.organizations.ownerRoleLabel"
+                        )
+                        : organizationRole
+                }
+            )
 
             const orgAvatar = await GetOrgAvatar.get(organizationData.avatarID, "large")
-            if(orgAvatar) {
+            if (orgAvatar) {
                 preparedData["avatar"] = orgAvatar
             }
 
-            if(!roleVisible) {
+            if ("github_repos" in organizationData) {
+                preparedData["repos"] = organizationData.github_repos
+            }
+
+            if (!roleVisible) {
                 delete preparedData["columns"][1]
             }
 
             if (isOwner) {
                 preparedData.note = `
                     ${gls.get("modals.organizations.ownerLabel")}
-                    ${
-                        organization.role?.length > 0
-                            ? gls.get(
-                                "modals.organizations.ownerLabel",
-                                {
-                                    role: organization.role
-                                }
-                            )
-                            : ""
+                    ${organization.role?.length > 0
+                        ? gls.get(
+                            "modals.organizations.ownerLabel",
+                            {
+                                role: organization.role
+                            }
+                        )
+                        : ""
                     }
                 `
                     .trim()
@@ -105,7 +133,9 @@ export async function createUserOrgsModalStructure({ gls, userOrgs, userJSON, ro
     return organizationsModalData
 }
 
-export async function createUserOrgModal({ gls, userOrgs, userJSON }) {
+export async function createUserOrgModal({ userOrgs, userJSON }) {
+    const gls = GLS.initLocal()
+
     function lgls(string, variables = {}) {
         return gls.get(`modals.organizations.${string}`, variables)
     }
@@ -121,8 +151,8 @@ export async function createUserOrgModal({ gls, userOrgs, userJSON }) {
     let exploreItems = []
     let membershipItems = []
 
-    if(exploreOrganizationsRes.success) {
-        if(exploreOrganizationsRes.msg.length == 0) {
+    if (exploreOrganizationsRes.success) {
+        if (exploreOrganizationsRes.msg.length == 0) {
             exploreItems = [
                 {
                     type: "centered",
@@ -131,14 +161,14 @@ export async function createUserOrgModal({ gls, userOrgs, userJSON }) {
             ]
         }
         else {
-            exploreItems = await createUserOrgsModalStructure({ gls: gls, userOrgs: exploreOrganizationsRes.msg, userJSON: userJSON, roleVisible: false })
+            exploreItems = await createUserOrgsModalStructure({ userOrgs: exploreOrganizationsRes.msg, userJSON: userJSON, roleVisible: false })
         }
     }
     else {
         exploreItems = [errorPlaceholder]
     }
 
-    if(Object.keys(userOrgs).length == 0) {
+    if (Object.keys(userOrgs).length == 0) {
         membershipItems = [
             {
                 type: "centered",
@@ -147,7 +177,7 @@ export async function createUserOrgModal({ gls, userOrgs, userJSON }) {
         ]
     }
     else {
-        membershipItems = await createUserOrgsModalStructure({ gls: gls, userOrgs: userOrgs, userJSON: userJSON })
+        membershipItems = await createUserOrgsModalStructure({ userOrgs: userOrgs, userJSON: userJSON })
     }
 
     const orgModal = Modal.create({
@@ -189,7 +219,14 @@ export async function createUserOrgModal({ gls, userOrgs, userJSON }) {
                 divider: true
             },
             createNewModalObject({ lgls: lgls }),
-            joinModalObject({ lgls: lgls })
+            joinModalObject({ lgls: lgls }),
+            {
+                divider: true
+            },
+            searchModalObject({ lgls: lgls }),
+            {
+                divider: true
+            }
         ]
     })
 
@@ -227,12 +264,20 @@ export async function createUserOrgModal({ gls, userOrgs, userJSON }) {
 
     // join
 
-    joinModalHandle({ 
+    joinModalHandle({
         element: element,
         lgls: lgls
     })
 
     // 
+
+    // search
+
+    searchModalHandle({
+        modal: orgModal,
+        element: element,
+        lgls: lgls
+    })
 
     return orgModal
 }

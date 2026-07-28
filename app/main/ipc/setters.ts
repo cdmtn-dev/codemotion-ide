@@ -1,5 +1,5 @@
 import { ipcMain, IpcMainInvokeEvent } from "electron"
-import { readSettings, writeSettings } from "../helpers/requests"
+import { getLocalAppData, readSettings, writeSettings, writeLocal } from "../helpers/requests"
 
 ipcMain.handle("set-settings", (_: IpcMainInvokeEvent, data: unknown) => {
     if (!data || typeof data !== "object" || Array.isArray(data)) {
@@ -7,4 +7,11 @@ ipcMain.handle("set-settings", (_: IpcMainInvokeEvent, data: unknown) => {
     }
 
     return writeSettings(data as object)
+})
+ipcMain.handle("set-local", (_: IpcMainInvokeEvent, data: unknown) => {
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+        return getLocalAppData()
+    }
+
+    return writeLocal(data as object)
 })

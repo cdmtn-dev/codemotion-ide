@@ -5,3 +5,10 @@ export function sendEvent(name, data) {
         detail: data
     }))
 }
+
+bus["onEditorChange"] = (cb) => {
+    bus.addEventListener("editor-language-changed", (e) => { cb(e) })
+}
+bus["onEditorClicked"] = (cb) => {
+    bus.addEventListener("editor-clicked", (e) => { cb(e) })
+}

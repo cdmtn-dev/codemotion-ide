@@ -39,11 +39,14 @@ contextBridge.exposeInMainWorld('electron', {
     keyboardAction: (callback: any) => ipcRenderer.on("keyboard_action", (_: any, data: any) => callback(data)),
 
     getCurrentUserDataFromAPI: () => ipcRenderer.invoke("get-user-data-from-api"),
+    getUser: (userid: number) => ipcRenderer.invoke("get-user", userid),
     getOrgDataFromAPI: (orgid: number) => ipcRenderer.invoke("get-org-data-from-api", orgid),
     removeOrg: (orgid: number) => ipcRenderer.invoke("remove-org", orgid),
     joinOrg: (inviteCode: string) => ipcRenderer.invoke("join-org", inviteCode),
     resetOrgInviteCode: (orgid: number) => ipcRenderer.invoke("reset-org-invite-code", orgid),
     uploadOrgAvatar: (orgid: number) => ipcRenderer.invoke("upload-org-avatar", orgid),
+    setOrgGithubRepos: (orgid: number, repos: object) => ipcRenderer.invoke("set-github-repos", orgid, repos),
+    searchOrg: (query: string) => ipcRenderer.invoke("search-orgs", query),
 
     close: () => ipcRenderer.send("close"),
     minimize: () => ipcRenderer.send("minimize"),
@@ -66,6 +69,7 @@ contextBridge.exposeInMainWorld('electron', {
     createFolder: (path: string) => ipcRenderer.invoke("create-folder", path),
     renamePath: (oldPath: string, newPath: string) => ipcRenderer.invoke("rename-path", oldPath, newPath),
 
+    setLocal: (data: any) => ipcRenderer.invoke("set-local", data),
     getLocal: () => ipcRenderer.invoke("get-app-local"),
 
     requestFile: () => ipcRenderer.invoke("request-file-open"),
@@ -122,6 +126,13 @@ contextBridge.exposeInMainWorld('electron', {
     javascriptAST: (code: string, language?: string) => ipcRenderer.invoke("javascript-ast", code, language),
     typescriptAST: (code: string, language?: string) => ipcRenderer.invoke("typescript-ast", code, language),
     golangAST: (code: string) => ipcRenderer.invoke("golang-ast", code),
+
+    sendCodeSuggestRequest: (data: any) => ipcRenderer.send("code-suggest-request", data),
+    onCodeSuggestResult: (callback: any) => {
+        const listener = (_event: any, result: any) => callback(result);
+        ipcRenderer.on("code-suggest-result", listener);
+        return () => ipcRenderer.removeListener("code-suggest-result", listener);
+    },
 
     // for extensions
 
@@ -221,8 +232,8 @@ contextBridge.exposeInMainWorld('electron', {
     
     triggers: {
         sendFileOpened: (data: any) => ipcRenderer.send("file-opened-event", data),
-        sendAceChanged: (data: any) => ipcRenderer.send("ace-changed-event", data),
-        sendAceClicked: (data: any) => ipcRenderer.send("ace-clicked-event", data),
+        sendEditorChanged: (data: any) => ipcRenderer.send("editor-changed-event", data),
+        sendEditorClicked: (data: any) => ipcRenderer.send("editor-clicked-event", data),
     },
 
     // 

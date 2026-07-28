@@ -1,9 +1,11 @@
 export function createDIV() {
     return document.createElement("div")
 }
-export function createParagraph(text, isWrapper = false) {
+export function createParagraph(text, isWrapper = false, isHTML = false) {
     const p = document.createElement("p")
-    p.textContent = text
+
+    if(!isHTML) p.textContent = text
+    if(isHTML) p.innerHTML = text
 
     if(isWrapper) {
         const wrapper = document.createElement("span")
@@ -43,4 +45,24 @@ export function createBadge(icon) {
 }
 export function createSpan() {
     return document.createElement("span")
+}
+
+export function replaceVars(text, vars) {
+    return text.replace(/\%\((.*?)\)/g, (_, key) => {
+        return key in vars ? String(vars[key]) : _;
+    });
+}
+export async function svgToElement(url) {
+    const parser = new DOMParser()
+
+    const res = await fetch(url)
+    const svg = parser.parseFromString(await res.text(), "image/svg+xml")
+
+    return svg.documentElement
+}
+export function wrapTags(text, className = 'tag') {
+    return text.replace(
+        /(^|\s)(#([\p{L}\p{N}_-]+))/gu,
+        (_, space, tag) => `${space}<span class="${className}">${tag}</span>`
+    );
 }

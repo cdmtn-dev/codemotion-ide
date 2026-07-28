@@ -4,7 +4,7 @@ import { createNotify, getInitials, truncateString } from "../../lib.js"
 export function createNewModalObject({ lgls }) {
     return {
         name: lgls("createNew.title"),
-        icon: "add",
+        icon: "add_circle",
 
         content: [
             {

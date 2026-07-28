@@ -1,6 +1,7 @@
 const { dialog } = require("electron")
 const fsPromise = require('fs/promises');
 const path = require("path")
+const { loadGitignore, isIgnored } = require("./gitignore")
 
 function selectFile(win) {
     const result = dialog.showOpenDialogSync(win, {
@@ -36,7 +37,7 @@ async function readDirTree(rootPath, options = {}) {
     const absRoot = path.resolve(rootPath);
     const maxDepth = Number.isInteger(options.maxDepth) ? options.maxDepth : Infinity;
     const ignoreRoot = path.resolve(options.ignoreRoot || absRoot);
-    const ignoreRules = await readIgnoreRules(ignoreRoot);
+    const ignoreRules = await loadGitignore(ignoreRoot);
 
     async function walk(dir, depth = 0) {
         let entries = [];
@@ -46,10 +47,13 @@ async function readDirTree(rootPath, options = {}) {
 
             for (const d of dirents) {
                 const full = path.join(dir, d.name);
-                const item = { name: d.name, path: full, ignored: isIgnored(full, d.isDirectory(), ignoreRoot, ignoreRules) };
+                const isDirectory = d.isDirectory();
+                const item = { name: d.name, path: full, ignored: isIgnored(full, ignoreRoot, ignoreRules, isDirectory) };
 
-                if (d.isDirectory()) {
-                    if (depth < maxDepth) {
+                if (isDirectory) {
+                    if (item.ignored && ignoreRules.canPrune) {
+                        entries.push({ ...item, type: 'dir', loaded: false });
+                    } else if (depth < maxDepth) {
                         const children = await walk(full, depth + 1);
                         entries.push({ ...item, type: 'dir', children, loaded: true });
                     } else {
@@ -101,45 +105,4 @@ module.exports = {
     selectFolder,
     saveFile,
     readDirTree
-}
-
-async function readIgnoreRules(rootPath) {
-    try {
-        const content = await fsPromise.readFile(path.join(rootPath, ".gitignore"), "utf8");
-        return content
-            .split(/\r?\n/)
-            .map(line => line.trim())
-            .filter(line => line && !line.startsWith("#"))
-            .map(line => line.replace(/\\/g, "/"));
-    } catch (_) {
-        return [];
-    }
-}
-
-function isIgnored(targetPath, isDir, rootPath, rules) {
-    const relative = path.relative(rootPath, targetPath).replace(/\\/g, "/");
-    if (!relative || relative.startsWith("..")) return false;
-
-    const name = path.basename(targetPath);
-
-    return rules.some(rule => {
-        let pattern = rule;
-        let dirOnly = pattern.endsWith("/");
-
-        if (pattern.startsWith("!")) return false;
-        pattern = pattern.replace(/^\/+/, "").replace(/\/+$/, "");
-        if (!pattern) return false;
-
-        const target = pattern.includes("/") ? relative : name;
-
-        if (dirOnly && !isDir) return false;
-        if (target === pattern || relative === pattern || relative.startsWith(`${pattern}/`)) return true;
-
-        if (pattern.includes("*")) {
-            const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*");
-            return new RegExp(`^${escaped}$`).test(target);
-        }
-
-        return false;
-    });
 }

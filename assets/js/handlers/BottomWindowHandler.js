@@ -277,7 +277,11 @@ export class BottomWindow {
     }
 }
 
-export function closeAllWindows() {
-    BottomWindow.windows.forEach(window => window.hide())
-    document.querySelector(".bottom-window__container").classList.remove("full")
+export function closeAllWindows(exceptId = null) {
+    BottomWindow.windows.forEach((window, id) => {
+        if (id !== exceptId) window.hide()
+    })
+    if (!exceptId) {
+        document.querySelector(".bottom-window__container").classList.remove("full")
+    }
 }

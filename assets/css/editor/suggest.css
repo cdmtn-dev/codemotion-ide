@@ -1,0 +1,9 @@
+.cm-suggest-ghost {
+    opacity: 0.4;
+    font-style: italic;
+    pointer-events: none;
+}
+
+.cm-suggest-ghost__line {
+    color: inherit;
+}

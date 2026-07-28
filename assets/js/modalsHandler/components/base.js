@@ -7,6 +7,7 @@ export function renderModalBase(options = {}) {
     const isHiddenOnSpawn = options.isHiddenOnSpawn
     const modalClassList = options.modalClassList
     const title = options.title
+    const titleAvatar = options.titleAvatar
     const pages = options.pages
     const size = options.size
 
@@ -69,7 +70,8 @@ export function renderModalBase(options = {}) {
     if(typeof pages == "object" && pages.length > 0) {
         sideBarHandler(pages, {
             body: modalBody,
-            title: title
+            title: title,
+            titleAvatar: titleAvatar
         })
     }
     else if("content" in options) {

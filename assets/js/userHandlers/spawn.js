@@ -1,4 +1,8 @@
-export function spawnSideBarOrganizationsButton({ gls, userOrgs }) {
+import { GLS } from "../lib.js"
+
+export function spawnSideBarOrganizationsButton({ userOrgs }) {
+    const gls = GLS.initLocal()
+
     if (userOrgs.length > 0) {
         if(!document.querySelector(".sidebar-item#yourOrganizations")) {
             const orgSideBarBtn = document.createElement("div")

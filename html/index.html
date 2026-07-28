@@ -37,6 +37,7 @@
             https://cdn.jsdelivr.net
             https://codemotion.yurba.one;
         connect-src 'self'
+            https://api.github.com
             https://cdn.jsdelivr.net
             https://unpkg.com
             https://www.unpkg.com
@@ -45,10 +46,6 @@
     ">
 
     <link rel="stylesheet" href="../assets/css/material-icons/css2.css" />
-
-    <script defer src="../ace/src-noconflict/ace.js"></script>
-    <script defer src="../ace/plugins/ext-language_tools.js"></script>
-
     <!-- codemirror -->
     <script defer src="../codemirror/dist/codemirror.js"></script>
 
@@ -128,7 +125,6 @@
 					<div class="popup-content hidden">
 						<div class="popup-content__item" id="extensionsAll" gls="popups.account.installedExtensions">Installed extensions</div>
                         <div class="popup-content__item" id="yourOrganizations" gls="popups.account.yourOrganizations">Your organizations</div>
-                        <div class="popup-content__item" id="createOrganization" gls="popups.account.createOrganization">Create organization</div>
                         <div class="popup-content__divider"></div>
                         <div class="popup-content__item danger" id="logout" gls="popups.account.logout">Logout</div>
 					</div>
@@ -196,6 +192,13 @@
                     <span class="material-symbols-rounded bounce-on-hover outline" id="open_folder" visibleOn="tab:files">folder_open</span>
                     <span class="material-symbols-rounded bounce-on-hover outline" id="add_bug" visibleOn="tab:bugs">add</span>
                     <span class="material-symbols-rounded bounce-on-hover outline" id="refresh_bugs" visibleOn="tab:bugs">sync</span>
+                    <span class="collapse-all-button bounce-on-hover" id="collapse_all" visibleOn="tab:files">
+                        <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                            <path d="M14 4.27051C14.5999 4.62053 15 5.26009 15 6V11C15 13.21 13.21 15 11 15H6C5.26009 15 4.62053 14.5999 4.27051 14H11C12.65 14 14 12.65 14 11V4.27051Z"/>
+                            <path d="M9.5 7C9.776 7 10 7.224 10 7.5C10 7.776 9.776 8 9.5 8H5.5C5.224 8 5 7.776 5 7.5C5 7.224 5.224 7 5.5 7H9.5Z"/>
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M11 2C12.103 2 13 2.897 13 4V11C13 12.103 12.103 13 11 13H4C2.897 13 2 12.103 2 11V4C2 2.897 2.897 2 4 2H11ZM4 3C3.449 3 3 3.449 3 4V11C3 11.552 3.449 12 4 12H11C11.551 12 12 11.552 12 11V4C12 3.449 11.551 3 11 3H4Z"/>
+                        </svg>
+                    </span>
                 </div>
             </div>
             <div class="explorer-elements" data-tab="files">
@@ -281,6 +284,10 @@
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="code-taskprogress hidden">
+                <span class="code-taskprogress_name">Forking "zrld/my-github-project"</span>
+                <span class="code-taskprogress_description">Cloning the repository...</span>
             </div>
             <div class="code-structure">
                 <span gls="editor.nocontext">No context</span>

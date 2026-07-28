@@ -1,0 +1,10 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "module": "ES2022",
+        "outDir": "app/dist-esm"
+    },
+    "include": [
+        "app/main/textmate/compile.ts"
+    ]
+}

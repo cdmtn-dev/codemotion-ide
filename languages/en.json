@@ -16,6 +16,38 @@
         "offlineMode": "Offline mode"
     },
 
+    "save": "Save",
+
+    "taskProgress": {
+        "defaults": {
+            "starting": "Starting...",
+            "done": "Done",
+            "error": "Error"
+        },
+
+        "githubFork": {
+            "waiting": {
+                "title": "Forking %{name}",
+                "description": "Waiting for a response from the Github..."
+            },
+            "done": {
+                "title": "Forked!"
+            },
+            "error": {
+                "title": "%{name} forking error"
+            },
+            "errorAny": {
+                "title": "{{taskProgress.githubFork.error.title}}",
+                "description": "You cannot create a fork of this repository"
+            },
+
+            "buttons": {
+                "open": "Open on Github",
+                "cloneAndOpen": "Clone & Open"
+            }
+        }
+    },
+
     "auth": {
         "register": {
             "title": "Register",
@@ -115,7 +147,6 @@
             "title": "Me",
             "installedExtensions": "Installed extensions",
             "yourOrganizations": "Organizations",
-            "createOrganization": "Create organization",
             "login": "Login",
             "logout": "Logout"
         }
@@ -168,6 +199,7 @@
             "ownerLabel": "You are the founder of this organization",
             "secondRoleLabel": "Your secondary role: %{role}",
             "ownerRoleLabel": "Founder",
+            "repos": "%{count} github repo(-s)",
             "explore": {
                 "title": "Explore"
             },
@@ -226,6 +258,11 @@
                         "title": "Reset invite code"
                     }
                 },
+                "githubRepos": {
+                    "loadRequest": "Select an organization to retrieve data",
+                    "title": "Github projects (%{current}/%{max})",
+                    "description": "You can add up to %{max} links to your public GitHub projects. Other users will be able to fork them right from within the app"
+                },
                 "dangerZone": {
                     "switch": {
                         "title": "Enable destructive actions",
@@ -250,6 +287,38 @@
                 },
                 "errorNotification": {
                     "title": "Error attempting to join an organization"
+                }
+            },
+            "search": {
+                "title": "Search",
+                "description": "Enter the name of the organization to view public information about it",
+                "inputs": {
+                    "search": "Enter organization name"
+                },
+                "noResults": {
+                    "text": "No organizations were found for the search term \"%{name}\""
+                }
+            },
+            "orgPage": {
+                "about": {
+                    "title": "About",
+                    "page": {
+                        "title": "Organization \"%{name}\"",
+                        "description": "Public Information About the Organization",
+
+                        "website": {
+                            "title": "Organization website"
+                        },
+                        "githubRepos": {
+                            "title": "Repositories"
+                        },
+                        "info": {
+                            "owner": "Owner",
+                            "createdAt": "Date created",
+                            "members": "Members",
+                            "repos": "Github repo's"
+                        }
+                    }
                 }
             }
         },
@@ -327,11 +396,6 @@
                     "description": "Allows increasing editor text size up to 200%"
                 },
 
-                "smoothScroll": {
-                    "title": "Smooth scrolling",
-                    "description": "Disable smooth scrolling in the editor?"
-                },
-
                 "pythonRunner": {
                     "title": "Python emulator",
                     "description": "Choose the Python version you want to use",
@@ -356,6 +420,40 @@
                 "confirmClose": {
                     "title": "Confirm on close",
                     "description": "Show a confirmation dialog when closing a tab with unsaved changes"
+                }
+            },
+
+            "extensions": {
+                "title": "Extensions",
+                "riskyPermsWarn": {
+                    "title": "Disable risky permission warning",
+                    "description": "Skips the warning modal for extensions with risky permissions and auto-enables them"
+                }
+            },
+
+            "gitGithub": {
+                "title": "Git & Github",
+                "integration": {
+                    "title": "Git & Github Integration",
+                    "description": "Set up and enable access to Git features to unlock more capabilities",
+                    "inputs": {
+                        "token": {
+                            "placeholder": "GitHub Personal Access Token"
+                        }
+                    },
+                    "buttons": {
+                        "view": "View"
+                    }
+                },
+                "notifications": {
+                    "success": {
+                        "title": "Github token saved locally",
+                        "description": "Your GitHub key has been successfully saved locally. It will be used for GitHub API requests"
+                    },
+                    "error": {
+                        "title": "Github token save error",
+                        "description": "An error occurred while saving the key locally. Please try logging back into your account"
+                    }
                 }
             }
         },

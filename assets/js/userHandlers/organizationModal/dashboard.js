@@ -1,8 +1,12 @@
 import { sendEvent } from "../../bus.js"
 import { createNotify, truncateString, Options, formatUnix, GetOrgAvatar, GLS } from "../../lib.js"
+import { renderList } from "../../modalsHandler/components/list.js"
 import { Modal } from "../../modalsHandler/engine.js"
 
 function encodeInviteCode(code) {
+    if(!code) {
+        return "****"
+    }
     return code
         .split("-")
         .map(part => "*".repeat(part.length))
@@ -88,7 +92,7 @@ export function dashboardModalObject({ lgls }) {
                         type: "divider"
                     },
 
-
+                    // edit zone
                     {
                         type: "placeholder",
                         id: "dashboardOrgEditZoneTitle",
@@ -113,7 +117,29 @@ export function dashboardModalObject({ lgls }) {
                         container: "#dashboardOrgEditZoneButtons"
                     },
 
+                    {
+                        type: "divider"
+                    },
 
+                    // github links zone
+                    {
+                        type: "placeholder",
+                        id: "dashboardOrgGitHubLinksTitle",
+                        title: lgls("dashboard.githubRepos.title", { current: 0, max: 0 }),
+                        description: lgls("dashboard.githubRepos.loadRequest")
+                    },
+                    {
+                        type: "placeholder",
+                        id: "dashboardOrgGitHubLinks"
+                    },
+                    {
+                        type: "button",
+                        title: "Save",
+                        id: "dashboardOrgGitHubLinksSave",
+                        classList: ["hidden"]
+                    },
+
+                    // danger zone
                     {
                         type: "divider"
                     },
@@ -152,6 +178,10 @@ export function dashboardModalObject({ lgls }) {
 export async function dashboardModalHandle({ userOrgs, element, orgModal }) {
     const gls = await GLS.initLocal()
 
+    function lgls(key, replacements = {}) {
+        return gls.get(`modals.organizations.dashboard.${key}`, replacements)
+    }
+
     const dashboardOrgSelect = new Options("dashboardOrgSelect")
     dashboardOrgSelect.clear()
     dashboardOrgSelect.add("none", "None").default()
@@ -188,6 +218,13 @@ export async function dashboardModalHandle({ userOrgs, element, orgModal }) {
 
     const avatar = element.querySelector("#dashboardOrgAvatar")
 
+    const githubLinksWrapper = element.querySelector("#dashboardOrgGitHubLinks")
+    const githubLinksListAddBtn = githubLinksWrapper.querySelector("#modal-list__add-btn")
+    const githubLinksSaveBtn = element.querySelector("#dashboardOrgGitHubLinksSave")
+    const githubLinksTitleWrapper = element.querySelector("#dashboardOrgGitHubLinksTitle")
+    const githubLinksTitle = githubLinksTitleWrapper.querySelector(".modal-category__item-title")
+    const githubLinksDesc = githubLinksTitleWrapper.querySelector(".modal-category__item-desc")
+
     const editButtons = element.querySelector("#dashboardOrgEditZoneButtons")
     const editResetInvite = element.querySelector("#dashboardOrgEditResetInvite")
     const editUploadAvatar = element.querySelector("#dashboardOrgEditUploadAvatar")
@@ -222,7 +259,38 @@ export async function dashboardModalHandle({ userOrgs, element, orgModal }) {
     dashboardOrgSelect.on("click", async (e) => {
         async function render(data) {
             const isOwner = data.is_owner
+            const maxGithubRepos = 8
             const inviteCodeResetAt = data.invite_reset_at
+            const githubRepos = data.github_repos
+
+            githubLinksTitle.textContent = lgls("githubRepos.title", 
+                { 
+                    current: githubRepos.length, 
+                    max: maxGithubRepos
+                }
+            )
+            githubLinksDesc.textContent = lgls("githubRepos.description", 
+                { 
+                    max: maxGithubRepos
+                }
+            )
+
+            const githubReposList = renderList({
+                maxElements: maxGithubRepos,
+                renderType: "byAdding",
+                placeholders: [],
+                placeholderAll: "GitHub Link",
+                placeholderPrefix: "https://github.com/",
+                values: githubRepos,
+                valuesReadOnly: !isOwner,
+                onAdd: (count) => {
+                    githubLinksTitle.textContent = `Github projects (${count}/${maxGithubRepos})`
+                }
+            })
+            githubReposList.classList.add("list-grid")
+
+            githubLinksWrapper.innerHTML = ``
+            githubLinksWrapper.appendChild(githubReposList)
 
             infoWrapper.classList.remove("hidden")
             infoName.textContent = data.name
@@ -247,11 +315,11 @@ export async function dashboardModalHandle({ userOrgs, element, orgModal }) {
             }
 
             membersCount.textContent = data.members_count
-            inviteCode.textContent = data.invite_code == false ? "--" : encodeInviteCode(data.invite_code)
+            inviteCode.textContent = encodeInviteCode(data.invite_code)
             createdAt.textContent = formatUnix(data.created_at, "{dd}.{mm}.{yyyy}, {hh}:{ii}")
 
             inviteCode.onclick = () => {
-                inviteCode.textContent = data.invite_code
+                inviteCode.textContent = data.invite_code == false ? "--" : data.invite_code
             }
 
             if(!isOwner) {
@@ -260,8 +328,12 @@ export async function dashboardModalHandle({ userOrgs, element, orgModal }) {
                 buttonsContainer.classList.add("hidden")
 
                 editButtons.classList.add("disabled")
+
+                githubLinksSaveBtn.classList.add("hidden")
             }
             else {
+                githubLinksSaveBtn.classList.remove("hidden")
+
                 dangerZoneTitle.classList.remove("hidden")
                 dangerZoneSwitch.closest(".modal-category__item").classList.remove("hidden")
                 buttonsContainer.classList.remove("hidden")
@@ -338,6 +410,38 @@ export async function dashboardModalHandle({ userOrgs, element, orgModal }) {
                 }
 
                 orgModal.unDisableCurrent()
+            }
+            // github linkk
+            githubLinksSaveBtn.onclick = async () => {
+                const inputs = githubLinksWrapper.querySelectorAll("input")
+                let repos = []
+
+                inputs.forEach(input => {
+                    repos.push(input.value.split("https://github.com/")[1])
+                })
+
+                repos = repos.filter(item => item.length > 0)
+
+                const res = await window.electron.setOrgGithubRepos(data.id, repos)
+                
+                if(res.success) {
+                    sendEvent("org-update", {})
+
+                    createNotify({
+                        type: "success",
+                        icon: "check",
+                        title: "Github repo's setted",
+                        content: `Github repo's for "${data.name}" successfully setted`
+                    })
+                }
+                else {
+                    createNotify({
+                        type: "danger",
+                        icon: "cancel",
+                        title: "Github repo's error",
+                        content: res.msg
+                    })
+                }
             }
         }
 

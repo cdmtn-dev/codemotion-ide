@@ -122,7 +122,6 @@ export class ContextMenu {
     }
 
     bindOnEditor(editor, editorContainer) {
-        console.log(editorContainer)
         this.scope = editorContainer;
 
         this._showMenu = (x, y) => {

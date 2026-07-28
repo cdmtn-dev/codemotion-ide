@@ -17,6 +17,7 @@ import { _Filenames } from "./libClasses/fillenames.js"
 import { _CodeTemplates } from "./libClasses/codeTemplates.js"
 import { _EditorAdapter } from "./libClasses/EditorAdapter.js"
 import { _GetOrgAvatar } from "./libClasses/avatar.js"
+import { _Task } from "./libClasses/task.js"
 
 let runtimeErrors = []
 let runtimeErrorsCount = 0
@@ -36,6 +37,7 @@ export const Loader = _Loader
 export const GLS = _GLS
 export const CodeTemplates = _CodeTemplates
 export const EditorAdapter = _EditorAdapter
+export const Task = _Task
 
 export const GetOrgAvatar = _GetOrgAvatar
 
@@ -216,7 +218,7 @@ export function addToHistory({ id, actionType, value, desc, today }) {
 
 export function addToBug({ id, priority, value, desc, today, isSelf, org, resolved, author, assignedTo, type }) {
     const bugID = id != undefined ? id : Object.keys(bugsObject).length + 1
-    const bugPriority = priority != undefined ? priority : 0
+    const bugPriority = (priority != undefined && !Number.isNaN(priority)) ? priority : 0
     const bugDesc = desc != undefined ? desc : "No description provided"
     const bugToday = today != undefined ? today : new Date().format("H:i")
     const bugIsSelf = isSelf != undefined ? isSelf : false
@@ -224,7 +226,8 @@ export function addToBug({ id, priority, value, desc, today, isSelf, org, resolv
     const bugAuthor = author != undefined ? author : false
     const bugAssignedTo = assignedTo != undefined ? assignedTo : {}
 
-    addToHistory({ actionType: "bug-added", value: value, desc: `Bug "${value}" added with ${priorityClasses[String(priority)].name} priority` });
+    const priorityInfo = priorityClasses[String(bugPriority)] || priorityClasses["0"]
+    addToHistory({ actionType: "bug-added", value: value, desc: `Bug "${value}" added with ${priorityInfo.name} priority` });
 
     bugsObject[bugID] = {
         id: bugID,
@@ -558,11 +561,6 @@ export function clearRuntimeErrors() {
     runtimeErrors = []
     runtimeErrorsCount = 0
 
-    const items = document.querySelectorAll(".runtime-item#runTimeErrorItem")
-    items.forEach(i => {
-        console.log(i)
-    })
-
     addRuntimeError(
         {
             isNull: true,
@@ -726,6 +724,13 @@ export function idify(string) {
     return btoa(binary).replaceAll("=", "");
 }
 
+export function linkify(text) {
+    return text.replace(
+        /(https?:\/\/[^\s<]+)/g,
+        '<a href="$1" target="_blank" rel="noopener noreferrer"><span>$1</span></a>'
+    );
+}
+
 export function splitCamelCase(str) {
     return str
         .replace(/([a-z])([A-Z])/g, "$1 $2")
@@ -815,29 +820,6 @@ export function type(value) {
 
 export function eventLog(...args) {
     console.warn(`[EVENT LOG] -----------\n`, ...args)
-}
-
-export function loadAceModule(moduleName, callback) {
-    try {
-        const mod = ace.require(moduleName)
-        callback(mod);
-    } catch (e) {
-        const script = document.createElement("script");
-        script.src = `../ace/src-noconflict/${moduleName}.js`;
-
-        if(callback) {
-            script.onload = () => {
-                callback(ace.require(moduleName));
-            };
-        }
-        document.head.appendChild(script);
-    }
-}
-export const loadAceModuleAsync = (moduleName) => {
-    return new Promise((resolve) => {
-        loadAceModule(moduleName)
-        resolve()
-    })
 }
 
 const CODE_WINDOW_VISUALS_TABS = document.querySelector(".code-tabs")
@@ -955,6 +937,21 @@ export function fitAceHeight(editor, minHeight = 50, maxHeight = 800) {
 }
 export function setAppTitle(title) {
     window.electron.setAppTitle(title)
+}
+
+export async function getGithubToken() {
+    const localData = await window.electron.getLocal()
+
+    if (
+        localData &&
+        typeof localData === "object" &&
+        typeof localData.githubToken === "string" &&
+        localData.githubToken.length > 0
+    ) {
+        return localData.githubToken
+    }
+
+    return false
 }
 
 window.Notificator = Notificator

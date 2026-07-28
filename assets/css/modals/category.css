@@ -36,6 +36,9 @@
 }
 .modal-category__item .modal-category__item-title {
     font-weight: var(--default-font-weight);
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 .modal-category__item .modal-category__item-desc {
     opacity: .5;

@@ -13,7 +13,7 @@
         "skipLibCheck": true,
         "allowJs": true
     },
-    "include": ["app/main/**/*", "assets/js/editor/colorComments.js"],
+    "include": ["app/main/**/*", "assets/js/editor/colorComments.js", "textmate/**/*"],
     "exclude": [
         "ace/**/*",
         "assets/**/*",

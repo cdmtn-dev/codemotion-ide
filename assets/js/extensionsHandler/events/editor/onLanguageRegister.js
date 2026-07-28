@@ -1,6 +1,6 @@
 import { bus } from "../../../bus.js"
-import { registerAceLanguage } from "../../../../../helpers/aceRegisterLanguage.js"
-import { Languages } from "../../../lib.js"
+import { ICON_MAP } from "../../../iconRegistry.js"
+import { EditorAdapter, Languages } from "../../../lib.js"
 
 export function onLanguageRegisterCallback({ data }) {
     const name = data.languageName
@@ -8,23 +8,11 @@ export function onLanguageRegisterCallback({ data }) {
     const extensions = data.languageExtensions
     const rules = data.languageRules
     const iconPath = data.languageIconPath
-    
-    bus.addEventListener("aceModeChanged", (e) => {
-        let data = e.detail
-        let extension = data.extension
-        let editor = data.editor
 
-        if ("errors" in rules) {
-            if (rules.errors) {
-                enableErrors(editor)
-            }
-            else {
-                disableErrors(editor)
-            }
-        }
+    EditorAdapter.registerLanguage({
+        id: name,
+        rules: rules
     })
-
-    registerAceLanguage(name, rules)
 
     const languageObject = {
         name: displayName,
@@ -39,6 +27,8 @@ export function onLanguageRegisterCallback({ data }) {
 
     extensions.forEach(id => {
         languageObject.id = id
+
+        ICON_MAP[id] = iconPath
         Languages.add(languageObject)
     })
 }

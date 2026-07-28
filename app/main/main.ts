@@ -32,6 +32,7 @@ require("./ipc/updaters")
 require("./ipc/misc")
 require("./ipc/organizations")
 require("./ipc/bugs")
+require("./ipc/suggest")
 
 // ext
 require("../sandbox/regs/language")
@@ -81,7 +82,7 @@ async function createWindow() {
     const localData = getLocalAppData();
     const settingsData = getSettingsData()
     const appIcon = await getAppIcon();
-    const isPackaged = !app.isPackaged;
+    const isPackaged = app.isPackaged;
     const primaryDisplay = screen.getPrimaryDisplay();
     const { width, height } = primaryDisplay.workAreaSize;
 
@@ -184,7 +185,11 @@ async function createWindow() {
 
     ipcMain.on("fullscreen", () => {
         if (mainWindow) {
-            mainWindow.maximize();
+            if (mainWindow.isMaximized()) {
+                mainWindow.unmaximize();
+            } else {
+                mainWindow.maximize();
+            }
         }
     });
 

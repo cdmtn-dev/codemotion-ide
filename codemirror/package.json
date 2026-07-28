@@ -38,10 +38,13 @@
     "@codemirror/view": "^6.43.6",
     "@replit/codemirror-indentation-markers": "^6.5.3",
     "@uiw/codemirror-extensions-color": "^4.25.11",
+    "@uiw/codemirror-theme-github": "^4.25.11",
     "@uiw/codemirror-themes": "^4.25.11",
     "@uiw/codemirror-themes-all": "^4.25.11",
     "codemirror": "^6.0.2",
-    "html-to-image": "^1.11.13"
+    "html-to-image": "^1.11.13",
+    "vscode-oniguruma": "^2.0.1",
+    "vscode-textmate": "^9.3.2"
   },
   "devDependencies": {
     "esbuild": "^0.28.1"

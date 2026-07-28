@@ -1,6 +1,3 @@
-// modal engine just for this ide
-// just for note: i recreated this thing 3 times
-
 import { renderModalBase } from "./components/base.js"
 
 const backdrop = document.createElement("div")
@@ -42,6 +39,15 @@ export function validBool(boolean) {
     if(typeof boolean == "boolean") return boolean
     else return undefined
 }
+// for objects
+export function validObject(object) {
+    if(object !== null && typeof object === 'object' && !Array.isArray(object)) {
+        return object
+    }
+    else {
+        return undefined
+    }
+}
 
 export function err(text) {
     throw new Error(`[CodeMotion.Modals] ${text}`)
@@ -52,6 +58,8 @@ export function showBackdrop() {
 export function hideBackdrop() {
     backdrop.classList.add("hidden")
 }
+
+const INPUT_EVENT_OPTS = { bubbles: true }
 
 export class Modal {
     static list = {}
@@ -78,37 +86,122 @@ export class Modal {
         const name = valid(config.name) ?? "Untitled"
         const isHiddenOnSpawn = valid(config.show) ?? true
         const modalClassList = validArray(config.modalClassList) ?? []
-        const title = valid(config.title) ?? false
+        let title = valid(config.title) ?? false
+        const titleAvatar = valid(config.titleAvatar) ?? false
         const pages = valid(config.pages) ?? {}
         const content = valid(config.content) ?? {}
         const size = valid(config.size) ?? "default"
 
-        const modalBase = renderModalBase({
-            id: id,
-            isHiddenOnSpawn: isHiddenOnSpawn,
-            modalClassList: modalClassList,
-            title: title,
-            pages: pages,
-            content: content,
-            size: size
-        })
+        let modalBase = null
+        let wrapper = null
+        let body = null
+        let contentEl = null
+        let titleEl = null
+        let sidebarPages = null
+        let sidebarIsBody = false
+        let pendingZIndex = null
+        let pendingContent = null
+        let pendingTitleText = null
+        let openListeners = []
 
-        function isSidebar() {
-            return modalBase.body.classList.contains("modal-body-sidebar")
+        function build() {
+            if (modalBase) return modalBase
+
+            modalBase = renderModalBase({
+                id: id,
+                isHiddenOnSpawn: isHiddenOnSpawn,
+                modalClassList: modalClassList,
+                title: title,
+                titleAvatar: titleAvatar,
+                pages: pages,
+                content: content,
+                size: size
+            })
+
+            wrapper = modalBase.wrapper
+            body = modalBase.body
+
+            sidebarIsBody = body.classList.contains("modal-body-sidebar")
+            if (sidebarIsBody) {
+                sidebarPages = body.querySelectorAll(".modal-body__sidebar-content")
+            }
+
+            contentEl = wrapper.querySelector(".modal-content")
+            titleEl = wrapper.querySelector(".modal-title")
+
+            if (pendingZIndex !== null) {
+                wrapper.style.zIndex = pendingZIndex
+            }
+
+            if (pendingContent !== null) {
+                applyContent(pendingContent)
+                pendingContent = null
+            }
+            if (pendingTitleText !== null) {
+                applyTitle(pendingTitleText)
+                pendingTitleText = null
+            }
+
+            return modalBase
+        }
+
+        function applyContent(newContent) {
+            if (!contentEl) return
+
+            if (typeof newContent === "string") {
+                contentEl.innerHTML = newContent
+            }
+            else if (newContent instanceof HTMLElement) {
+                contentEl.innerHTML = ''
+                contentEl.appendChild(newContent)
+            }
+        }
+
+        function applyTitle(newTitle) {
+            if (!titleEl) return
+
+            titleEl.textContent = newTitle
+        }
+
+        function mount() {
+            build()
+
+            if (!wrapper.isConnected) {
+                document.body.prepend(wrapper)
+            }
+        }
+
+        function activate() {
+            mount()
+
+            requestAnimationFrame(() => { 
+                wrapper.classList.remove("hidden")
+                showBackdrop()
+            })
+
+            if (openListeners.length) {
+                const listeners = openListeners.slice()
+                listeners.forEach(l => l.callback(api))
+                openListeners = openListeners.filter(l => !l.once)
+            }
         }
 
         const api = {
             id: id,
 
-            el: modalBase.wrapper,
+            get el() {
+                build()
+                return wrapper
+            },
+
+            preRender: () => {
+                mount()
+            },
 
             bind: (el) => {
-                document.body.prepend(modalBase.wrapper)
-                
                 function bindClick(el) {
                     el.addEventListener("click", () => {
-                        modalBase.wrapper.classList.remove("hidden")
-                        showBackdrop()
+                        activate()
                     })
                 }
 
@@ -124,60 +217,84 @@ export class Modal {
 
             zIndex(value) {
                 if(Number.isInteger(value)) {
-                    modalBase.wrapper.style.zIndex = value
+                    if (modalBase) {
+                        wrapper.style.zIndex = value
+                    } else {
+                        pendingZIndex = value
+                    }
                 }
             },
 
             open: () => {
-                document.body.prepend(modalBase.wrapper)
-                modalBase.wrapper.classList.remove("hidden")
-                showBackdrop()
+                activate()
+            },
+
+            onOpen: (callback, options = {}) => {
+                if (typeof callback !== "function") return () => {}
+
+                const once = validBool(options.once) ?? false
+                const listener = { callback, once }
+
+                openListeners.push(listener)
+
+                return () => {
+                    openListeners = openListeners.filter(l => l !== listener)
+                }
             },
 
             close: () => {
+                if (!modalBase) return
+
                 hideBackdrop()
-                modalBase.wrapper.classList.add("hidden")
+                wrapper.classList.add("hidden")
             },
 
             destroy: () => {
-                modalBase.wrapper.remove()
+                if (modalBase) {
+                    wrapper.remove()
+                }
+
+                modalBase = null
+                wrapper = null
+                body = null
+                contentEl = null
+                titleEl = null
+                sidebarPages = null
+                openListeners = []
+
                 delete Modal.list[id]
             },
 
-            isSidebar: isSidebar,
+            isSidebar: () => {
+                build()
+                return sidebarIsBody
+            },
 
             disableCurrent() {
-                if (isSidebar()) {
-                    const body = modalBase.body
-                    const pages = body.querySelectorAll(".modal-body__sidebar-content")
-
-                    pages.forEach(p => {
+                build()
+                if (sidebarIsBody) {
+                    sidebarPages.forEach(p => {
                         if(!p.classList.contains("hidden")) p.classList.add("disabled")
                     })
                 }
             },
             unDisableCurrent() {
-                if (isSidebar()) {
-                    const body = modalBase.body
-                    const pages = body.querySelectorAll(".modal-body__sidebar-content")
-
-                    pages.forEach(p => {
+                build()
+                if (sidebarIsBody) {
+                    sidebarPages.forEach(p => {
                         if(!p.classList.contains("hidden")) p.classList.remove("disabled")
                     })
                 }
             },
 
-            pageShow: (id) => {
-                if (isSidebar()) {
-                    const body = modalBase.body
-                    const wrapper = modalBase.wrapper
-                    const pages = body.querySelectorAll(".modal-body__sidebar-content")
-
-                    pages.forEach((page, index) => {
+            pageShow: (pageIndex) => {
+                build()
+                if (sidebarIsBody) {
+                    sidebarPages.forEach((page, index) => {
                         const pageid = page.id.split("_content")[0]
 
-                        if (index == id) {
-                            pages.forEach(p => p.classList.add("hidden"))
+                        if (index == pageIndex) {
+                            sidebarPages.forEach(p => p.classList.add("hidden"))
                             page.classList.remove("hidden")
 
                             const pageSidebarBtn = wrapper.querySelector(`[id="${pageid}"]`)
@@ -194,37 +311,30 @@ export class Modal {
             },
 
             clear: () => {
-                const body = modalBase.body
+                if (!modalBase) return
 
                 body.querySelectorAll("input").forEach(i => {
                     i.value = ''
-
-                    i.dispatchEvent(new Event("input", {
-                        bubbles: true
-                    }))
+                    i.dispatchEvent(new Event("input", INPUT_EVENT_OPTS))
                 })
             },
 
-            setContent: (content) => {
-                const contentEl = modalBase.wrapper.querySelector(".modal-content")
-
-                if (!contentEl) return
-
-                if (typeof content === "string") {
-                    contentEl.innerHTML = content
+            setContent: (newContent) => {
+                if (!modalBase) {
+                    pendingContent = newContent
+                    return
                 }
-                else if (content instanceof HTMLElement) {
-                    contentEl.innerHTML = ''
-                    contentEl.appendChild(content)
-                }
+
+                applyContent(newContent)
             },
 
             setTitle: (newTitle) => {
-                const titleEl = modalBase.wrapper.querySelector(".modal-title")
+                if (!modalBase) {
+                    pendingTitleText = newTitle
+                    return
+                }
 
-                if (!titleEl) return
-
-                titleEl.textContent = newTitle
+                applyTitle(newTitle)
             }
         }
 

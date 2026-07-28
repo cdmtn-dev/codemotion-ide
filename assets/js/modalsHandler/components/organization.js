@@ -1,8 +1,14 @@
-import { generateAvatar, idify, truncateString } from "../../lib.js"
+import { generateAvatar, GLS, idify, truncateString } from "../../lib.js"
 import { valid } from "../engine.js"
-import { createDIV, createParagraph, createIcon, createLink, createBadge } from "../handlers/helpers.js"
+import { createDIV, createParagraph, createIcon, createLink, createBadge, createSpan, wrapTags } from "../handlers/helpers.js"
 
 export function renderOrganization(properties = {}) {
+    const gls = GLS.initLocal()
+
+    function lgls(key, replacements = {}) {
+        return gls.get(`modals.organizations.${key}`, replacements)
+    }
+
     let id = properties.id
     const name = properties.name
     const description = properties.description
@@ -11,6 +17,7 @@ export function renderOrganization(properties = {}) {
     const badgeOwner = properties.badgeOwner
     const badgeVerified = properties.badgeVerified
     const avatar = properties.avatar
+    const repos = properties.repos
 
     function createSection() {
         const sectionEl = createDIV()
@@ -86,7 +93,10 @@ export function renderOrganization(properties = {}) {
     const secondSectionInfoComponentTitle = createParagraph(name, true)
     secondSectionInfoComponentTitle.classList.add("modal-org__title")
 
-    const secondSectionInfoComponentDesc = createParagraph(truncateString(description, 400))
+    const secondSectionInfoComponentDesc = createParagraph(
+        wrapTags(
+            truncateString(description, 400)
+        ), false, true)
     secondSectionInfoComponentDesc.classList.add("modal-org-description")
 
     secondSectionInfoComponent.appendChild(secondSectionInfoComponentTitle)
@@ -109,7 +119,7 @@ export function renderOrganization(properties = {}) {
     }
 
     if(website) {
-        let url = new URL(website)
+        let url = website.startsWith("https://") ? new URL(website) : new URL("https://" + website)
         let urlPreview = url.host
 
         if (url.pathname != "/") {
@@ -120,8 +130,23 @@ export function renderOrganization(properties = {}) {
         secondSectionIconText.classList.add("modal-org-icontext")
 
         const secondSectionIconTextIcon = createIcon("link_2")
-        const secondSectionIconTextLink = createLink(website)
+        const secondSectionIconTextLink = createLink(url.href)
         secondSectionIconTextLink.textContent = urlPreview
+
+        secondSectionIconText.appendChild(secondSectionIconTextIcon)
+        secondSectionIconText.appendChild(secondSectionIconTextLink)
+
+        secondSectionIconTextWrapper.appendChild(secondSectionIconText)
+
+        secondSectionInfoComponent.appendChild(secondSectionIconTextWrapper)
+    }
+    if(repos.length > 0) {
+        const secondSectionIconText = createDIV()
+        secondSectionIconText.classList.add("modal-org-icontext")
+
+        const secondSectionIconTextIcon = createIcon("commit")
+        const secondSectionIconTextLink = createSpan()
+        secondSectionIconTextLink.textContent = lgls("repos", { count: repos.length })
 
         secondSectionIconText.appendChild(secondSectionIconTextIcon)
         secondSectionIconText.appendChild(secondSectionIconTextLink)

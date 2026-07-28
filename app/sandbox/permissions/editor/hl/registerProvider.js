@@ -1,4 +1,4 @@
-const { setAceChangedCallback } = require("../../../../dist/ipc/ace.js");
+const { setEditorChangedCallback } = require("../../../../dist/ipc/ace.js");
 const { getAceTriggeredData } = require("../__api.js")
 
 const providers = new Map();
@@ -16,7 +16,7 @@ function callback(data) {
 
     if (typeof cb !== "function") return;
 
-    setAceChangedCallback((editorData) => {
+    setEditorChangedCallback((editorData) => {
         const fileId = editorData.editorId;
 
         const allRules = [];

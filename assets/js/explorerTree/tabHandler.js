@@ -12,21 +12,18 @@ import {
     getTheme,
     SideBarIconManager,
     Languages,
-    loadAceModule,
-    loadAceModuleAsync,
     showCodeWindowVisuals,
     Filenames,
     idify,
     CodeTemplates,
     dedent,
     GLS,
-    fitAceHeight,
     setAppTitle,
     setTabName,
     EditorAdapter
 } from "../lib.js"
 import { BottomWindow, closeAllWindows } from "../handlers/BottomWindowHandler.js"
-import { enableSmoothScroll } from "../../plugins/aceSmoothScroller/index.js"
+import { bindImageZoomHandlers } from "../handlers/imageZoomHandler.js"
 import { Setting } from "../settings.js"
 import { getFileIconUrl } from "../iconRegistry.js"
 import {
@@ -48,16 +45,12 @@ import { bus, sendEvent } from "../bus.js"
 
 import { renderPyMsgSuccess, renderPyMsgErr } from "../terminalRenderer/PyRuntimeHandler.js"
 
-import { triggerAceChanged, triggerAceClicked } from "./triggers.js"
+import { triggerEditorChanged, triggerEditorClicked } from "./triggers.js"
 import { TopWindowList, destroyAllTopWindowLists } from "../topWindowHandler/topWindowList.js"
 import { setEditorContext } from "./helpers/setEditorContext.js"
 import { Modal } from "../modalsHandler/engine.js"
 import { electronAPI } from "../global.js"
 import { closeConfirmModal } from "../modals/closeConfirm.js"
-
-ace.require("ace/ext/language_tools");
-ace.require("ace/ext/beautify");
-ace.config.setModuleUrl("ace/mode/gomod", "../app/main/tools/go/gomod-mode.js");
 
 export const recentlyClosed = new Map();
 export const tabsByPath = new Map();
@@ -249,6 +242,7 @@ export class themeEditors {
     }
 
     apply(id) {
+        this.current = id
         this.editor.setTheme(themeEditors.themes[id])
     }
 }
@@ -650,7 +644,10 @@ function initExtensionEditorAPIEvents({ editor }) {
 }
 
 export async function openTab(path, content, extension, name, pathContext, isNew = false, settings = {}) {
-    closeAllWindows()
+    let language = Languages.get(extension)
+    const isImage = language.name == "Image" || extension == "svg"
+
+    closeAllWindows(isImage ? "imagePreview" : null)
     setAppTitle(name)
 
     currentContent = content
@@ -664,22 +661,16 @@ export async function openTab(path, content, extension, name, pathContext, isNew
     pane.id = id;
     editorWrapper.appendChild(pane);
 
-    let language = Languages.get(extension)
-    let languageIcon = await Languages.getIconPath(extension)
-
     let fileNameInfo = Filenames.get(name)
-    let fileNameInfoIcon = await Filenames.getIconPath(name)
 
     const codeMirrorView = window.CodeMirror.create(
         document.getElementById(id),
         {
-            value: content
+            value: isImage ? "" : content
         }
     )
 
     const editor = new EditorAdapter(codeMirrorView);
-
-    addThemeModificator(editor)
 
     const ErrorsHistoryWindow = new BottomWindow("errorsHistory", { title: "Errors history" })
     clearRuntimeErrors()
@@ -687,12 +678,8 @@ export async function openTab(path, content, extension, name, pathContext, isNew
     const imagePreviewWindow = new BottomWindow("imagePreview", { title: "Preview" })
     imagePreviewWindow.removeClose()
 
-    if (language.name == "Image") {
-        disableSave()
-        const escapedPath = escapeHtml(path);
-        imagePreviewWindow.set(`<div class="image-preview"><img src="${escapedPath}"></div>`)
-        imagePreviewWindow.fullscreen()
-        imagePreviewWindow.show()
+    if (isImage) {
+        renderImagePreview(imagePreviewWindow, path)
     }
     else {
         enableSave()
@@ -707,6 +694,21 @@ export async function openTab(path, content, extension, name, pathContext, isNew
     initializeChangeTabSizeButton(settings)
     updateVisibleOnElements(extension, language)
 
+    // chached value set
+    if (cached) {
+        if (!isImage) editor.setValue(cached.content ?? "", -1);
+        editor.resetUndoManager();
+
+        setErrors(editor.getAnnotations())
+        if (cached.cursor) editor.moveCursorTo(cached.cursor.row, cached.cursor.column);
+        if (typeof cached.scrollTop === "number") editor.setScrollTop(cached.scrollTop);
+    } else {
+        if (!isImage) editor.setValue(content ?? "", -1);
+        editor.resetUndoManager();
+        
+        setErrors(editor.getAnnotations())
+    }
+
     editor.setLanguage(fileNameInfo == false ? extension : fileNameInfo.mode);
     editor.setOptions({
         enableBasicAutocompletion: false,
@@ -716,6 +718,8 @@ export async function openTab(path, content, extension, name, pathContext, isNew
         cursorStyle: "smooth",
         fixedWidthGutter: true
     });
+
+    addThemeModificator(editor)
 
     window.electron.triggers.sendFileOpened(
         {
@@ -737,7 +741,7 @@ export async function openTab(path, content, extension, name, pathContext, isNew
 
     // trigger first ace mode changed
 
-    triggerAceChanged({ editor: editor, extension: extension, language: language })
+    triggerEditorChanged({ editor: editor, extension: extension, language: language })
     initExtensionEditorAPIEvents({ editor: editor })
 
     let cursorChangeTimer = null
@@ -747,21 +751,11 @@ export async function openTab(path, content, extension, name, pathContext, isNew
 
         clearTimeout(cursorChangeTimer)
         cursorChangeTimer = setTimeout(() => {
-            triggerAceClicked({ editor: editor, extension: extension, language: language })
+            triggerEditorClicked({ editor: editor, extension: extension, language: language })
         }, 100)
     }
 
-    // 
-
-    if ("editor" in settings && "smoothScroll" in settings.editor) {
-        if (settings.editor.smoothScroll) {
-            try {
-                enableSmoothScroll(editor)
-            } catch (e) {
-                console.warn("Smooth scroll not supported for current editor adapter:", e)
-            }
-        }
-    }
+    //
 
     editor.onWheel((e) => {
         if (!e.ctrlKey && !e.metaKey) return
@@ -819,19 +813,7 @@ export async function openTab(path, content, extension, name, pathContext, isNew
             settings: settings
         })
     });
-
-    if (cached) {
-        editor.setValue(cached.content ?? "", -1);
-        editor.resetUndoManager();
-        setErrors(editor.getAnnotations())
-        if (cached.cursor) editor.moveCursorTo(cached.cursor.row, cached.cursor.column);
-        if (typeof cached.scrollTop === "number") editor.setScrollTop(cached.scrollTop);
-    } else {
-        editor.setValue(content ?? "", -1);
-        editor.resetUndoManager();
-        setErrors(editor.getAnnotations())
-    }
-
+    
     const tab = document.createElement("div");
 
     tab.className = "code-tab";
@@ -912,6 +894,7 @@ export async function openTab(path, content, extension, name, pathContext, isNew
         paneEl: pane,
         ErrorsHistoryWindow: ErrorsHistoryWindow,
         language: language,
+        isImage: isImage,
         new: isNew,
         fileName: name,
         color: language.color,
@@ -928,6 +911,10 @@ export async function openTab(path, content, extension, name, pathContext, isNew
         }
     )
 
+    tab.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        activateTab(tab);
+    });
     tab.addEventListener("auxclick", async (ev) => {
         if (ev.button === 1) {
             ev.preventDefault();
@@ -940,11 +927,6 @@ export async function openTab(path, content, extension, name, pathContext, isNew
                 closeTab(path);
             }
         }
-    });
-
-    tab.addEventListener("click", (ev) => {
-        ev.preventDefault();
-        activateTab(tab);
     });
     tab.querySelector("#tab-close").addEventListener("click", async (ev) => {
         ev.stopPropagation();
@@ -968,7 +950,7 @@ export async function openTab(path, content, extension, name, pathContext, isNew
             settings: settings
         })
 
-        triggerAceChanged({ editor: editor, extension: extension, language: language })
+        triggerEditorChanged({ editor: editor, extension: extension, language: language })
     });
 
     activateTab(tab);
@@ -1081,6 +1063,11 @@ export function closeTab(path) {
 
     const stillHas = !!tabsBar.querySelector(".code-tab");
     if (!stillHas) {
+        const imagePreviewWindow = BottomWindow.get("imagePreview");
+        if (imagePreviewWindow) {
+            imagePreviewWindow.fullscreen(false);
+            imagePreviewWindow.hide();
+        }
         startScreen?.classList.remove("hidden");
         toggleCodeFooter(false)
         tabsBar.classList.add("hidden");
@@ -1104,6 +1091,21 @@ export async function reopenLastClosed() {
     const name = path.split(/[\\/]/).pop();
 
     openTab(path, state.content, extension, name, path, false, settings);
+}
+
+function renderImagePreview(imagePreviewWindow, realPath) {
+    disableSave();
+    const escapedPath = escapeHtml(realPath);
+    imagePreviewWindow.set(`
+        <div class="image-preview">
+            <div class="image-preview-stage">
+                <img src="${escapedPath}" alt="preview">
+            </div>
+        </div>
+    `);
+    imagePreviewWindow.fullscreen();
+    imagePreviewWindow.show();
+    bindImageZoomHandlers(imagePreviewWindow.winContent);
 }
 
 export function activateTab(tabEl) {
@@ -1146,6 +1148,15 @@ export function activateTab(tabEl) {
 
     if (rec && rec.language) {
         updateVisibleOnElements(ext, rec.language);
+    }
+
+    const imagePreviewWindow = BottomWindow.get("imagePreview") || new BottomWindow("imagePreview", { title: "Preview" });
+    if (rec.isImage) {
+        renderImagePreview(imagePreviewWindow, realPath);
+    } else {
+        enableSave();
+        imagePreviewWindow.fullscreen(false);
+        imagePreviewWindow.hide();
     }
 }
 

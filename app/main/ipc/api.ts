@@ -1,5 +1,5 @@
-import { ipcMain } from "electron";
-import { readFileContent } from "../helpers/requests";
+import { ipcMain, IpcMainInvokeEvent } from "electron";
+import { getUserToken, readFileContent } from "../helpers/requests";
 import { API, LOCAL_FILE_PATH } from "../helpers/paths";
 
 ipcMain.handle('get-user-data-from-api', async () => {
@@ -33,5 +33,28 @@ ipcMain.handle('get-user-data-from-api', async () => {
             success: false,
             result: String(error),
         }
+    }
+})
+
+ipcMain.handle('get-user', async (_: IpcMainInvokeEvent, userid: number) => {
+    const userToken = await getUserToken()
+
+    try {
+        const response = await fetch(`${API}/user/get?id=${userid}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${userToken}`
+            }
+        });
+
+        const data: any = await response.json()
+
+        if (data.success) {
+            return { success: true, msg: data.result }
+        } else {
+            return { success: false, msg: data.result }
+        }
+    } catch (error) {
+        return { success: false, msg: error }
     }
 })

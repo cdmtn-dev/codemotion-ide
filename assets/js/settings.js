@@ -1,4 +1,4 @@
-import { Notificator, Options, showNeedReloadTopBar, GLS } from "./lib.js"
+import { Notificator, Options, showNeedReloadTopBar, GLS, createNotify } from "./lib.js"
 import { optionsThemeButtonHandler } from "./handlers/themesHandler.js"
 
 import { Modal } from "../js/modalsHandler/engine.js"
@@ -28,44 +28,55 @@ function updateThemeSelectDefault(settingsObject) {
     if ("ui" in settingsObject && "theme" in settingsObject.ui) {
         const instance = themeSelect.get(settingsObject.ui.theme)
 
-        if(instance) instance.default()
+        if (instance) instance.default()
     }
 }
 
 // creating options
 
 export async function handleSettings(settingsObject) {
+    const localObject = await window.electron.getLocal()
     const settings = await readSettings()
     const platform = await window.electron.getPlatform()
     const aviableLanguages = await window.electron.getAllLanguages()
-    const gls = await GLS.init()
+    const gls = await GLS.initLocal()
 
     const appearanceModal = await getSettingsModal({ platform: platform })
 
     appearanceModal.bind(document.querySelector("#appearance_n"))
+    appearanceModal.preRender()
+
+    function get(id) {
+        return appearanceModal.el.querySelector(`#setting_${id}`)
+    }
 
     updateSettingSelectors(
         {
-            editorTextSize: document.querySelector("#setting_editorTextSize"),
-            editorSmoothScroll: document.querySelector("#setting_smoothScroll"),
-            useSystemFonts: document.querySelector("#setting_useSystemFonts"),
-            boldFont: document.querySelector("#setting_boldFont"),
-            devMode: document.querySelector("#setting_devMode"),
-            splash: document.querySelector("#setting_splash"),
-            reduceMotion: document.querySelector("#setting_reduceMotion"),
-            uiScale: document.querySelector("#setting_uiScale"),
+            editorTextSize: get("editorTextSize"),
+            useSystemFonts: get("useSystemFonts"),
+            boldFont: get("boldFont"),
+            devMode: get("devMode"),
+            splash: get("splash"),
+            reduceMotion: get("reduceMotion"),
+            uiScale: get("uiScale"),
 
-            coloredTabs: document.querySelector("#setting_coloredTabs"),
-            confirmCloseTab: document.querySelector("#setting_confirmCloseTab"),
-            restoreFolder: document.querySelector("#setting_restoreFolder"),
+            coloredTabs: get("coloredTabs"),
+            confirmCloseTab: get("confirmCloseTab"),
+            restoreFolder: get("restoreFolder"),
 
-            goContextParser: document.querySelector("#setting_go_context_parser"),
+            goContextParser: get("go_context_parser"),
 
-            disableRiskyPermissionWarning: document.querySelector("#setting_disableRiskyPermissionWarning"),
+            disableRiskyPermissionWarning: get("disableRiskyPermissionWarning"),
+
+            gitGithubTokenInput: get("githubAccessKey"),
+            gitGithubTokenSave: get("githubAccessKeySave"),
+            gitGithubTokenView: get("githubAccessKeyView"),
         }
     )
 
-    // set app icons choose in settings modal
+    // handler for options button theme cause it need to be updated. Another one in custom theme handler
+    optionsThemeButtonHandler(themeSelect)
+
     const appIconsWrapper = document.createElement("div")
     appIconsWrapper.classList.add("modal-appicons")
 
@@ -80,8 +91,8 @@ export async function handleSettings(settingsObject) {
             <div style="background: url('${pathname}');background-size:cover;"></div>
             <p>${name}</p>
         `
-        
-        if(isActive) appIcon.classList.add("active")
+
+        if (isActive) appIcon.classList.add("active")
 
         appIconsWrapper.appendChild(appIcon)
 
@@ -133,11 +144,6 @@ export async function handleSettings(settingsObject) {
         Setting.editorTextSize(e.target.value)
     })
 
-    settingsSelectors.editorSmoothScroll.addEventListener("change", (e) => {
-        let t = e.target
-        Setting.editorSmoothScroll(t.checked)
-    })
-
     settingsSelectors.useSystemFonts.addEventListener("click", (e) => {
         let t = e.target
         Setting.useSystemFonts(t.checked)
@@ -167,17 +173,25 @@ export async function handleSettings(settingsObject) {
         Setting.uiScale(e.target.value)
     })
 
-    // handler for options button theme cause it need to be updated. Another one in custom theme handler
-    optionsThemeButtonHandler(themeSelect)
+    settingsSelectors.gitGithubTokenSave.addEventListener("click", () => {
+        const token = settingsSelectors.gitGithubTokenInput.value
+
+        Setting.githubToken(token)
+    })
+    settingsSelectors.gitGithubTokenView.addEventListener("click", (e) => {
+        settingsSelectors.gitGithubTokenInput.type = "text"
+
+        e.target.remove()
+    }, { once: true })
 
     themeSelect.appendTo(document.querySelector("#setting_theme"))
 
-    if(platform == "win32") {
+    if (platform == "win32") {
         const pyInfo = await window.electron.getPython()
 
         pythonRunnerMethodSelect.add("builtin", gls.get("modals.appearance.editor.pythonRunner.select.builtIn")).default()
 
-        if(pyInfo != false) {
+        if (pyInfo != false) {
             pythonRunnerMethodSelect.add("installed", `${gls.get("modals.appearance.editor.pythonRunner.select.userDefined")} (Python ${pyInfo.version})`)
         }
 
@@ -234,44 +248,47 @@ export async function handleSettings(settingsObject) {
         updateThemeSelectDefault(settingsObject)
     })
 
-    if(settingsObject.editor) {
-        if("fontSize" in settingsObject.editor) Setting.editorTextSize(settingsObject.editor.fontSize, false, false)
-        if("smoothScroll" in settingsObject.editor) Setting.editorSmoothScroll(settingsObject.editor.smoothScroll, false, false)
-        if("pythonRunnerMethod" in settingsObject.editor) Setting.pythonRunnerMethod(settingsObject.editor.pythonRunnerMethod, false)
-        if("coloredTabs" in settingsObject.editor) Setting.coloredTabs(settingsObject.editor.coloredTabs, false)
-        if("confirmCloseTab" in settingsObject.editor) Setting.confirmCloseTab(settingsObject.editor.confirmCloseTab, false)
+    if (settingsObject.editor) {
+        if ("fontSize" in settingsObject.editor) Setting.editorTextSize(settingsObject.editor.fontSize, false, false)
+        if ("pythonRunnerMethod" in settingsObject.editor) Setting.pythonRunnerMethod(settingsObject.editor.pythonRunnerMethod, false)
+        if ("coloredTabs" in settingsObject.editor) Setting.coloredTabs(settingsObject.editor.coloredTabs, false)
+        if ("confirmCloseTab" in settingsObject.editor) Setting.confirmCloseTab(settingsObject.editor.confirmCloseTab, false)
 
-        if("goContextParser" in settingsObject.editor) Setting.goContextParser(settingsObject.editor.goContextParser, false)
+        if ("goContextParser" in settingsObject.editor) Setting.goContextParser(settingsObject.editor.goContextParser, false)
     }
-    if(settingsObject.ui) {
-        if("useSystemFont" in settingsObject.ui) Setting.useSystemFonts(settingsObject.ui.useSystemFont, false)
-        if("boldFont" in settingsObject.ui) Setting.boldFont(settingsObject.ui.boldFont, false)
-        if("theme" in settingsObject.ui) Setting.themeSelect(settingsObject.ui.theme, false)
+    if (settingsObject.ui) {
+        if ("useSystemFont" in settingsObject.ui) Setting.useSystemFonts(settingsObject.ui.useSystemFont, false)
+        if ("boldFont" in settingsObject.ui) Setting.boldFont(settingsObject.ui.boldFont, false)
+        if ("theme" in settingsObject.ui) Setting.themeSelect(settingsObject.ui.theme, false)
     }
-    if(settingsObject.app) {
-        if("devMode" in settingsObject.app) Setting.devMode(settingsObject.app.devMode, false)
-        if("splashScreen" in settingsObject.app) Setting.splash(settingsObject.app.splashScreen, false)
-        if("reduceMotion" in settingsObject.app) Setting.reduceMotion(settingsObject.app.reduceMotion, false)
-        if("uiScale" in settingsObject.app) Setting.uiScale(settingsObject.app.uiScale, false, false)
-        if("language" in settingsObject.app) Setting.language(settingsObject.app.language, false)
-        if("restoreFolder" in settingsObject.app) Setting.restoreFolder(settingsObject.app.restoreFolder, false)
+    if (settingsObject.app) {
+        if ("devMode" in settingsObject.app) Setting.devMode(settingsObject.app.devMode, false)
+        if ("splashScreen" in settingsObject.app) Setting.splash(settingsObject.app.splashScreen, false)
+        if ("reduceMotion" in settingsObject.app) Setting.reduceMotion(settingsObject.app.reduceMotion, false)
+        if ("uiScale" in settingsObject.app) Setting.uiScale(settingsObject.app.uiScale, false, false)
+        if ("language" in settingsObject.app) Setting.language(settingsObject.app.language, false)
+        if ("restoreFolder" in settingsObject.app) Setting.restoreFolder(settingsObject.app.restoreFolder, false)
     }
-    if(settingsObject.extensions) {
-        if("disableRiskyPermissionWarning" in settingsObject.extensions) Setting.disableRiskyPermissionWarning(settingsObject.extensions.disableRiskyPermissionWarning, false)
+    if (settingsObject.extensions) {
+        if ("disableRiskyPermissionWarning" in settingsObject.extensions) Setting.disableRiskyPermissionWarning(settingsObject.extensions.disableRiskyPermissionWarning, false)
+    }
+
+    if (localObject.githubToken) {
+        Setting.githubToken(localObject.githubToken, false)
     }
 }
 
 export class Setting {
     static editorTextSize(value, notification = true, set = true) {
-        let v = Number(value) 
+        let v = Number(value)
         let defaultFontSize = 15
         let editorFontSize = defaultFontSize * (v / 100)
 
-        if(set) window.electron.setSettings({ editor: { fontSize: v } })
+        if (set) window.electron.setSettings({ editor: { fontSize: v } })
 
         settingsSelectors.editorTextSize.value = value
 
-        if(notification) {
+        if (notification) {
             const n = new Notificator()
             n.text = v + "%"
             n.icon = "format_size"
@@ -280,23 +297,8 @@ export class Setting {
 
         document.body.style.setProperty("--editor-font-size", editorFontSize + "px")
     }
-    static editorSmoothScroll(value, notification = true, set = true) {
-        if(set) {
-            showNeedReloadTopBar()
-            window.electron.setSettings({ editor: { smoothScroll: value } })
-        }
-
-        settingsSelectors.editorSmoothScroll.value = value
-
-        if(notification) {
-            const n = new Notificator()
-            n.text = `Smooth scroll ${value ? "Enabled" : "Disabled"}`
-            n.icon = "animation"
-            n.show()
-        }
-    }
     static useSystemFonts(value, set = true) {
-        if(value) {
+        if (value) {
             document.body.style.setProperty("--main-font", "system-ui")
             document.body.style.setProperty("--second-font", "system-ui")
             document.body.style.setProperty("--code-font", "monospace")
@@ -309,13 +311,13 @@ export class Setting {
 
         settingsSelectors.useSystemFonts.checked = value
 
-        if(set) window.electron.setSettings({ ui: { useSystemFont: value } })
+        if (set) window.electron.setSettings({ ui: { useSystemFont: value } })
     }
     static boldFont(value, set = true) {
         let styleElement = document.createElement("style")
         styleElement.id = "settingsBoldFont"
 
-        if(value) {
+        if (value) {
             document.body.style.setProperty("--default-font-weight", "800")
             document.body.style.setProperty("--bold-font-weight", "800")
             document.body.style.setProperty("--medium-font-weight", "700")
@@ -328,7 +330,7 @@ export class Setting {
 
         settingsSelectors.boldFont.checked = value
 
-        if(set) window.electron.setSettings({ ui: { boldFont: value } })
+        if (set) window.electron.setSettings({ ui: { boldFont: value } })
     }
     static themeSelect(value, set = true) {
         let styleElement = document.createElement("style")
@@ -336,25 +338,25 @@ export class Setting {
 
         document.body.setAttribute("theme", value)
 
-        if(themeSelect.get(value) != false) {
+        if (themeSelect.get(value) != false) {
             themeSelect.get(value).default()
         }
 
-        if(set) window.electron.setSettings({ ui: { theme: value }})
+        if (set) window.electron.setSettings({ ui: { theme: value } })
     }
     static async devMode(value, set = true) {
         settingsSelectors.devMode.checked = value
-        
-        if(set) {
-            await window.electron.setSettings({ app: { devMode: value }})
+
+        if (set) {
+            await window.electron.setSettings({ app: { devMode: value } })
             window.electron.reload()
         }
     }
     static async splash(value, set = true) {
         settingsSelectors.splash.checked = value
-        
-        if(set) {
-            await window.electron.setSettings({ app: { splashScreen: value }})
+
+        if (set) {
+            await window.electron.setSettings({ app: { splashScreen: value } })
         }
     }
     static async reduceMotion(value, set = true) {
@@ -370,31 +372,31 @@ export class Setting {
         window.dispatchEvent(new CustomEvent("codemotion-reduce-motion-change", {
             detail: { reduceMotion: value }
         }))
-        
-        if(set) {
-            await window.electron.setSettings({ app: { reduceMotion: value }})
+
+        if (set) {
+            await window.electron.setSettings({ app: { reduceMotion: value } })
         }
     }
     static async pythonRunnerMethod(value, set = true) {
         const pythonRunnerMethodSelectGet = pythonRunnerMethodSelect.get(value)
-        
-        if(pythonRunnerMethodSelectGet) {
+
+        if (pythonRunnerMethodSelectGet) {
             pythonRunnerMethodSelectGet.default()
         }
 
-        if(set) {
+        if (set) {
             showNeedReloadTopBar()
-            await window.electron.setSettings({ editor: { pythonRunnerMethod: value }})
+            await window.electron.setSettings({ editor: { pythonRunnerMethod: value } })
         }
     }
     static uiScale(value, notification = true, set = true) {
         let v = Number(value)
 
-        if(set) window.electron.setSettings({ app: { uiScale: v } })
+        if (set) window.electron.setSettings({ app: { uiScale: v } })
 
         settingsSelectors.uiScale.value = value
 
-        if(notification) {
+        if (notification) {
             const n = new Notificator()
             n.text = value + "x"
             n.icon = "linear_scale"
@@ -406,14 +408,14 @@ export class Setting {
     static async language(value, set = true) {
         async function update() {
             const languageSelectGet = languageSelect.get(value)
-            
-            if(languageSelectGet) {
+
+            if (languageSelectGet) {
                 languageSelectGet.default()
             }
 
-            if(set) {
+            if (set) {
                 showNeedReloadTopBar()
-                await window.electron.setSettings({ app: { language: value }})
+                await window.electron.setSettings({ app: { language: value } })
             }
         }
 
@@ -426,36 +428,67 @@ export class Setting {
 
         sendEvent("on-setting-colored-tabs", value)
 
-        if(set) {
-            await window.electron.setSettings({ editor: { coloredTabs: value }})
+        if (set) {
+            await window.electron.setSettings({ editor: { coloredTabs: value } })
         }
     }
     static async restoreFolder(value, set = true) {
         settingsSelectors.restoreFolder.checked = value
 
-        if(set) {
-            await window.electron.setSettings({ app: { restoreFolder: value }})
+        if (set) {
+            await window.electron.setSettings({ app: { restoreFolder: value } })
         }
     }
     static async confirmCloseTab(value, set = true) {
         settingsSelectors.confirmCloseTab.checked = value
 
-        if(set) {
-            await window.electron.setSettings({ editor: { confirmCloseTab: value }})
+        if (set) {
+            await window.electron.setSettings({ editor: { confirmCloseTab: value } })
         }
     }
     static async goContextParser(value, set = true) {
         settingsSelectors.goContextParser.checked = value
 
-        if(set) {
-            await window.electron.setSettings({ editor: { goContextParser: value }})
+        if (set) {
+            await window.electron.setSettings({ editor: { goContextParser: value } })
         }
     }
     static async disableRiskyPermissionWarning(value, set = true) {
         settingsSelectors.disableRiskyPermissionWarning.checked = value
 
-        if(set) {
-            await window.electron.setSettings({ extensions: { disableRiskyPermissionWarning: value }})
+        if (set) {
+            await window.electron.setSettings({ extensions: { disableRiskyPermissionWarning: value } })
+        }
+    }
+
+    static async githubToken(value, set = true) {
+        const gls = GLS.initLocal()
+
+        settingsSelectors.gitGithubTokenInput.value = value
+
+        if (value.length > 0) {
+            settingsSelectors.gitGithubTokenInput.classList.add("focused")
+        }
+
+        if (set) {
+            const res = window.electron.setLocal({ "githubToken": value })
+
+            if (res) {
+                createNotify({
+                    type: "success",
+                    icon: "check",
+                    title: gls.get("modals.appearance.gitGithub.notifications.success.title"),
+                    content: gls.get("modals.appearance.gitGithub.notifications.success.description")
+                })
+            }
+            else {
+                createNotify({
+                    type: "danger",
+                    icon: "cancel",
+                    title: gls.get("modals.appearance.gitGithub.notifications.error.title"),
+                    content: gls.get("modals.appearance.gitGithub.notifications.error.description")
+                })
+            }
         }
     }
 }

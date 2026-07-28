@@ -146,10 +146,9 @@ function notifyError({ name, content }) {
 function renderExtensionsModal(properties) {
     Modal.destroy("installedExtensions")
 
-    const extensionsAllBtn = document.querySelector("#extensionsAll")
     const items = properties == undefined ? [{ type: "centered", icon: "extension" }] : properties
 
-    const installedExtensionsModal = Modal.create({
+    Modal.create({
         id: "installedExtensions",
         name: "Installed Extensions",
         modalClassList: ["window"],
@@ -163,13 +162,15 @@ function renderExtensionsModal(properties) {
             },
         ]
     })
-
-    installedExtensionsModal.bind(extensionsAllBtn)
 }
 
 export async function initExtensions() {
     handleExtensionEvents()
     renderExtensionsModal()
+
+    document.querySelector("#extensionsAll")?.addEventListener("click", () => {
+        Modal.get("installedExtensions")?.open()
+    })
 
     const extensionsRequest = await window.electron.requestExtensions()
     const extensionsDir = await window.electron.getExtensionsDir()
@@ -377,8 +378,7 @@ export async function initExtensions() {
 
             language: (name, onActivate) => {
                 const handler = (data) => {
-                    const mode = data.detail.editor.getCurrentLanguage().split("ace/mode/")[1]
-                    console.log(mode)
+                    const mode = data.detail.editor.getCurrentLanguage()
 
                     if (mode === name) {
                         onActivate()

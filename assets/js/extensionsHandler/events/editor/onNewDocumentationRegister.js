@@ -7,7 +7,7 @@ export function onNewDocumentationRegisterCallback({ data }) {
     
     bus.addEventListener("ace-mode-changed", (e) => {
         let detail = e.detail
-        let mode = detail.mode.split("ace/mode/")[1].trim()
+        let mode = detail.mode.trim()
         let extension = detail.extension
         let editor = detail.editor
 

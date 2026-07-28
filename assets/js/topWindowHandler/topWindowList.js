@@ -23,8 +23,6 @@ export class TopWindowList {
     constructor(id = null, list = {}) {
         id ??= `top-window-${++autoId}`
 
-        console.log(id)
-
         if (instances.has(id)) {
             return instances.get(id)
         }

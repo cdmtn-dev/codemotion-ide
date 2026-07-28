@@ -6,5 +6,6 @@ esbuild.build({
     format: "iife",
     globalName: "CodeMirrorBundle",
     outfile: "dist/codemirror.js",
+    sourcemap: true,
     minify: false
 }).catch(() => process.exit(1));

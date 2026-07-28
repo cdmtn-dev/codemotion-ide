@@ -1,4 +1,5 @@
 import { Languages } from "../lib.js";
+import { fromJSONToTextMate } from "../../../app/dist-esm/textmate/compile.js"
 
 export class _EditorAdapter {
     constructor(
@@ -392,5 +393,21 @@ export class _EditorAdapter {
 
     off(name) {
         delete this.listeners[name]
+    }
+
+    // regs
+
+    static async registerLanguage({ id, rules }) {
+        const { keywords, comment, operators, types } = rules.syntax
+
+        const textMateCompiled = fromJSONToTextMate({
+            id, keywords, comment, operators, types
+        })
+
+        return await window.CodeMirror.registerLanguage({
+            id: id,
+            grammar: textMateCompiled,
+            extends: rules.extends
+        })
     }
 }

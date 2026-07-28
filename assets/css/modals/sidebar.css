@@ -1,4 +1,5 @@
 .modal-wrapper .modal.window .modal-body.modal-body-sidebar .modal-sidebar {
+    min-width: 200px;
     width: 200px;
     background: var(--body-color-solid);
     padding: 10px;
@@ -12,6 +13,13 @@
     font-weight: 600;
     margin-bottom: 5px;
     background: none;
+    opacity: .5;
+}
+.modal-wrapper .modal.window .modal-body.modal-body-sidebar .modal-sidebar .modal-sidebar__item.title .avatar {
+    width: 18px;
+    height: 18px;
+    object-fit: cover;
+    border-radius: 3px;
 }
 .modal-wrapper .modal.window .modal-body.modal-body-sidebar .modal-sidebar .modal-sidebar__item {
     display: flex;
@@ -75,8 +83,10 @@
     margin-top: 20px;
     margin-bottom: 20px;
     max-width: 100%;
-    width: calc(100% - 40%);
+    padding-right: 50px;
+    width: 100%;
     position: relative;
+    overflow: auto;
 }
 .modal-body__sidebar-content.modal-columns {
     display: flex;
@@ -110,6 +120,10 @@
     border-bottom: 0px;
     padding-bottom: 0px;
 }
+.modal-body__sidebar-content.modal-row.modal-row__clear .modal-category__item a {
+    color: var(--link-color);
+    text-decoration: none;
+}
 .modal-body__sidebar-content.background {
     background: var(--block-divider-border-color);
     padding: 20px;
@@ -117,6 +131,7 @@
     border-radius: 10px;
     overflow-y: auto;
     overflow-x: hidden;
+    width: 60%;
 }
 .modal-body__sidebar-content.background::-webkit-scrollbar-track {
     background: var(--bg-color);

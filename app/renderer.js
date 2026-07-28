@@ -28,8 +28,8 @@ import { initActions } from "../assets/js/actions.js"
 
 import { handleHistoryTab } from "../assets/js/explorerTabsHandlers/history.js"
 import { handleBugsTab } from "../assets/js/explorerTabsHandlers/bugs.js"
+import { getFolderIconUrl } from "../assets/js/iconRegistry.js"
 import { electronAPI, getDirname, readSettings } from "../assets/js/global.js"
-import { closeAllTabs } from "../assets/js/explorerTree/tabHandler.js"
 
 import { handleSettings } from "../assets/js/settings.js"
 import { SidebarResizeHandler } from "../assets/js/handlers/SidebarResizeHandler.js"
@@ -54,10 +54,6 @@ export function enableSave() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-    ace.config.set("basePath", "../ace/src-noconflict");
-    ace.config.set("modePath", "../ace/src-noconflict");
-    ace.config.set("workerPath", "../ace/src-noconflict");
-
     const gls = await GLS.init()
     
     localStorage.setItem("gls.current", gls.currentLang)
@@ -223,7 +219,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     else {
         getCurrentUserDataFromAPI(gls).then((e) => {
-            console.log(e)
             if (!e.success) {
                 const errEl = loader?.querySelector(".loader-msg");
                 if (errEl) {
@@ -444,5 +439,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         btn.addEventListener("click", () => {
             closeFolder();
         })
+    })
+
+    document.querySelector("#collapse_all").addEventListener("click", () => {
+        const filesPanel = document.querySelector(".explorer-elements[data-tab='files']");
+        if (!filesPanel) return;
+        const expandedDirs = filesPanel.querySelectorAll(".dir.expanded");
+        expandedDirs.forEach(dir => {
+            dir.classList.remove("expanded");
+            const folderImg = dir.querySelector(".dir-title .folder-icon");
+            if (folderImg) {
+                const folderName = dir.querySelector(".dir-title .explorer-name")?.textContent || "";
+                folderImg.src = getFolderIconUrl(folderName, false);
+            }
+        });
+    })
     })
 })

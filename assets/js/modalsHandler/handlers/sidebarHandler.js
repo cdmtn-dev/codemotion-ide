@@ -2,15 +2,47 @@ import { idify } from "../../lib.js"
 import { valid, validBool } from "../engine.js"
 import { sideBarContentHandler } from "./contentHandler.js"
 
+export function renderSidebarItem(name, properties = {}) {
+    const id = properties.id
+    const isDivider = properties.isDivider
+    const label = properties.label
+    const icon = properties.icon
+
+    const item = document.createElement("div")
+    item.classList.add("modal-sidebar__item")
+
+    if(id) item.id = id
+
+    if (isDivider) {
+        item.classList.add("sidebar-divider")
+    }
+    else {
+        item.textContent = name
+    }
+
+    if (icon) {
+        const itemIcon = document.createElement("span")
+        itemIcon.classList.add("material-symbols-rounded")
+        itemIcon.textContent = icon
+
+        item.prepend(itemIcon)
+    }
+
+    if (label) {
+        const labelEl = document.createElement("span")
+        labelEl.classList.add("modal-sidebar__item-label")
+        labelEl.textContent = label
+
+        item.appendChild(labelEl)
+    }
+
+    return item
+}
+
 export function sideBarHandler(pagesArray = [], properties = {}) {
     const body = properties.body
     const title = properties.title
-
-    const createSidebarItem = () => {
-        const item = document.createElement("div")
-        item.classList.add("modal-sidebar__item")
-        return item
-    }
+    const titleAvatar = properties.titleAvatar
 
     body.classList.add("modal-body-sidebar")
 
@@ -19,9 +51,16 @@ export function sideBarHandler(pagesArray = [], properties = {}) {
 
     // setup sidebar title
     if(title) {
-        const sidebarTitle = createSidebarItem()
-        sidebarTitle.textContent = title
+        const sidebarTitle = renderSidebarItem(title)
         sidebarTitle.classList.add("title")
+
+        if(titleAvatar) {
+            const titleAvatarEl = document.createElement("img")
+            titleAvatarEl.src = titleAvatar
+            titleAvatarEl.classList.add("avatar")
+
+            sidebarTitle.prepend(titleAvatarEl)
+        }
 
         sidebar.appendChild(sidebarTitle)
     }
@@ -39,29 +78,12 @@ export function sideBarHandler(pagesArray = [], properties = {}) {
         const isDivider = validBool(p.divider) ?? false
         const id = idify(name)
 
-        const item = createSidebarItem()
-        if(!isDivider) item.textContent = name
-        item.id = id
-
-        if(icon) {
-            const itemIcon = document.createElement("span")
-            itemIcon.classList.add("material-symbols-rounded")
-            itemIcon.textContent = icon
-
-            item.prepend(itemIcon)
-        }
-
-        if(isDivider) {
-            item.classList.add("sidebar-divider")
-        }
-
-        if(label) {
-            const labelEl = document.createElement("span")
-            labelEl.classList.add("modal-sidebar__item-label")
-            labelEl.textContent = label
-
-            item.appendChild(labelEl)
-        }
+        const item = renderSidebarItem(name, {
+            icon: icon,
+            isDivider: isDivider,
+            label: label,
+            id: id
+        })
 
         // adding click action (show sidebar page)
         item.addEventListener("click", (e) => {
