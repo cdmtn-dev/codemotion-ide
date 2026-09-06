@@ -1,0 +1,69 @@
+.hover-tooltip {
+    position: fixed;
+    z-index: 9999;
+    top: 0;
+    left: 0;
+    max-width: 460px;
+    max-height: 340px;
+    overflow: auto;
+    background: var(--body-color);
+    backdrop-filter: blur(5px);
+    color: var(--text-color);
+    border: 1px solid var(--topbar-menu-item-hover-bg);
+    border-radius: 10px;
+    box-shadow: #00000014 0px 2px 5px 0px;
+    font-size: 12px;
+    pointer-events: auto;
+    transition: opacity .15s;
+}
+.hover-tooltip.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.hover-tooltip__signature {
+    padding: 8px 12px;
+    font-family: var(--code-font);
+    font-size: 13px;
+    white-space: pre-wrap;
+    color: var(--color-default, var(--text-color));
+}
+
+.hover-tooltip .tt-keyword { color: var(--color-keyword); }
+.hover-tooltip .tt-type { color: var(--color-class); }
+.hover-tooltip .tt-function { color: var(--color-function); }
+.hover-tooltip .tt-param { color: var(--color-func-arg); }
+.hover-tooltip .tt-property { color: var(--color-const); }
+.hover-tooltip .tt-string { color: var(--color-string); }
+.hover-tooltip .tt-number { color: var(--color-number); }
+.hover-tooltip .tt-operator { color: var(--color-operator); }
+
+.hover-tooltip__members {
+    border-top: 1px solid var(--topbar-menu-item-hover-bg);
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-family: var(--code-font);
+    line-height: 1.5;
+}
+.hover-tooltip__member {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.hover-tooltip__key {
+    color: var(--color-property, var(--color-const, var(--text-color)));
+}
+.hover-tooltip__sep {
+    color: var(--color-operator, var(--text-color-muted));
+}
+.hover-tooltip__type {
+    color: var(--color-class, var(--link-color));
+}
+
+.hover-tooltip__doc {
+    border-top: 1px solid var(--topbar-menu-item-hover-bg);
+    padding: 8px 12px;
+    color: var(--text-color-muted);
+    white-space: pre-wrap;
+}

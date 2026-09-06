@@ -7,8 +7,8 @@ type DiagnosticLanguage = "js" | "jsx" | "ts" | "tsx" | "dts"
 type WorkerKey = "js" | "ts" | "typecheck"
 
 type WorkerMap = Record<WorkerKey, Worker>
-type PendingMap = Record<WorkerKey, Map<number, (value: DiagnosticResult) => void>>
-type WorkerResponse = { id?: number, diagnostics?: DiagnosticResult }
+type PendingMap = Record<WorkerKey, Map<number, (value: unknown) => void>>
+type WorkerResponse = { id?: number, diagnostics?: DiagnosticResult, quickInfo?: unknown, unused?: unknown }
 
 let nextRequestId = 0
 
@@ -26,11 +26,13 @@ function createWorker(fileName: string): Worker {
     return new Worker(path.join(__dirname, "js-ts", fileName))
 }
 
-const workers: WorkerMap = {
-    js: createWorker("diagnosticWorker.js"),
-    ts: createWorker("diagnosticWorker.js"),
-    typecheck: createWorker("typeCheckWorker.js"),
+const workerFiles: Record<WorkerKey, string> = {
+    js: "diagnosticWorker.js",
+    ts: "diagnosticWorker.js",
+    typecheck: "typeCheckWorker.js",
 }
+
+const workers: Partial<Record<WorkerKey, Worker>> = {}
 
 const pending: PendingMap = {
     js: new Map(),
@@ -38,12 +40,12 @@ const pending: PendingMap = {
     typecheck: new Map(),
 }
 
-function resolvePending(workerKey: WorkerKey, id: number | undefined, diagnostics: DiagnosticResult) {
+function resolvePending(workerKey: WorkerKey, id: number | undefined, value: unknown) {
     if (id === undefined) return
     const resolve = pending[workerKey].get(id)
     if (!resolve) return
     pending[workerKey].delete(id)
-    resolve(diagnostics)
+    resolve(value)
 }
 
 function rejectAllPending(workerKey: WorkerKey) {
@@ -51,33 +53,62 @@ function rejectAllPending(workerKey: WorkerKey) {
     pending[workerKey].clear()
 }
 
-for (const workerKey of ["js", "ts", "typecheck"] as const) {
-    workers[workerKey].on("message", (response: WorkerResponse) => {
-        resolvePending(workerKey, response?.id, response?.diagnostics || [])
+function getWorker(workerKey: WorkerKey): Worker {
+    const existing = workers[workerKey]
+    if (existing) return existing
+
+    const worker = createWorker(workerFiles[workerKey])
+    workers[workerKey] = worker
+
+    worker.on("message", (response: WorkerResponse) => {
+        let value: unknown = response?.diagnostics || []
+        if ("quickInfo" in response) value = response.quickInfo
+        else if ("unused" in response) value = response.unused
+        resolvePending(workerKey, response?.id, value)
     })
-    workers[workerKey].on("error", (error: Error) => {
+    worker.on("error", (error: Error) => {
         console.error(`${workerKey} diagnostics worker error:`, error)
         rejectAllPending(workerKey)
+        workers[workerKey] = undefined
     })
-    workers[workerKey].on("exit", (code: number) => {
+    worker.on("exit", (code: number) => {
         if (code !== 0) console.error(`${workerKey} diagnostics worker exited with code ${code}`)
         rejectAllPending(workerKey)
+        workers[workerKey] = undefined
     })
+
+    return worker
 }
 
 function requestDiagnostics(workerKey: "js" | "ts", code: string, lang: DiagnosticLanguage): Promise<DiagnosticResult> {
     const id = ++nextRequestId
     return new Promise(resolve => {
-        pending[workerKey].set(id, resolve)
-        workers[workerKey].postMessage({ id, code, lang })
+        pending[workerKey].set(id, resolve as (value: unknown) => void)
+        getWorker(workerKey).postMessage({ id, code, lang })
     })
 }
 
 function requestTypeCheck(fileName: string, code: string): Promise<DiagnosticResult> {
     const id = ++nextRequestId
     return new Promise(resolve => {
+        pending.typecheck.set(id, resolve as (value: unknown) => void)
+        getWorker("typecheck").postMessage({ id, fileName, code })
+    })
+}
+
+function requestQuickInfo(fileName: string, code: string, offset: number): Promise<unknown> {
+    const id = ++nextRequestId
+    return new Promise(resolve => {
         pending.typecheck.set(id, resolve)
-        workers.typecheck.postMessage({ id, fileName, code })
+        getWorker("typecheck").postMessage({ id, op: "quickInfo", fileName, code, offset })
+    })
+}
+
+function requestUnused(fileName: string, code: string): Promise<unknown> {
+    const id = ++nextRequestId
+    return new Promise(resolve => {
+        pending.typecheck.set(id, resolve)
+        getWorker("typecheck").postMessage({ id, op: "unused", fileName, code })
     })
 }
 
@@ -101,5 +132,19 @@ ipcMain.handle(
     "ts-type-check",
     (_event: IpcMainInvokeEvent, code: string, filePath: string): Promise<DiagnosticResult> => {
         return requestTypeCheck(filePath, code)
+    }
+)
+
+ipcMain.handle(
+    "ts-quick-info",
+    (_event: IpcMainInvokeEvent, code: string, filePath: string, offset: number): Promise<unknown> => {
+        return requestQuickInfo(filePath, code, offset)
+    }
+)
+
+ipcMain.handle(
+    "ts-unused",
+    (_event: IpcMainInvokeEvent, code: string, filePath: string): Promise<unknown> => {
+        return requestUnused(filePath, code)
     }
 )

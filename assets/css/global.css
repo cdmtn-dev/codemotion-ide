@@ -6,6 +6,7 @@
 @import url("components/contextMenu.css");
 @import url("components/loader.css");
 @import url("components/aceDocTooltip.css");
+@import url("components/hoverTooltip.css");
 
 @font-face {
     font-family: 'Inter';

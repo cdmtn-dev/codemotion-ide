@@ -38,6 +38,7 @@ import {
     disableErrors
 } from "../handlers/bottomTabHandler.js"
 import { Console } from "../handlers/terminalHandler.js"
+import { initHoverTooltip } from "../handlers/hoverTooltip.js"
 import { minifyJS, minifyCSS } from "../handlers/minifyHandlers.js"
 import { initCodeContextMenu, destroyCodeContextMenu } from "../codeContextMenu.js"
 import { enableSave, disableSave } from "../../../app/renderer.js"
@@ -777,6 +778,8 @@ export async function openTab(path, content, extension, name, pathContext, isNew
 
     initCodeContextMenu(path, pathContext, editor)
     codeContextMenuPerTab.set(path, true)
+
+    if (!isImage) initHoverTooltip({ editor, path })
 
     initializeGlobalButtons(settings)
     initializeChangeTabSizeButton(settings)

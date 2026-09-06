@@ -144,6 +144,8 @@ contextBridge.exposeInMainWorld('electron', {
     yamlDiagnostic: (code: string) => ipcRenderer.invoke("yaml-diagnostic", code),
     yamlAST: (code: string) => ipcRenderer.invoke("yaml-ast", code),
     tsTypeCheck: (code: string, filePath: string) => ipcRenderer.invoke("ts-type-check", code, filePath),
+    tsQuickInfo: (code: string, filePath: string, offset: number) => ipcRenderer.invoke("ts-quick-info", code, filePath, offset),
+    tsUnused: (code: string, filePath: string) => ipcRenderer.invoke("ts-unused", code, filePath),
 
     sendCodeSuggestRequest: (data: any) => ipcRenderer.send("code-suggest-request", data),
     onCodeSuggestResult: (callback: any) => {

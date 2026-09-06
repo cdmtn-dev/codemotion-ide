@@ -6,7 +6,7 @@ export class _EditorAdapter {
         {
             view, compartments, setDiagnostics, setOnChange, commands,
             recreateState, editorView, editorState, tools,
-            setSemanticDiagnosticsHandler, setValueNoHistory
+            setSemanticDiagnosticsHandler, setValueNoHistory, setUnusedRanges
         }
     ) {
         this.instance = view
@@ -38,6 +38,7 @@ export class _EditorAdapter {
         this._cleanups = [];
         this._destroyed = false;
         this._setValueNoHistory = setValueNoHistory;
+        this._setUnusedRanges = setUnusedRanges;
 
         this.dom = view.dom
 
@@ -305,6 +306,12 @@ export class _EditorAdapter {
     }
     setDiagnostics(list) {
         this.setDiagnosticsFor("manual", list);
+    }
+
+    setUnusedRanges(list) {
+        if (typeof this._setUnusedRanges === "function") {
+            this._setUnusedRanges(Array.isArray(list) ? list : []);
+        }
     }
 
     _computeDiagnosticsState() {

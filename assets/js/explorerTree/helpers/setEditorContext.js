@@ -90,6 +90,7 @@ export async function setEditorContext(properties = {}, { editor, language, upda
     if (isErrorsUpdate) {
         clearTimeout(diagnosticTimer)
         clearTimeout(typeCheckTimer)
+        clearTimeout(unusedTimer)
     }
     const currentGen = isErrorsUpdate ? ++generation : generation
 
@@ -133,6 +134,15 @@ export async function setEditorContext(properties = {}, { editor, language, upda
                 if (currentGen !== generation) return
                 showDiagnostics(typeDiagnostics, { editor, path, source: "types" })
             }, 400)
+
+            unusedTimer = setTimeout(async () => {
+                if (typeof window.electron.tsUnused !== "function") return
+                try {
+                    const ranges = await window.electron.tsUnused(editor.getValue(), filePath)
+                    if (currentGen !== generation) return
+                    editor.setUnusedRanges(ranges)
+                } catch (_) {}
+            }, 500)
         }
 
         const ast = await getAst(editor.getValue(), oxcLanguage)

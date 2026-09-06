@@ -42,8 +42,29 @@ interface Diagnostic {
 
 interface CheckMessage {
     id?: any;
+    op?: string;
     fileName?: string;
     code?: string;
+    offset?: number;
+}
+
+interface HoverMember {
+    name: string;
+    type: string;
+    optional: boolean;
+}
+
+interface SignaturePart {
+    text: string;
+    kind: string;
+}
+
+interface HoverInfo {
+    kind: string;
+    signature: string;
+    signatureParts: SignaturePart[];
+    documentation: string;
+    members: HoverMember[] | null;
 }
 
 const projects = new Map<string, Project>();
@@ -85,7 +106,9 @@ function createProject(config: TsconfigInfo | null, fallbackRoot: string): Proje
     const scriptContents = new Map<string, string>();
     let version = 0;
 
-    const rootFiles = (config?.parsed.fileNames || []).map(normalizeFileName);
+    const rootFiles = (config?.parsed.fileNames || [])
+        .filter((fileName) => /\.d\.ts$/i.test(fileName))
+        .map(normalizeFileName);
     const compilerOptions: ts.CompilerOptions = {
         ...defaultCompilerOptions,
         ...(config?.parsed.options || {}),
@@ -130,16 +153,30 @@ function createProject(config: TsconfigInfo | null, fallbackRoot: string): Proje
     };
 }
 
+const MAX_PROJECTS = 3;
+
 function getProject(fileName: string): Project {
     const directory = path.dirname(fileName);
     const config = findTsconfig(directory);
     const key = config ? `config:${config.path}` : `isolated:${normalizeFileName(directory)}`;
 
-    if (!projects.has(key)) {
-        projects.set(key, createProject(config, directory));
+    const existing = projects.get(key);
+    if (existing) {
+        projects.delete(key);
+        projects.set(key, existing);
+        return existing;
     }
 
-    return projects.get(key)!;
+    while (projects.size >= MAX_PROJECTS) {
+        const oldestKey = projects.keys().next().value as string | undefined;
+        if (oldestKey === undefined) break;
+        try { projects.get(oldestKey)?.languageService.dispose(); } catch {}
+        projects.delete(oldestKey);
+    }
+
+    const project = createProject(config, directory);
+    projects.set(key, project);
+    return project;
 }
 
 function buildLineTable(code: string): number[] {
@@ -327,6 +364,123 @@ function getJavaScriptArgumentDiagnostics(fileName: string, code: string): Diagn
     return diagnostics;
 }
 
+const PRIMITIVE_TYPE_MASK =
+    ts.TypeFlags.String | ts.TypeFlags.Number | ts.TypeFlags.Boolean |
+    ts.TypeFlags.BigInt | ts.TypeFlags.ESSymbol | ts.TypeFlags.Void |
+    ts.TypeFlags.Undefined | ts.TypeFlags.Null | ts.TypeFlags.Never |
+    ts.TypeFlags.Any | ts.TypeFlags.Unknown | ts.TypeFlags.StringLiteral |
+    ts.TypeFlags.NumberLiteral | ts.TypeFlags.BooleanLiteral | ts.TypeFlags.Enum |
+    ts.TypeFlags.EnumLiteral;
+
+function findNodeAtOffset(node: ts.Node, offset: number, sourceFile: ts.SourceFile): ts.Node | null {
+    if (offset < node.getStart(sourceFile) || offset >= node.getEnd()) return null;
+
+    let deepest: ts.Node = node;
+    ts.forEachChild(node, (child) => {
+        const found = findNodeAtOffset(child, offset, sourceFile);
+        if (found) deepest = found;
+    });
+
+    return deepest;
+}
+
+function isFromDefaultLib(symbol: ts.Symbol | undefined): boolean {
+    const declarations = symbol?.declarations || [];
+    return declarations.some((declaration) => {
+        const declarationFile = declaration.getSourceFile().fileName;
+        return /node_modules[\\/]/.test(declarationFile) || /lib\.[^\\/]*\.d\.ts$/i.test(declarationFile);
+    });
+}
+
+function collectMembers(checker: ts.TypeChecker, type: ts.Type, node: ts.Node): HoverMember[] | null {
+    if (!type || (type.flags & PRIMITIVE_TYPE_MASK)) return null;
+    if (type.getCallSignatures().length > 0) return null;
+
+    const properties = checker.getPropertiesOfType(type);
+    if (!properties.length || properties.length > 60) return null;
+
+    return properties.map((property) => {
+        const propertyType = checker.getTypeOfSymbolAtLocation(property, node);
+        return {
+            name: property.getName(),
+            type: checker.typeToString(propertyType, node, ts.TypeFormatFlags.NoTruncation),
+            optional: Boolean(property.flags & ts.SymbolFlags.Optional),
+        };
+    });
+}
+
+function getQuickInfo(fileName: string, code: string, offset: number): HoverInfo | null {
+    const project = getProject(fileName);
+    const nextVersion = (project.scriptVersions.get(fileName) || 0) + 1;
+
+    project.scriptContents.set(fileName, code);
+    project.scriptVersions.set(fileName, nextVersion);
+    project.incrementVersion();
+
+    const info = project.languageService.getQuickInfoAtPosition(fileName, offset);
+    if (!info) return null;
+
+    const displayParts = info.displayParts || [];
+    const signature = ts.displayPartsToString(displayParts);
+    const signatureParts = displayParts.map((part) => ({ text: part.text, kind: part.kind }));
+    const documentation = ts.displayPartsToString(info.documentation || []);
+
+    let members: HoverMember[] | null = null;
+    let resolvedType: ts.Type | undefined;
+
+    const program = project.languageService.getProgram();
+    const sourceFile = program?.getSourceFile(fileName);
+
+    if (program && sourceFile) {
+        const checker = program.getTypeChecker();
+        const node = findNodeAtOffset(sourceFile, offset, sourceFile);
+        const symbol = node ? checker.getSymbolAtLocation(node) : undefined;
+
+        if (symbol && node && !isFromDefaultLib(symbol)) {
+            resolvedType = (symbol.flags & (ts.SymbolFlags.Interface | ts.SymbolFlags.TypeAlias))
+                ? checker.getDeclaredTypeOfSymbol(symbol)
+                : checker.getTypeOfSymbolAtLocation(symbol, node);
+
+            members = collectMembers(checker, resolvedType, node);
+        }
+    }
+
+    const noExtraInfo = !members && !documentation;
+    const isAnyType = Boolean(
+        resolvedType &&
+        (resolvedType.flags & (ts.TypeFlags.Any | ts.TypeFlags.Unknown)) &&
+        resolvedType.getCallSignatures().length === 0
+    );
+
+    const trimmedSignature = signature.trim();
+    const isAnySignature =
+        /^(any|unknown)$/.test(trimmedSignature) ||
+        (/:\s*(any|unknown)$/.test(trimmedSignature) && !trimmedSignature.includes("(") && !trimmedSignature.includes("=>"));
+
+    if (noExtraInfo && (isAnyType || isAnySignature)) {
+        return null;
+    }
+
+    return { kind: info.kind || "", signature, signatureParts, documentation, members };
+}
+
+function getUnusedRanges(fileName: string, code: string): { from: number; to: number }[] {
+    const project = getProject(fileName);
+    const nextVersion = (project.scriptVersions.get(fileName) || 0) + 1;
+
+    project.scriptContents.set(fileName, code);
+    project.scriptVersions.set(fileName, nextVersion);
+    project.incrementVersion();
+
+    return project.languageService
+        .getSuggestionDiagnostics(fileName)
+        .filter((diagnostic) => diagnostic.reportsUnnecessary)
+        .map((diagnostic) => {
+            const start = diagnostic.start ?? 0;
+            return { from: start, to: start + Math.max(diagnostic.length ?? 1, 1) };
+        });
+}
+
 function checkFile(fileName: any, code: any): Diagnostic[] {
     const normalizedFileName = normalizeFileName(fileName);
     const source = typeof code === "string" ? code : "";
@@ -336,10 +490,24 @@ function checkFile(fileName: any, code: any): Diagnostic[] {
         : checkTypeScript(normalizedFileName, source);
 }
 
-parentPort?.on("message", ({ id, fileName, code }: CheckMessage = {}) => {
+parentPort?.on("message", ({ id, op, fileName, code, offset }: CheckMessage = {}) => {
     try {
+        if (op === "quickInfo") {
+            const quickInfo = getQuickInfo(normalizeFileName(fileName), typeof code === "string" ? code : "", Number(offset) || 0);
+            parentPort?.postMessage({ id, quickInfo });
+            return;
+        }
+
+        if (op === "unused") {
+            const unused = getUnusedRanges(normalizeFileName(fileName), typeof code === "string" ? code : "");
+            parentPort?.postMessage({ id, unused });
+            return;
+        }
+
         parentPort?.postMessage({ id, diagnostics: checkFile(fileName, code) });
     } catch (error) {
-        parentPort?.postMessage({ id, diagnostics: [] });
+        if (op === "quickInfo") parentPort?.postMessage({ id, quickInfo: null });
+        else if (op === "unused") parentPort?.postMessage({ id, unused: [] });
+        else parentPort?.postMessage({ id, diagnostics: [] });
     }
 });
