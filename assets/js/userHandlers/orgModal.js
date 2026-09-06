@@ -54,81 +54,82 @@ export async function createUserOrgsModalStructure({ userOrgs, userJSON, roleVis
 
     roleVisible = roleVisible == undefined ? true : roleVisible
 
-    const organizationsModalData = await Promise.all(
-        userOrgs.map(async (organization) => {
-            const organizationReq =
-                await window.electron.getOrgDataFromAPI(organization.id)
+    const organizationsModalData = []
 
-            if (!organizationReq.success) {
-                createNotify(
-                    {
-                        type: "warn",
-                        icon: "close",
-                        title: "Organization Fetch Error",
-                        content: `Error getting organization data: ${organization.id}`
-                    }
-                )
-            }
+    for (const organization of userOrgs) {
+        const organizationReq =
+            await window.electron.getOrgDataFromAPI(organization.id)
 
-            const organizationData = organizationReq.msg
-
-            const organizationRole =
-                organization.role?.length > 0
-                    ? organization.role
-                    : "No role"
-
-            const isOwner = organizationData.is_owner
-
-            // get modal structure
-            const preparedData = await getModalOrgStructure(organizationData)
-
-            // set role
-            preparedData["columns"].push(
+        if (!organizationReq.success || !organizationReq.msg) {
+            createNotify(
                 {
-                    name: gls.get(
-                        "modals.organizations.roleLabel"
-                    ),
-
-                    value: isOwner
-                        ? gls.get(
-                            "modals.organizations.ownerRoleLabel"
-                        )
-                        : organizationRole
+                    type: "warn",
+                    icon: "close",
+                    title: "Organization Fetch Error",
+                    content: `Error getting organization data: ${organization.id}`
                 }
             )
+            continue
+        }
 
-            const orgAvatar = await GetOrgAvatar.get(organizationData.avatarID, "large")
-            if (orgAvatar) {
-                preparedData["avatar"] = orgAvatar
+        const organizationData = organizationReq.msg
+
+        const organizationRole =
+            organization.role?.length > 0
+                ? organization.role
+                : "No role"
+
+        const isOwner = organizationData.is_owner
+
+        // get modal structure
+        const preparedData = await getModalOrgStructure(organizationData)
+
+        // set role
+        preparedData["columns"].push(
+            {
+                name: gls.get(
+                    "modals.organizations.roleLabel"
+                ),
+
+                value: isOwner
+                    ? gls.get(
+                        "modals.organizations.ownerRoleLabel"
+                    )
+                    : organizationRole
             }
+        )
 
-            if ("github_repos" in organizationData) {
-                preparedData["repos"] = organizationData.github_repos
-            }
+        const orgAvatar = await GetOrgAvatar.get(organizationData.avatarID, "large")
+        if (orgAvatar) {
+            preparedData["avatar"] = orgAvatar
+        }
 
-            if (!roleVisible) {
-                delete preparedData["columns"][1]
-            }
+        if ("github_repos" in organizationData) {
+            preparedData["repos"] = organizationData.github_repos
+        }
 
-            if (isOwner) {
-                preparedData.note = `
-                    ${gls.get("modals.organizations.ownerLabel")}
-                    ${organization.role?.length > 0
-                        ? gls.get(
-                            "modals.organizations.ownerLabel",
-                            {
-                                role: organization.role
-                            }
-                        )
-                        : ""
-                    }
-                `
-                    .trim()
-            }
+        if (!roleVisible) {
+            delete preparedData["columns"][1]
+        }
 
-            return preparedData
-        })
-    )
+        if (isOwner) {
+            preparedData.note = `
+                ${gls.get("modals.organizations.ownerLabel")}
+                ${organization.role?.length > 0
+                    ? gls.get(
+                        "modals.organizations.ownerLabel",
+                        {
+                            role: organization.role
+                        }
+                    )
+                    : ""
+                }
+            `
+                .trim()
+        }
+
+        organizationsModalData.push(preparedData)
+    }
 
     return organizationsModalData
 }
