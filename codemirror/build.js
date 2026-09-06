@@ -1,7 +1,7 @@
 const esbuild = require("esbuild");
 
 esbuild.build({
-    entryPoints: ["src/index.js"],
+    entryPoints: ["src/index.ts"],
     bundle: true,
     format: "iife",
     globalName: "CodeMirrorBundle",

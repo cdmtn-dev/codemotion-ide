@@ -1,10 +1,10 @@
-import { EditorView, Decoration, ViewPlugin } from "@codemirror/view";
+import { EditorView, Decoration, ViewPlugin, ViewUpdate, DecorationSet } from "@codemirror/view";
 import { StateField, StateEffect, RangeSetBuilder, Facet } from "@codemirror/state";
 import * as babelParser from "@babel/parser";
 import traverseImport from "@babel/traverse";
 
 const parse = babelParser.parse;
-const traverse = traverseImport.default || traverseImport;
+const traverse: any = (traverseImport as any).default || traverseImport;
 
 
 const BASE_PLUGINS = [
@@ -19,8 +19,8 @@ const BASE_PLUGINS = [
     "topLevelAwait",
 ];
 
-function parserPlugins({ ts, jsx }) {
-    const plugins = [...BASE_PLUGINS];
+function parserPlugins({ ts, jsx }: any): any[] {
+    const plugins: any[] = [...BASE_PLUGINS];
     if (jsx) plugins.push("jsx");
     if (ts) plugins.push("typescript");
     return plugins;
@@ -358,7 +358,7 @@ export const semanticDiagnosticsSink = Facet.define({
     combine: (values) => (values.length ? values[0] : null),
 });
 
-const setSemanticDecorations = StateEffect.define();
+const setSemanticDecorations = StateEffect.define<DecorationSet>();
 
 const MARKS = {
     "func_arg": Decoration.mark({ class: "cm-func-arg" }),
@@ -369,7 +369,7 @@ const MARKS = {
 };
 
 function buildDecorations(tokens) {
-    const builder = new RangeSetBuilder();
+    const builder = new RangeSetBuilder<Decoration>();
     for (const token of tokens) builder.add(token.from, token.to, MARKS[token.kind]);
     return builder.finish();
 }
@@ -388,21 +388,22 @@ const semanticField = StateField.define({
 
 export function semanticHighlight({ ts = false, jsx = true } = {}) {
     const driver = ViewPlugin.fromClass(class {
-        constructor(view) {
+        timer: any;
+        constructor(view: EditorView) {
             this.timer = null;
             this.schedule(view, INITIAL_DELAY_MS);
         }
-        update(update) {
+        update(update: ViewUpdate) {
             if (update.docChanged) this.schedule(update.view, DEBOUNCE_MS);
         }
-        schedule(view, delay) {
+        schedule(view: EditorView, delay: number) {
             clearTimeout(this.timer);
             this.timer = setTimeout(() => { this.timer = null; this.run(view); }, delay);
         }
-        run(view) {
+        run(view: EditorView) {
             try {
                 const code = view.state.doc.toString();
-                const sink = view.state.facet(semanticDiagnosticsSink);
+                const sink: any = view.state.facet(semanticDiagnosticsSink);
 
                 if (code.length > MAX_DOC_LENGTH) {
                     view.dispatch({ effects: setSemanticDecorations.of(Decoration.none) });

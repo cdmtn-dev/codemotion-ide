@@ -1,7 +1,7 @@
 import { parse } from "@babel/parser";
 import traverse from "@babel/traverse";
 
-export function identifierJavaScriptCompletionSource(context) {
+export function identifierJavaScriptCompletionSource(context: any) {
     const word = context.matchBefore(/\w+/);
     if (!word || (word.from === word.to && !context.explicit)) return null;
 
@@ -16,15 +16,15 @@ export function identifierJavaScriptCompletionSource(context) {
     }
 
     const names = new Set();
-    traverse(ast, {
-        Identifier(path) {
+    (traverse as any)(ast, {
+        Identifier(path: any) {
             if (path.isReferencedIdentifier()) return;
             names.add(path.node.name);
         },
-        ImportSpecifier(path) { names.add(path.node.local.name); },
-        ImportDefaultSpecifier(path) { names.add(path.node.local.name); },
-        FunctionDeclaration(path) { if (path.node.id) names.add(path.node.id.name); },
-        VariableDeclarator(path) { if (path.node.id.name) names.add(path.node.id.name); }
+        ImportSpecifier(path: any) { names.add(path.node.local.name); },
+        ImportDefaultSpecifier(path: any) { names.add(path.node.local.name); },
+        FunctionDeclaration(path: any) { if (path.node.id) names.add(path.node.id.name); },
+        VariableDeclarator(path: any) { if (path.node.id.name) names.add(path.node.id.name); }
     });
 
     return {

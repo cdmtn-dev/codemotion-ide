@@ -1,11 +1,12 @@
-import { EditorView, Decoration, ViewPlugin, WidgetType } from "@codemirror/view";
+import { EditorView, Decoration, ViewPlugin, WidgetType, ViewUpdate, DecorationSet } from "@codemirror/view";
 import { StateField, StateEffect } from "@codemirror/state";
 
-const setSuggestion = StateEffect.define();
-const clearSuggestion = StateEffect.define();
+const setSuggestion = StateEffect.define<any>();
+const clearSuggestion = StateEffect.define<any>();
 
 class GhostLineWidget extends WidgetType {
-    constructor(text) {
+    text: string;
+    constructor(text: string) {
         super();
         this.text = text;
     }
@@ -17,7 +18,7 @@ class GhostLineWidget extends WidgetType {
         return span;
     }
 
-    eq(other) {
+    eq(other: GhostLineWidget) {
         return this.text === other.text;
     }
 
@@ -31,7 +32,7 @@ const suggestionField = StateField.define({
         return { text: null, from: 0 };
     },
 
-    update(value, tr) {
+    update(value: any, tr: any) {
         for (const effect of tr.effects) {
             if (effect.is(setSuggestion)) return effect.value;
             if (effect.is(clearSuggestion)) return { text: null, from: 0 };
@@ -100,11 +101,12 @@ function buildDecorations(view) {
 
 const suggestPlugin = ViewPlugin.fromClass(
     class {
-        constructor(view) {
+        decorations: DecorationSet;
+        constructor(view: EditorView) {
             this.decorations = buildDecorations(view);
         }
 
-        update(update) {
+        update(update: ViewUpdate) {
             this.decorations = buildDecorations(update.view);
         }
     },

@@ -1,11 +1,14 @@
-import { ViewPlugin, Decoration } from "@codemirror/view";
+import { ViewPlugin, Decoration, DecorationSet } from "@codemirror/view";
 import { RangeSetBuilder } from "@codemirror/state";
 import { INITIAL } from "vscode-textmate";
-import { scopesToClass } from "./scopeMap.js";
+import { scopesToClass } from "./scopeMap";
 
-export function textMateHighlighter(grammar) {
+export function textMateHighlighter(grammar: any) {
     return ViewPlugin.fromClass(class {
-        constructor(view) {
+        grammar: any;
+        cache: Map<number, any>;
+        decorations: DecorationSet;
+        constructor(view: any) {
             this.grammar = grammar;
             this.cache = new Map();
             this.decorations = Decoration.none;
@@ -72,7 +75,7 @@ export function textMateHighlighter(grammar) {
         }
 
         rebuild(view) {
-            const builder = new RangeSetBuilder();
+            const builder = new RangeSetBuilder<Decoration>();
 
             for (const { from, to } of view.visibleRanges) {
                 let pos = from;

@@ -1,4 +1,4 @@
-const RULES = [
+const RULES: [RegExp, string][] = [
     [/^comment/, "cm-tm-comment"],
     [/^string/, "cm-tm-string"],
     [/^constant\.numeric/, "cm-tm-number"],

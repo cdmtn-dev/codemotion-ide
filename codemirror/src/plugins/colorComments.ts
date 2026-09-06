@@ -1,4 +1,4 @@
-import { EditorView, Decoration, ViewPlugin } from "@codemirror/view";
+import { EditorView, Decoration, ViewPlugin, ViewUpdate, DecorationSet } from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
 import { RangeSetBuilder } from "@codemirror/state";
 
@@ -11,8 +11,8 @@ const markers = [
 
 const LEADER = /^(\/\/|\/\*|\*)\s*/;
 
-function buildDecorations(view) {
-    const builder = new RangeSetBuilder();
+function buildDecorations(view: EditorView): DecorationSet {
+    const builder = new RangeSetBuilder<Decoration>();
 
     for (const { from, to } of view.visibleRanges) {
         syntaxTree(view.state).iterate({
@@ -41,10 +41,11 @@ function buildDecorations(view) {
 
 export const colorComments = ViewPlugin.fromClass(
     class {
-        constructor(view) {
+        decorations: DecorationSet;
+        constructor(view: EditorView) {
             this.decorations = buildDecorations(view);
         }
-        update(update) {
+        update(update: ViewUpdate) {
             if (update.docChanged || update.viewportChanged || update.selectionSet) {
                 this.decorations = buildDecorations(update.view);
             }

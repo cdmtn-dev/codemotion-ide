@@ -9,7 +9,7 @@ import * as yaml from "prettier/plugins/yaml";
 
 const PLUGINS = [babel, estree, typescript, postcss, html, markdown, yaml];
 
-const MODE_TO_PARSER = {
+const MODE_TO_PARSER: Record<string, string> = {
     javascript: "babel",
     jsx: "babel",
     typescript: "typescript",
@@ -25,16 +25,16 @@ const MODE_TO_PARSER = {
     yaml: "yaml",
 };
 
-export function parserForMode(mode) {
+export function parserForMode(mode: string) {
     if (!mode) return null;
     return MODE_TO_PARSER[String(mode).toLowerCase()] || null;
 }
 
-export async function formatCode(code, options = {}) {
+export async function formatCode(code: string, options: any = {}) {
     const { parser, tabWidth = 4, useTabs = true, rangeStart, rangeEnd, cursorOffset } = options;
     if (!parser) return null;
 
-    const prettierOptions = { parser, plugins: PLUGINS, tabWidth, useTabs };
+    const prettierOptions: any = { parser, plugins: PLUGINS, tabWidth, useTabs };
     if (typeof rangeStart === "number") prettierOptions.rangeStart = rangeStart;
     if (typeof rangeEnd === "number") prettierOptions.rangeEnd = rangeEnd;
 

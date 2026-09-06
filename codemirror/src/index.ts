@@ -48,6 +48,7 @@ import { markdown } from "@codemirror/lang-markdown";
 // extensions
 import { colorComments, colorCommentsTheme } from "./plugins/colorComments";
 import { semanticHighlight, semanticHighlightTheme, semanticDiagnosticsSink } from "./plugins/semanticHighlight";
+import { unusedMarksField, unusedMarksTheme, applyUnusedMarks } from "./plugins/unusedMarks";
 import { formatCode, parserForMode } from "./plugins/formatter";
 import { fromVSCodeSnippets } from "./plugins/snippets";
 import { suggestionField, suggestionTheme, suggestPlugin, suggestUpdateListener, acceptSuggestion, dismissSuggestion, initSuggestListener } from "./plugins/suggest";
@@ -73,8 +74,8 @@ import { toPng, toBlob } from "html-to-image";
 // lang-reg
 import { Registry } from "vscode-textmate";
 import { loadWASM, OnigScanner, OnigString } from "vscode-oniguruma";
-import { textMateHighlighter } from "./plugins/textmate/highlighter.js";
-import { textMateBaseTheme } from "./plugins/textmate/theme.js";
+import { textMateHighlighter } from "./plugins/textmate/highlighter";
+import { textMateBaseTheme } from "./plugins/textmate/theme";
 // 
 
 const commentHighlightStyle = Prec.highest(syntaxHighlighting(HighlightStyle.define([
@@ -270,7 +271,7 @@ async function getTextMateRegistry() {
 }
 
 window.CodeMirror = {
-    create(parent, options = {}) {
+    create(parent: any, options: any = {}) {
         const languageCompartment = new Compartment();
         const themeCompartment = new Compartment();
         const tabSizeCompartment = new Compartment();
@@ -325,6 +326,9 @@ window.CodeMirror = {
 
                     semanticDiagnosticsSink.of((list) => onSemanticDiagnostics?.(list)),
 
+                    unusedMarksField,
+                    unusedMarksTheme,
+
                     closeBrackets(),
                     autocompletion(),
 
@@ -373,6 +377,9 @@ window.CodeMirror = {
 
             setDiagnostics(value) {
                 view.dispatch(setLintDiagnostics(view.state, Array.isArray(value) ? value : []));
+            },
+            setUnusedRanges(value) {
+                applyUnusedMarks(view, Array.isArray(value) ? value : []);
             },
             setOnChange(cb) {
                 onChange = cb;
@@ -425,7 +432,7 @@ window.CodeMirror = {
     formatCode: formatCode,
     parserForMode: parserForMode,
 
-    async registerLanguage({ id, grammar, extends: inherits = {} }) {
+    async registerLanguage({ id, grammar, extends: inherits = {} }: any) {
         const scopeName = `source.${id}`;
         rawGrammars.set(scopeName, grammar);
 
