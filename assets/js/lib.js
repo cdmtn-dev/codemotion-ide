@@ -22,8 +22,7 @@ import { _SidebarElement } from "./libClasses/sidebarElement.js"
 import { _ChatElement } from "./libClasses/chatElement.js"
 import { _Time } from "./libClasses/Time.js"
 
-let runtimeErrors = []
-let runtimeErrorsCount = 0
+let runtimeErrorGroups = new Map()
 
 export const GLOBAL = {}
 
@@ -503,76 +502,89 @@ export function runCode(code, acorn) {
 
     return null
 }
-export function addRuntimeError({ msg, line = null, col = null, time = null, isNull = false, win = null }) {
-    const exists = runtimeErrors.some(
-        e => e.msg === msg && e.line === line && e.col === col
-    )
+function runtimeErrorKey(source, path) {
+    return `${path ?? ""} ${source ?? ""}`
+}
 
+function collectRuntimeErrors() {
+    const all = []
+    const seen = new Set()
+
+    for (const list of runtimeErrorGroups.values()) {
+        for (const error of list) {
+            const key = `${error.msg} ${error.line} ${error.col}`
+            if (seen.has(key)) continue
+            seen.add(key)
+            all.push(error)
+        }
+    }
+
+    return all
+}
+
+function renderRuntimeErrors() {
     const wrapper = BottomWindow.get("errorsHistory")
+    if (!wrapper) return
+
     const badge = document.querySelector("#runtimeErrors .badge")
-    const el = document.createElement("div")
-    const items = document.querySelectorAll(".runtime-item#runTimeErrorItem")
-    const lastItem = items[items.length - 1]
+    const errors = collectRuntimeErrors()
 
-    if (isNull && lastItem?.classList.contains("success")) return
-    if (exists) return
+    wrapper.clear()
 
-    const error = { msg, line, col }
-
-    if (!isNull) {
-        runtimeErrors.push(error)
-        runtimeErrorsCount += 1
-    }
-    else {
-        runtimeErrors = []
-        badge.classList.add("hidden")
+    if (badge) {
+        badge.textContent = errors.length
+        badge.classList.toggle("hidden", errors.length === 0)
     }
 
-    badge.classList.remove("hidden")
-    badge.textContent = runtimeErrors.length
-
-    if (runtimeErrors.length == 0) {
-        badge.classList.add("hidden")
-    }
-
-    items.forEach(e => { e.classList.add("prev") })
-
-    el.classList.add("runtime-item", "bottom-window__item")
-    el.id = "runTimeErrorItem"
-
-    if (!isNull) {
-        el.innerHTML = `
-            <span class="material-symbols-rounded error">error</span>
-            ${msg}
-            ${line !== null ? `<span class="translucent">${line}:${col ?? 0}</span>` : ""}
-            ${time !== null ? `<span class="time">${formatUnix(time)}</span>` : ""}
-        `
-    }
-    else {
-        el.classList.add("success")
+    if (errors.length === 0) {
+        const el = document.createElement("div")
+        el.classList.add("runtime-item", "bottom-window__item", "success")
+        el.id = "runTimeErrorItem"
         el.innerHTML = `
             <span class="material-symbols-rounded error">check_circle</span>
             All errors fixed
-            ${runtimeErrorsCount > 0 ? `<span class="translucent">(${runtimeErrorsCount})</span>` : ""}
-            ${time !== null ? `<span class="time">${formatUnix(time)}</span>` : ""}
         `
-        runtimeErrorsCount = 0
+        wrapper.add(el)
+        return
     }
 
-    wrapper.add(el)
-
-    wrapper.win.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    errors.forEach(error => {
+        const el = document.createElement("div")
+        el.classList.add("runtime-item", "bottom-window__item")
+        el.id = "runTimeErrorItem"
+        el.innerHTML = `
+            <span class="material-symbols-rounded error">error</span>
+            ${error.msg}
+            ${error.line !== null ? `<span class="translucent">${error.line}:${error.col ?? 0}</span>` : ""}
+            ${error.time !== null ? `<span class="time">${formatUnix(error.time)}</span>` : ""}
+        `
+        wrapper.add(el)
+    })
 }
-export function clearRuntimeErrors() {
-    runtimeErrors = []
-    runtimeErrorsCount = 0
 
-    addRuntimeError(
-        {
-            isNull: true,
-            time: Math.floor(Date.now() / 1000)
-        }
-    )
+export function setRuntimeErrors({ source = "syntax", path = null, errors = [] }) {
+    const key = runtimeErrorKey(source, path)
+
+    const list = errors.map(error => ({
+        msg: error.msg,
+        line: error.line ?? null,
+        col: error.col ?? null,
+        time: error.time ?? null,
+    }))
+
+    if (list.length === 0) {
+        runtimeErrorGroups.delete(key)
+    }
+    else {
+        runtimeErrorGroups.set(key, list)
+    }
+
+    renderRuntimeErrors()
+}
+
+export function clearRuntimeErrors() {
+    runtimeErrorGroups.clear()
+    renderRuntimeErrors()
 }
 
 export function formatUnix(ts, format = "{dd}.{mm}.{yyyy}, {hh}:{ii}:{ss}") {

@@ -4,13 +4,14 @@ import { JSONParser } from "../../contextParsers/jsonParser.js"
 import { HTMLParser } from "../../contextParsers/htmlParser.js"
 import { CSSParser } from "../../contextParsers/cssParser.js"
 
-import { addRuntimeError, GLS } from "../../lib.js"
+import { setRuntimeErrors, GLS } from "../../lib.js"
 import { GoParser } from "../../contextParsers/goParser.js"
 import { YAMLParser } from "../../contextParsers/yamlParser.js"
 import { PythonParser } from "../../contextParsers/pythonParser.js"
 
 let diagnosticTimer = null
 let typeCheckTimer = null
+let unusedTimer = null
 let generation = 0
 
 const SEVERITY_MAP = {
@@ -64,13 +65,15 @@ function showDiagnostics(diagnostics, { editor, path, source }) {
 
     editor.setDiagnosticsFor(source, list)
 
-    diagnostics.forEach(item => {
-        addRuntimeError({
+    setRuntimeErrors({
+        source,
+        path,
+        errors: diagnostics.map(item => ({
             msg: item.message,
             line: Math.max(1, Number(item.line) || 1),
             col: Math.max(0, Number(item.col) || 0),
             time: Math.floor(Date.now() / 1000),
-        })
+        })),
     })
 }
 
